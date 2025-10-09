@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="@drawable/image_background"
+    android:padding="24dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:padding="8dp">
+
+        <!-- 🏷️ Título -->
+        <TextView
+            android:id="@+id/tvTituloForm"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Agregar nuevo inmueble"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@android:color/white"
+            android:layout_marginBottom="24dp"
+            android:shadowColor="#80000000"
+            android:shadowDx="1"
+            android:shadowDy="1"
+            android:shadowRadius="2" />
+
+        <!-- 🏠 Campo de Dirección -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/hint_direccion"
+            app:boxBackgroundMode="outline"
+            app:boxStrokeColor="?attr/colorPrimary"
+            app:hintTextColor="@color/purple_700"
+            android:layout_marginBottom="12dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etDireccion"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPostalAddress"
+                android:imeOptions="actionNext"
+                android:padding="10dp"
+                android:textColor="@android:color/black" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- 💰 Campo de Precio -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/hint_precio"
+            app:boxBackgroundMode="outline"
+            app:boxStrokeColor="?attr/colorPrimary"
+            app:hintTextColor="@color/purple_700"
+            android:layout_marginBottom="16dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etPrecio"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="numberDecimal"
+                android:imeOptions="actionDone"
+                android:padding="10dp"
+                android:textColor="@android:color/black" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- 🔘 Switch de disponibilidad -->
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/swDisponibleForm"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/label_disponible"
+            android:checked="true"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
+            android:textColor="@android:color/white"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="20dp" />
+
+        <!-- 💾 Botón Guardar -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnGuardar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/btn_guardar"
+            android:textAllCaps="false"
+            android:paddingVertical="12dp"
+            android:textSize="17sp"
+            android:insetTop="8dp"
+            android:insetBottom="8dp"
+            app:cornerRadius="16dp"
+            app:icon="@drawable/ic_baseline_save_24"
+            app:iconGravity="textStart"
+            app:iconPadding="10dp"
+            app:elevation="6dp"
+            app:backgroundTint="?attr/colorPrimary"
+            android:textColor="@android:color/white"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="20dp" />
+
+    </LinearLayout>
+</ScrollView>

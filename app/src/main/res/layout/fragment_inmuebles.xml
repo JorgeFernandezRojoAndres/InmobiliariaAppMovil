@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/image_background"
+    tools:context=".view.InmueblesFragment">
+
+    <!-- 🏠 Lista de inmuebles -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvInmuebles"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="8dp"
+        android:clipToPadding="false"
+        android:scrollbars="vertical"
+        tools:listitem="@layout/item_inmueble" />
+
+    <!-- ➕ Botón para agregar nuevo inmueble -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabAgregar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="20dp"
+        android:contentDescription="@string/agregar_inmueble"
+        android:focusable="true"
+        android:clickable="true"
+        app:srcCompat="@drawable/ic_baseline_add_24"
+        app:tint="@android:color/white"
+        app:backgroundTint="?attr/colorPrimary"
+        app:elevation="8dp"
+        app:useCompatPadding="true" />
+
+</FrameLayout>

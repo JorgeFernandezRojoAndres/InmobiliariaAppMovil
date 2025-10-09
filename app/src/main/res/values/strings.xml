@@ -1,0 +1,52 @@
+<resources>
+
+    <!-- 📱 Nombre de la app -->
+    <string name="app_name">Inmobiliaria_2025</string>
+    <string name="agregar_inmueble">Agregar inmueble</string>
+
+    <!-- 🔄 Textos generales -->
+    <string name="loading">Cargando...</string>
+    <string name="logout">Cerrar Sesión</string>
+    <string name="volver">Volver</string>
+    <string name="guardar">Guardar</string>
+    <string name="editar">Editar</string>
+    <string name="eliminar">Eliminar</string>
+
+    <!-- 💰 Formatos y valores por defecto -->
+    <string name="precio_formato">$%.2f</string>
+    <string name="precio_default">$0.00</string>
+
+    <!-- 🏠 Campos del formulario de inmueble -->
+    <string name="direccion_label">Dirección</string>
+    <string name="disponible_label">Disponible</string>
+    <string name="hint_direccion">Dirección</string>
+    <string name="hint_precio">Precio</string>
+    <string name="label_disponible">Disponible</string>
+    <string name="btn_guardar">Guardar</string>
+
+    <!-- ✅ Mensajes de estado y validación -->
+    <string name="msg_inmueble_guardado">Inmueble guardado correctamente</string>
+    <string name="msg_campos_vacios">Complete todos los campos</string>
+    <string name="msg_precio_invalido">Precio inválido</string>
+    <string name="msg_error_generico">Ocurrió un error. Intente nuevamente.</string>
+    <string name="msg_cargando_inmuebles">Cargando lista de inmuebles...</string>
+
+    <!-- 🏷️ Títulos y encabezados -->
+    <string name="titulo_nuevo_inmueble">Agregar nuevo inmueble</string>
+    <string name="titulo_lista_inmuebles">Mis Inmuebles</string>
+    <string name="titulo_detalle_inmueble">Detalle del Inmueble</string>
+    <string name="titulo_perfil">Mi Perfil</string>
+    <string name="titulo_ubicacion">Ubicación</string>
+
+    <!-- 💡 Indicaciones de interfaz -->
+    <string name="hint_buscar_inmueble">Buscar inmueble...</string>
+    <string name="label_no_inmuebles">No hay inmuebles registrados.</string>
+    <string name="label_confirmar_logout">¿Desea cerrar sesión?</string>
+
+    <!-- 📍 Mensajes del módulo de ubicación -->
+    <string name="msg_ubicacion_actual">Ubicación actual</string>
+    <string name="msg_inmobiliaria_marker">Inmobiliaria Alone</string>
+    <string name="msg_permiso_denegado">Permiso de ubicación denegado</string>
+    <string name="msg_gps_desactivado">GPS desactivado. Actívelo para continuar.</string>
+
+</resources>

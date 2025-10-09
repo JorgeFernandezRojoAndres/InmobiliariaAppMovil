@@ -1,0 +1,17 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- 🎨 Tema principal claro -->
+    <style name="Theme.Inmobiliaria_2025" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Paleta de colores -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryVariant">@color/colorPrimaryVariant</item>
+        <item name="colorSecondary">@color/colorSecondary</item>
+
+        <!-- Colores del sistema -->
+        <item name="android:statusBarColor" tools:targetApi="l">@color/purple_700</item>
+        <item name="android:navigationBarColor">@color/purple_700</item>
+        <item name="android:windowBackground">@color/white</item>
+
+        <!-- Color del texto -->
+        <item name="android:textColor">@color/black</item>
+    </style>
+</resources>

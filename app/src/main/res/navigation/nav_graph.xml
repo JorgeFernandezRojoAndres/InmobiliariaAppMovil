@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/nav_ubicacion">
+
+    <!-- 🗺️ Pantalla inicial: mapa de ubicación -->
+    <fragment
+        android:id="@+id/nav_ubicacion"
+        android:name="com.jorge.inmobiliaria2025.view.UbicacionFragment"
+        android:label="Ubicación"
+        tools:layout="@layout/fragment_ubicacion" />
+
+    <!-- 👤 Perfil -->
+    <fragment
+        android:id="@+id/nav_perfil"
+        android:name="com.jorge.inmobiliaria2025.view.PerfilFragment"
+        android:label="Perfil"
+        tools:layout="@layout/fragment_perfil" />
+
+    <!-- 🏠 Inmuebles -->
+    <fragment
+        android:id="@+id/nav_inmuebles"
+        android:name="com.jorge.inmobiliaria2025.view.InmueblesFragment"
+        android:label="Inmuebles"
+        tools:layout="@layout/fragment_inmuebles">
+
+        <!-- ➡️ Acción: ir al detalle del inmueble -->
+        <action
+            android:id="@+id/action_inmueblesFragment_to_detalleInmuebleFragment"
+            app:destination="@id/detalleInmuebleFragment" />
+
+        <!-- ➕ Acción: ir al formulario de nuevo inmueble -->
+        <action
+            android:id="@+id/action_inmueblesFragment_to_nuevoInmuebleFragment"
+            app:destination="@id/nuevoInmuebleFragment" />
+    </fragment>
+
+    <!-- 🏠 Detalle de inmueble -->
+    <fragment
+        android:id="@+id/detalleInmuebleFragment"
+        android:name="com.jorge.inmobiliaria2025.view.DetalleInmuebleFragment"
+        android:label="Detalle del Inmueble"
+        tools:layout="@layout/fragment_detalle_inmueble" />
+
+    <!-- 🏡 Nuevo inmueble -->
+    <fragment
+        android:id="@+id/nuevoInmuebleFragment"
+        android:name="com.jorge.inmobiliaria2025.view.NuevoInmuebleFragment"
+        android:label="Nuevo Inmueble"
+        tools:layout="@layout/fragment_nuevo_inmueble" />
+
+    <!-- 📄 Contratos -->
+    <fragment
+        android:id="@+id/nav_contratos"
+        android:name="com.jorge.inmobiliaria2025.view.PlaceholderFragment"
+        android:label="Contratos"
+        tools:layout="@layout/fragment_placeholder" />
+
+    <!-- 💰 Pagos -->
+    <fragment
+        android:id="@+id/nav_pagos"
+        android:name="com.jorge.inmobiliaria2025.view.PlaceholderFragment"
+        android:label="Pagos"
+        tools:layout="@layout/fragment_placeholder" />
+
+    <!-- 🚪 Cerrar sesión -->
+    <fragment
+        android:id="@+id/nav_logout"
+        android:name="com.jorge.inmobiliaria2025.view.LogoutFragment"
+        android:label="Cerrar sesión"
+        tools:layout="@layout/fragment_logout" />
+
+</navigation>
