@@ -1,10 +1,13 @@
 package com.jorge.inmobiliaria2025.viewmodel;
 
 import android.app.Application;
+import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -19,11 +22,6 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-/**
- * ✅ InmuebleViewModel
- * Unifica los datos locales (Room) y remotos (API .NET).
- * Elimina mocks y sincroniza directamente con el backend real.
- */
 public class InmuebleViewModel extends AndroidViewModel {
 
     private final InmuebleDao inmuebleDao;
@@ -36,6 +34,10 @@ public class InmuebleViewModel extends AndroidViewModel {
     // 🔹 Repositorio remoto
     private final InmuebleRepository repo;
     private final MutableLiveData<List<Inmueble>> listaInmueblesRemotos = new MutableLiveData<>();
+
+    // 🔹 LiveData para mensajes y navegación
+    private final MutableLiveData<String> mensajeToast = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> navegarAtras = new MutableLiveData<>();
 
     public InmuebleViewModel(@NonNull Application application) {
         super(application);
@@ -120,17 +122,23 @@ public class InmuebleViewModel extends AndroidViewModel {
         });
     }
 
+    // 🔹 Carga sin lógica en Fragment
     public void cargarDesdeBundle(Bundle args) {
-        if (args != null && args.containsKey("inmueble")) {
-            Inmueble dato = (Inmueble) args.getSerializable("inmueble");
-            inmuebleSeleccionado.setValue(dato);
+        if (args == null) return;
+        Inmueble inmueble = (Inmueble) args.getSerializable("inmueble");
+        mostrarInmuebleSiExiste(inmueble);
+    }
+
+    public void mostrarInmuebleSiExiste(Inmueble inmueble) {
+        if (inmueble != null) {
+            inmuebleSeleccionado.postValue(inmueble);
         }
     }
 
-    public void guardarInmueble(String direccion, String precioStr, boolean disponible) {
-        if (direccion == null || direccion.trim().isEmpty() ||
-                precioStr == null || precioStr.trim().isEmpty()) {
-            estadoGuardado.postValue(EstadoGuardado.CAMPOS_VACIOS);
+    // 🔹 Nuevo método centralizado (reemplaza el if/switch del Fragment)
+    public void procesarGuardado(String direccion, String precioStr, boolean disponible) {
+        if (direccion.isEmpty() || precioStr.isEmpty()) {
+            mensajeToast.postValue("⚠️ Complete todos los campos");
             return;
         }
 
@@ -138,12 +146,14 @@ public class InmuebleViewModel extends AndroidViewModel {
             double precio = Double.parseDouble(precioStr);
             Inmueble nuevo = new Inmueble(direccion.trim(), precio, disponible);
             insertar(nuevo);
-            estadoGuardado.postValue(EstadoGuardado.EXITO);
+            mensajeToast.postValue("✅ Inmueble guardado correctamente");
+            navegarAtras.postValue(true);
         } catch (NumberFormatException e) {
-            estadoGuardado.postValue(EstadoGuardado.PRECIO_INVALIDO);
+            mensajeToast.postValue("❌ Precio inválido");
         }
     }
 
+    // 🔹 Actualiza lista local tras inserción
     private void actualizarListaLocal(Inmueble nuevo) {
         List<Inmueble> actual = listaLiveData.getValue();
         if (actual == null) actual = new ArrayList<>();
@@ -151,12 +161,50 @@ public class InmuebleViewModel extends AndroidViewModel {
         listaLiveData.postValue(actual);
     }
 
-    // 🔹 Métodos de compatibilidad para Fragment antiguos
+    // 🔹 Utilidad para mostrar toasts desde el Fragment sin lógica
+    public void mostrarToast(Context context, String mensaje) {
+        Toast.makeText(context, mensaje, Toast.LENGTH_SHORT).show();
+    }
+
+    public LiveData<String> getMensajeToast() {
+        return mensajeToast;
+    }
+
+    public LiveData<Boolean> getNavegarAtras() {
+        return navegarAtras;
+    }
+
+    // 🔹 Métodos declarativos
+    public String getTextoDisponibilidad(Inmueble inmueble) {
+        return inmueble.isDisponible() ? "Disponible" : "No disponible";
+    }
+
+    public int getColorDisponibilidad(Context context, Inmueble inmueble) {
+        int color = inmueble.isDisponible()
+                ? android.R.color.holo_green_dark
+                : android.R.color.holo_red_dark;
+        return ContextCompat.getColor(context, color);
+    }
+
+    // 🔹 LiveData filtrado
+    public LiveData<List<Inmueble>> getListaFiltrada() {
+        MutableLiveData<List<Inmueble>> filtrada = new MutableLiveData<>();
+        getListaLiveData().observeForever(lista -> {
+            if (lista == null || lista.isEmpty()) {
+                filtrada.postValue(new ArrayList<>());
+            } else {
+                filtrada.postValue(lista);
+            }
+        });
+        return filtrada;
+    }
+
+    // 🔹 Compatibilidad con fragments antiguos
     public LiveData<List<Inmueble>> getListaLiveData() {
-        return getInmuebles(); // Alias para compatibilidad con InmueblesFragment
+        return getInmuebles();
     }
 
     public void cargarInmuebles() {
-        cargarInmueblesDesdeApi(); // Alias para compatibilidad con InmueblesFragment
+        cargarInmueblesDesdeApi();
     }
 }

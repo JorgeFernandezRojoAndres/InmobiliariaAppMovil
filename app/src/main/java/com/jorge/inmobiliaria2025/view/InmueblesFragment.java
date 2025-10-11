@@ -20,6 +20,7 @@ import com.jorge.inmobiliaria2025.model.Inmueble;
 import com.jorge.inmobiliaria2025.viewmodel.InmuebleViewModel;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class InmueblesFragment extends Fragment {
 
@@ -40,30 +41,25 @@ public class InmueblesFragment extends Fragment {
         // 🔹 Configurar vista en cuadrícula de 2 columnas
         rv.setLayoutManager(new GridLayoutManager(getContext(), 2));
 
-        // 🔹 Obtener ViewModel compartido
+        // 🔹 ViewModel compartido
         vm = new ViewModelProvider(requireActivity()).get(InmuebleViewModel.class);
 
-        // 🔹 Inicializar adaptador con lista vacía y listener de clic
+        // 🔹 Adaptador con listener
         adapter = new InmueblesAdapter(new ArrayList<>(), inmueble -> {
-            Bundle bundle = new Bundle();
-            bundle.putSerializable("inmueble", inmueble);
+            vm.setInmuebleSeleccionado(inmueble);
             NavHostFragment.findNavController(this)
-                    .navigate(R.id.action_inmueblesFragment_to_detalleInmuebleFragment, bundle);
+                    .navigate(R.id.action_inmueblesFragment_to_detalleInmuebleFragment);
         });
 
         rv.setAdapter(adapter);
 
-        // 🔹 Observar lista de inmuebles y actualizar adapter con DiffUtil
-        vm.getListaLiveData().observe(getViewLifecycleOwner(), inmuebles -> {
-            if (inmuebles != null && !inmuebles.isEmpty()) {
-                adapter.actualizarLista(inmuebles);
-            }
-        });
+        // 🔹 Observa los inmuebles (ya filtrados por el VM)
+        vm.getListaFiltrada().observe(getViewLifecycleOwner(), adapter::actualizarLista);
 
-        // 🔹 Cargar inmuebles desde base de datos local o mock
+        // 🔹 Carga inicial (el VM decide fuente)
         vm.cargarInmuebles();
 
-        // 🔹 FAB: navegar al formulario de nuevo inmueble
+        // 🔹 FAB para agregar
         fabAgregar.setOnClickListener(view ->
                 NavHostFragment.findNavController(this)
                         .navigate(R.id.action_inmueblesFragment_to_nuevoInmuebleFragment)

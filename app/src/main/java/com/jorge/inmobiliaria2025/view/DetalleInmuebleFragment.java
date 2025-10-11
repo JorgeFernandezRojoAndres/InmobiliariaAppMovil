@@ -9,7 +9,6 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
@@ -40,29 +39,22 @@ public class DetalleInmuebleFragment extends Fragment {
         // 🔹 ViewModel compartido
         vm = new ViewModelProvider(requireActivity()).get(InmuebleViewModel.class);
 
-        // 🔹 Observa el inmueble seleccionado
+        // 🔹 Observa el inmueble seleccionado (ya validado en el VM)
         vm.getInmuebleSeleccionado().observe(getViewLifecycleOwner(), this::mostrarInmueble);
 
-        // 🔹 Si se pasa por argumentos (al navegar desde la lista)
+        // 🔹 Carga desde argumentos (el VM decide si es válido)
         vm.cargarDesdeBundle(getArguments());
 
         return v;
     }
 
     private void mostrarInmueble(Inmueble inmueble) {
-        if (inmueble == null) return;
-
         tvDireccion.setText(inmueble.getDireccion());
         tvPrecio.setText(getString(R.string.precio_formato, inmueble.getPrecio()));
 
-        // 🔹 Colorea según estado
-        if (inmueble.isDisponible()) {
-            tvDisponible.setText("Disponible");
-            tvDisponible.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.holo_green_dark));
-        } else {
-            tvDisponible.setText("No disponible");
-            tvDisponible.setTextColor(ContextCompat.getColor(requireContext(), android.R.color.holo_red_dark));
-        }
+        // 🔹 Texto y color delegados al ViewModel
+        tvDisponible.setText(vm.getTextoDisponibilidad(inmueble));
+        tvDisponible.setTextColor(vm.getColorDisponibilidad(requireContext(), inmueble));
 
         // 🔹 Carga de imagen con Glide
         Glide.with(requireContext())

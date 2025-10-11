@@ -6,7 +6,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -42,47 +41,35 @@ public class NuevoInmuebleFragment extends Fragment {
         vm = new ViewModelProvider(requireActivity()).get(InmuebleViewModel.class);
         NavController navController = NavHostFragment.findNavController(this);
 
-        // 🔹 Observa el estado de guardado
-        vm.getEstadoGuardado().observe(getViewLifecycleOwner(), estado -> {
-            if (getContext() == null) return; // evita crash si el fragmento no está activo
+        // 🔹 Observa mensajes ya preparados por el ViewModel
+        vm.getMensajeToast().observe(getViewLifecycleOwner(), mensaje -> {
+            if (mensaje == null || getContext() == null) return;
+            vm.mostrarToast(getContext(), mensaje);
+        });
 
-            switch (estado) {
-                case EXITO:
-                    Toast.makeText(getContext(), "✅ Inmueble guardado correctamente", Toast.LENGTH_SHORT).show();
-
-                    // Limpia los campos antes de salir
-                    etDireccion.setText("");
-                    etPrecio.setText("");
-                    swDisponible.setChecked(false);
-
-                    // Navega de vuelta al listado de inmuebles
-                    navController.popBackStack();
-                    break;
-
-                case CAMPOS_VACIOS:
-                    Toast.makeText(getContext(), "⚠️ Complete todos los campos", Toast.LENGTH_SHORT).show();
-                    break;
-
-                case PRECIO_INVALIDO:
-                    Toast.makeText(getContext(), "❌ Precio inválido", Toast.LENGTH_SHORT).show();
-                    break;
+        // 🔹 Observa navegación controlada desde el ViewModel
+        vm.getNavegarAtras().observe(getViewLifecycleOwner(), navegar -> {
+            if (Boolean.TRUE.equals(navegar)) {
+                limpiarCampos();
+                navController.popBackStack();
             }
         });
 
         // 🔹 Acción del botón Guardar
         btnGuardar.setOnClickListener(view -> {
-            String direccion = etDireccion.getText().toString().trim();
-            String precio = etPrecio.getText().toString().trim();
-            boolean disponible = swDisponible.isChecked();
-
-            if (direccion.isEmpty() || precio.isEmpty()) {
-                Toast.makeText(getContext(), "Complete todos los campos", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            vm.guardarInmueble(direccion, precio, disponible);
+            vm.procesarGuardado(
+                    etDireccion.getText().toString().trim(),
+                    etPrecio.getText().toString().trim(),
+                    swDisponible.isChecked()
+            );
         });
 
         return v;
+    }
+
+    private void limpiarCampos() {
+        etDireccion.setText("");
+        etPrecio.setText("");
+        swDisponible.setChecked(false);
     }
 }
