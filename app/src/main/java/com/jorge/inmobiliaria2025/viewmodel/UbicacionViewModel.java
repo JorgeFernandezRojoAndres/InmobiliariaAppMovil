@@ -1,4 +1,4 @@
-package com.santisoft.inmobiliariaalone.ui.ubicacion;
+package com.jorge.inmobiliaria2025.viewmodel;
 
 import android.app.Application;
 import android.annotation.SuppressLint;
