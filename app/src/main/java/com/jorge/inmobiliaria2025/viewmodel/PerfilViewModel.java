@@ -167,11 +167,18 @@ public class PerfilViewModel extends AndroidViewModel {
         mensajeEvento.setValue(msg);
     }
 
-    // -------------------- ✅ NUEVO MÉTODO: validación + acceso a datos --------------------
+    // ✅ Nuevo método: decide cómo mostrar la clave en la UI
+    public String obtenerTextoSeguroClave(String clave) {
+        if (clave == null || clave.trim().isEmpty()) {
+            return "••••••••"; // placeholder visible cuando no hay clave
+        }
+        return clave;
+    }
+
+    // -------------------- ✅ Validación + acceso a datos --------------------
     public void guardarCambiosPerfil(String id, String documento, String nombre, String apellido,
                                      String email, String clave, String telefono, Context context) {
 
-        // 🔍 Validaciones
         if (nombre.isEmpty() || apellido.isEmpty() || email.isEmpty()) {
             emitirMensaje("⚠️ Todos los campos obligatorios deben estar completos");
             return;
@@ -183,7 +190,7 @@ public class PerfilViewModel extends AndroidViewModel {
 
         try {
             Propietario p = new Propietario();
-            p.setId(Integer.parseInt(id));
+            p.setId(Integer.parseInt(id)); // mantener ID interno (no editable, pero necesario)
             p.setDocumento(documento);
             p.setNombre(nombre);
             p.setApellido(apellido);
@@ -191,7 +198,6 @@ public class PerfilViewModel extends AndroidViewModel {
             p.setClave(clave);
             p.setTelefono(telefono);
 
-            // 🌐 Llamada a la API y guardado local
             actualizarPropietario(p);
             guardarPerfil(context);
             emitirMensaje("✅ Datos actualizados correctamente");
@@ -202,7 +208,6 @@ public class PerfilViewModel extends AndroidViewModel {
         }
     }
 
-    // -------------------- Guardar cambios en perfil --------------------
     public void guardarPerfil(Context context) {
         ApiService api = RetrofitClient.getInstance(context).create(ApiService.class);
         String token = sessionManager.obtenerToken();
@@ -219,27 +224,62 @@ public class PerfilViewModel extends AndroidViewModel {
 
         if (p.getTelefono() == null) p.setTelefono("");
 
-        api.actualizarPerfil("Bearer " + token, p).enqueue(new Callback<Propietario>() {
+        // 🔹 Usamos ResponseBody para manejar JSON genérico { token, propietario }
+        api.actualizarPerfil("Bearer " + token, p).enqueue(new Callback<ResponseBody>() {
             @Override
-            public void onResponse(@NonNull Call<Propietario> call, @NonNull Response<Propietario> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    Propietario actualizado = response.body();
-                    propietario.postValue(actualizado);
-                    avatarUrl.postValue(sessionManager.getAvatarFullUrl(actualizado.getAvatarUrl()));
-                    sessionManager.guardarPropietario(actualizado);
-                    eventoActualizarHeader.postValue(actualizado);
-                    emitirMensaje("✅ Perfil actualizado correctamente");
-                } else {
-                    emitirMensaje("❌ No se pudo actualizar (" + response.code() + ")");
+            public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
+                try {
+                    if (response.isSuccessful() && response.body() != null) {
+
+                        // 🔍 Parseamos manualmente la respuesta JSON
+                        String responseStr = response.body().string();
+                        JSONObject json = new JSONObject(responseStr);
+
+                        // 🔑 Si vino un nuevo token (por cambio de email), lo guardamos
+                        String nuevoToken = json.optString("token", "");
+                        if (!nuevoToken.isEmpty()) {
+                            sessionManager.saveToken(nuevoToken);
+                            Log.d("PerfilViewModel", "🔑 Nuevo token guardado tras cambio de email");
+                        }
+
+                        // 🧩 Extraemos el propietario actualizado
+                        JSONObject propJson = json.optJSONObject("propietario");
+                        if (propJson != null) {
+                            Propietario actualizado = new Propietario();
+                            actualizado.setId(propJson.optInt("id", 0));
+                            actualizado.setNombre(propJson.optString("nombre", ""));
+                            actualizado.setApellido(propJson.optString("apellido", ""));
+                            actualizado.setEmail(propJson.optString("email", ""));
+                            actualizado.setTelefono(propJson.optString("telefono", ""));
+                            actualizado.setAvatarUrl(propJson.optString("avatarUrl", ""));
+
+                            // 🔄 Actualizamos todo localmente
+                            propietario.postValue(actualizado);
+                            avatarUrl.postValue(sessionManager.getAvatarFullUrl(actualizado.getAvatarUrl()));
+                            sessionManager.guardarPropietario(actualizado);
+                            eventoActualizarHeader.postValue(actualizado);
+                            sessionManager.saveEmail(actualizado.getEmail());
+                        }
+
+                        emitirMensaje(json.optString("mensaje", "✅ Perfil actualizado correctamente"));
+
+                    } else {
+                        emitirMensaje("❌ No se pudo actualizar (" + response.code() + ")");
+                    }
+
+                } catch (Exception e) {
+                    emitirMensaje("⚠️ Error procesando respuesta: " + e.getMessage());
+                    Log.e("PerfilViewModel", "Error en guardarPerfil", e);
                 }
             }
 
             @Override
-            public void onFailure(@NonNull Call<Propietario> call, @NonNull Throwable t) {
+            public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
                 emitirMensaje("⚠️ Error de red: " + t.getMessage());
             }
         });
     }
+
 
     // -------------------- Procesar imagen y subir avatar --------------------
     public void procesarResultadoImagen(Uri uri, Context context) {

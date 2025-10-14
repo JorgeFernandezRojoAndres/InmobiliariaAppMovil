@@ -24,7 +24,6 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.jorge.inmobiliaria2025.MainActivity;
 import com.jorge.inmobiliaria2025.R;
 import com.jorge.inmobiliaria2025.data.SessionManager;
-import com.jorge.inmobiliaria2025.model.Propietario;
 import com.jorge.inmobiliaria2025.viewmodel.PerfilViewModel;
 
 public class PerfilFragment extends Fragment {
@@ -54,19 +53,21 @@ public class PerfilFragment extends Fragment {
         vm = new ViewModelProvider(this).get(PerfilViewModel.class);
         sm = new SessionManager(requireContext());
 
-        // Observadores
+        // 📧 Email
         vm.getEmail().observe(getViewLifecycleOwner(), tvEmail::setText);
 
+        // 👤 Datos del propietario (la lógica condicional la maneja el ViewModel)
         vm.getPropietario().observe(getViewLifecycleOwner(), propietario -> {
             etCodigo.setText(String.valueOf(propietario.getId()));
             etDocumento.setText(propietario.getDocumento());
             etNombre.setText(propietario.getNombre());
             etApellido.setText(propietario.getApellido());
             etEmail.setText(propietario.getEmail());
-            etPassword.setText(propietario.getClave());
+            etPassword.setText(vm.obtenerTextoSeguroClave(propietario.getClave()));
             etTelefono.setText(propietario.getTelefono());
         });
 
+        // 🖼️ Avatar reactivo
         vm.getAvatarUrl().observe(getViewLifecycleOwner(), url -> {
             String urlSinCache = (url == null || url.isEmpty()) ? null : url + "?t=" + System.currentTimeMillis();
             Glide.with(this)
@@ -78,12 +79,13 @@ public class PerfilFragment extends Fragment {
                     .into(ivAvatar);
         });
 
+        // 🚪 Eventos controlados desde ViewModel
         vm.getCerrarSesionEvento().observe(getViewLifecycleOwner(), cerrar -> manejarCierreSesion());
-        vm.getAbrirGaleriaEvento().observe(getViewLifecycleOwner(), abrir -> {
-            pickImageLauncher.launch(new PickVisualMediaRequest.Builder()
-                    .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
-                    .build());
-        });
+        vm.getAbrirGaleriaEvento().observe(getViewLifecycleOwner(), abrir ->
+                pickImageLauncher.launch(new PickVisualMediaRequest.Builder()
+                        .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
+                        .build())
+        );
 
         vm.getMensajeEvento().observe(getViewLifecycleOwner(),
                 msg -> Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show());
@@ -91,8 +93,13 @@ public class PerfilFragment extends Fragment {
         vm.getActivarEdicionEvento().observe(getViewLifecycleOwner(), u -> activarModoEdicion());
         vm.getGuardarCambiosEvento().observe(getViewLifecycleOwner(), u -> guardarCambios());
 
-        vm.getEventoActualizarHeader().observe(getViewLifecycleOwner(), propietario -> {
-            ((MainActivity) requireActivity()).actualizarHeaderUsuario(propietario, propietario.getEmail());
+        vm.getEventoActualizarHeader().observe(getViewLifecycleOwner(),
+                propietario -> ((MainActivity) requireActivity())
+                        .actualizarHeaderUsuario(propietario, propietario.getEmail()));
+
+        vm.getPermitirCambioAvatar().observe(getViewLifecycleOwner(), permitir -> {
+            ivAvatar.setEnabled(permitir);
+            ivAvatar.setAlpha(permitir ? 1f : 0.5f);
         });
 
         btnCerrar.setOnClickListener(v1 -> vm.cerrarSesion(requireContext()));
@@ -100,12 +107,10 @@ public class PerfilFragment extends Fragment {
         btnEditar.setOnClickListener(v1 -> vm.alternarModoEdicion());
         ivAvatar.setOnClickListener(v2 -> vm.onAvatarClick(modoEdicion));
 
-        vm.getPermitirCambioAvatar().observe(getViewLifecycleOwner(), permitir -> {
-            ivAvatar.setEnabled(permitir);
-            ivAvatar.setAlpha(permitir ? 1f : 0.5f);
-        });
-
         vm.cargarPerfilDesdeApi(requireContext());
+
+        // 🔒 Ocultar ID (presente internamente, pero no visible ni editable)
+        etCodigo.setVisibility(View.GONE);
 
         return v;
     }
@@ -141,7 +146,6 @@ public class PerfilFragment extends Fragment {
     }
 
     private void guardarCambios() {
-        // ⚡ Ahora solo delega al ViewModel toda la validación y el acceso a datos
         vm.guardarCambiosPerfil(
                 etCodigo.getText().toString(),
                 etDocumento.getText().toString(),
@@ -160,6 +164,7 @@ public class PerfilFragment extends Fragment {
     }
 
     private void setCamposEditable(boolean editable) {
+        etCodigo.setEnabled(false); // nunca editable
         etDocumento.setEnabled(editable);
         etNombre.setEnabled(editable);
         etApellido.setEnabled(editable);

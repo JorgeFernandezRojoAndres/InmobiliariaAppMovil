@@ -43,9 +43,10 @@ public interface ApiService {
     @GET("api/Propietarios/perfil")
     Call<Propietario> obtenerPerfil(@Header("Authorization") String token);
 
-    // ✅ Actualiza datos del propietario (nombre, teléfono, etc.)
+    // ✅ Actualiza datos del propietario
+    //    Ahora devuelve ResponseBody para poder leer { token, propietario }
     @PUT("api/Propietarios/perfil")
-    Call<Propietario> actualizarPerfil(
+    Call<ResponseBody> actualizarPerfil(
             @Header("Authorization") String token,
             @Body Propietario propietario
     );
