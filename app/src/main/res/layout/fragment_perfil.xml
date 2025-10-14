@@ -20,7 +20,6 @@
             android:layout_height="120dp"
             android:layout_marginBottom="20dp"
             android:src="@drawable/ic_person"
-
             android:contentDescription="Avatar del usuario"
             android:scaleType="centerCrop"
             android:background="@drawable/avatar_border"
@@ -37,7 +36,7 @@
             android:textColor="@color/black"
             android:layout_marginBottom="24dp" />
 
-        <!-- 🔹 Email (solo para mostrar el correo logueado, usado en el ViewModel actual) -->
+        <!-- 🔹 Email (solo para mostrar el correo logueado) -->
         <TextView
             android:id="@+id/tvEmail"
             android:layout_width="wrap_content"
@@ -100,17 +99,6 @@
             android:hint="E-mail"
             android:enabled="false"
             android:inputType="textEmailAddress"
-            android:textColor="@color/black"
-            android:layout_marginBottom="12dp" />
-
-        <!-- 🔹 Contraseña -->
-        <EditText
-            android:id="@+id/etPassword"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Contraseña"
-            android:enabled="false"
-            android:inputType="textPassword"
             android:textColor="@color/black"
             android:layout_marginBottom="12dp" />
 

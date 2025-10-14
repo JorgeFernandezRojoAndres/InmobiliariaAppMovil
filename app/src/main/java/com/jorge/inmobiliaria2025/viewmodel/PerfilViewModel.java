@@ -1,9 +1,13 @@
 package com.jorge.inmobiliaria2025.viewmodel;
-
+import com.jorge.inmobiliaria2025.model.CambioClaveDto;
 import android.app.Application;
 import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
@@ -360,4 +364,58 @@ public class PerfilViewModel extends AndroidViewModel {
             }
         });
     }
+    // -------------------- 🔐 Cambio de contraseña --------------------
+    public void cambiarClave(String claveActual, String nuevaClave, Context context) {
+        if (claveActual.isEmpty() || nuevaClave.isEmpty()) {
+            emitirMensaje("⚠️ Complete ambos campos");
+            return;
+        }
+
+        String token = sessionManager.obtenerToken();
+        if (token == null || token.isEmpty()) {
+            emitirMensaje("⚠️ Sesión expirada. Inicie sesión nuevamente.");
+            cerrarSesionEvento.setValue(Boolean.TRUE);
+            return;
+        }
+
+        ApiService api = RetrofitClient.getInstance(context).create(ApiService.class);
+
+        // ✅ Enviamos el DTO con las claves correctas (mayúscula inicial)
+        CambioClaveDto dto = new CambioClaveDto(claveActual, nuevaClave);
+
+        Call<ResponseBody> call = api.cambiarClave("Bearer " + token, dto);
+
+        call.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
+                try {
+                    if (response.isSuccessful() && response.body() != null) {
+                        String responseStr = response.body().string();
+                        JSONObject json = new JSONObject(responseStr);
+                        String mensaje = json.optString("mensaje", "✅ Contraseña actualizada correctamente");
+                        emitirMensaje(mensaje);
+                        Log.d("PerfilViewModel", "🔑 Cambio de clave exitoso");
+                    } else if (response.code() == 400) {
+                        emitirMensaje("⚠️ Contraseña actual incorrecta");
+                    } else if (response.code() == 401) {
+                        emitirMensaje("⚠️ Sesión expirada. Inicie sesión nuevamente.");
+                        cerrarSesionEvento.setValue(Boolean.TRUE);
+                    } else {
+                        emitirMensaje("❌ Error al cambiar la contraseña (" + response.code() + ")");
+                    }
+                } catch (Exception e) {
+                    emitirMensaje("⚠️ Error procesando respuesta: " + e.getMessage());
+                    Log.e("PerfilViewModel", "Error en cambiarClave", e);
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ResponseBody> call, @NonNull Throwable t) {
+                emitirMensaje("⚠️ Error de red: " + t.getMessage());
+                Log.e("PerfilViewModel", "Error de red cambiarClave", t);
+            }
+        });
+    }
+
+
 }

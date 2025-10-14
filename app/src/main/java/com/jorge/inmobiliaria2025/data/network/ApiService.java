@@ -7,6 +7,7 @@ import com.jorge.inmobiliaria2025.model.Pago;
 import com.jorge.inmobiliaria2025.model.LoginRequest;
 import com.jorge.inmobiliaria2025.model.TokenResponse;
 import com.jorge.inmobiliaria2025.model.Propietario;
+import com.jorge.inmobiliaria2025.model.CambioClaveDto; // ✅ agregado
 
 import java.util.List;
 
@@ -44,11 +45,17 @@ public interface ApiService {
     Call<Propietario> obtenerPerfil(@Header("Authorization") String token);
 
     // ✅ Actualiza datos del propietario
-    //    Ahora devuelve ResponseBody para poder leer { token, propietario }
     @PUT("api/Propietarios/perfil")
     Call<ResponseBody> actualizarPerfil(
             @Header("Authorization") String token,
             @Body Propietario propietario
+    );
+
+    // ✅ Cambiar contraseña usando DTO fuerte
+    @PUT("api/Propietarios/cambiar-clave")
+    Call<ResponseBody> cambiarClave(
+            @Header("Authorization") String token,
+            @Body CambioClaveDto dto
     );
 
 

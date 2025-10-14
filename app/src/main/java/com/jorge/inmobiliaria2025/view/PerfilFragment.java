@@ -16,6 +16,7 @@ import androidx.activity.result.PickVisualMediaRequest;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
@@ -29,7 +30,7 @@ import com.jorge.inmobiliaria2025.viewmodel.PerfilViewModel;
 public class PerfilFragment extends Fragment {
 
     private PerfilViewModel vm;
-    private EditText etCodigo, etDocumento, etNombre, etApellido, etEmail, etPassword, etTelefono;
+    private EditText etCodigo, etDocumento, etNombre, etApellido, etEmail, etTelefono;
     private Button btnEditar, btnCerrar, btnCambiarClave;
     private boolean modoEdicion = false;
     private ImageView ivAvatar;
@@ -56,14 +57,13 @@ public class PerfilFragment extends Fragment {
         // 📧 Email
         vm.getEmail().observe(getViewLifecycleOwner(), tvEmail::setText);
 
-        // 👤 Datos del propietario (la lógica condicional la maneja el ViewModel)
+        // 👤 Datos del propietario
         vm.getPropietario().observe(getViewLifecycleOwner(), propietario -> {
             etCodigo.setText(String.valueOf(propietario.getId()));
             etDocumento.setText(propietario.getDocumento());
             etNombre.setText(propietario.getNombre());
             etApellido.setText(propietario.getApellido());
             etEmail.setText(propietario.getEmail());
-            etPassword.setText(vm.obtenerTextoSeguroClave(propietario.getClave()));
             etTelefono.setText(propietario.getTelefono());
         });
 
@@ -103,7 +103,26 @@ public class PerfilFragment extends Fragment {
         });
 
         btnCerrar.setOnClickListener(v1 -> vm.cerrarSesion(requireContext()));
-        btnCambiarClave.setOnClickListener(v1 -> tvEmail.setText("🔒 Cambiar clave aún no implementado"));
+
+        // 🔐 NUEVO: Diálogo de cambio de contraseña
+        btnCambiarClave.setOnClickListener(v1 -> {
+            View dialogView = LayoutInflater.from(requireContext())
+                    .inflate(R.layout.dialog_cambiar_clave, null);
+            EditText etActual = dialogView.findViewById(R.id.etClaveActual);
+            EditText etNueva = dialogView.findViewById(R.id.etNuevaClave);
+
+            new AlertDialog.Builder(requireContext())
+                    .setTitle("Cambiar contraseña")
+                    .setView(dialogView)
+                    .setPositiveButton("Aceptar", (dialog, which) -> {
+                        String actual = etActual.getText().toString().trim();
+                        String nueva = etNueva.getText().toString().trim();
+                        vm.cambiarClave(actual, nueva, requireContext());
+                    })
+                    .setNegativeButton("Cancelar", (dialog, which) -> dialog.dismiss())
+                    .show();
+        });
+
         btnEditar.setOnClickListener(v1 -> vm.alternarModoEdicion());
         ivAvatar.setOnClickListener(v2 -> vm.onAvatarClick(modoEdicion));
 
@@ -121,7 +140,6 @@ public class PerfilFragment extends Fragment {
         etNombre = v.findViewById(R.id.etNombre);
         etApellido = v.findViewById(R.id.etApellido);
         etEmail = v.findViewById(R.id.etEmail);
-        etPassword = v.findViewById(R.id.etPassword);
         etTelefono = v.findViewById(R.id.etTelefono);
         ivAvatar = v.findViewById(R.id.ivAvatar);
         tvEmail = v.findViewById(R.id.tvEmail);
@@ -152,7 +170,7 @@ public class PerfilFragment extends Fragment {
                 etNombre.getText().toString(),
                 etApellido.getText().toString(),
                 etEmail.getText().toString(),
-                etPassword.getText().toString(),
+                "", // 🔹 contraseña eliminada del flujo
                 etTelefono.getText().toString(),
                 requireContext()
         );
@@ -169,7 +187,6 @@ public class PerfilFragment extends Fragment {
         etNombre.setEnabled(editable);
         etApellido.setEnabled(editable);
         etEmail.setEnabled(editable);
-        etPassword.setEnabled(editable);
         etTelefono.setEnabled(editable);
     }
 }
