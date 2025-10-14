@@ -60,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
 
         // ✅ Configuración del Drawer con NavController
         appBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.nav_ubicacion,     // 🗺️ Fragmento Ubicación
+                R.id.nav_ubicacion,
                 R.id.nav_perfil,
                 R.id.nav_inmuebles,
                 R.id.nav_contratos,
@@ -80,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
         Log.d("MAIN", "👤 Header actualizado con los datos del propietario.");
     }
 
-    // ✅ Método reutilizable para actualizar header después de login o cambio de avatar
+    // ✅ Actualiza el header del menú con nombre, email y avatar
     public void actualizarHeaderUsuario(Propietario propietario, String fallbackEmail) {
         if (navView == null) return;
 
@@ -95,24 +95,24 @@ public class MainActivity extends AppCompatActivity {
             tvNombre.setText(nombreCompleto.trim().isEmpty() ? "Mi Perfil" : nombreCompleto);
             tvEmail.setText(propietario.getEmail() != null ? propietario.getEmail() : fallbackEmail);
 
-            // 🖼️ Cargar imagen con URL completa
+            // 🖼️ Usar SessionManager para obtener la URL completa del avatar
             try {
-                if (propietario.getAvatarUrl() != null && !propietario.getAvatarUrl().isEmpty()) {
-                    String urlCompleta = "http://192.168.1.33:5027" + propietario.getAvatarUrl();
-                    Glide.with(this)
-                            .load(urlCompleta)
-                            .placeholder(R.drawable.ic_person)
-                            .circleCrop()
-                            .into(imgPerfil);
-                } else {
-                    imgPerfil.setImageResource(R.drawable.ic_person);
-                }
+                SessionManager sm = new SessionManager(this);
+                String urlCompleta = sm.getAvatarFullUrl(propietario.getAvatarUrl());
+
+                Glide.with(this)
+                        .load((urlCompleta != null && !urlCompleta.isEmpty()) ? urlCompleta : R.drawable.ic_person)
+                        .placeholder(R.drawable.ic_person)
+                        .error(R.drawable.ic_person)
+                        .circleCrop()
+                        .into(imgPerfil);
+
+                Log.d("MAIN", "🖼️ Avatar cargado desde: " + urlCompleta);
             } catch (Exception e) {
                 Log.e("MAIN", "⚠️ Error cargando avatar: " + e.getMessage());
                 imgPerfil.setImageResource(R.drawable.ic_person);
             }
         } else {
-            // Fallback: solo email disponible
             tvNombre.setText("Propietario");
             tvEmail.setText(fallbackEmail);
             imgPerfil.setImageResource(R.drawable.ic_person);

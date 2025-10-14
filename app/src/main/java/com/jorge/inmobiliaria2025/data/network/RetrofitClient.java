@@ -23,12 +23,14 @@ import retrofit2.converter.gson.GsonConverterFactory;
  *  - Autenticación JWT (header Authorization)
  *  - Logging detallado en Logcat
  *  - Compatibilidad con multipart (subida de imágenes)
- *  - Base URL adaptable (emulador / dispositivo físico)
- *  - Endpoint ajustado a /api/PropietariosApi/*
+ *  - Base URL fija a la IP del backend local
  */
 public class RetrofitClient {
 
     private static volatile Retrofit retrofit = null; // 🧱 thread-safe singleton
+
+    // 🛠️ FIX: quitar /api/ del final para evitar el doble "api/api"
+    private static final String BASE_URL = "http://192.168.1.34:5027/"; // 📡 IP fija de la PC
 
     public static Retrofit getInstance(Context context) {
         if (retrofit == null) {
@@ -48,7 +50,6 @@ public class RetrofitClient {
                         String token = session.obtenerToken();
                         Request.Builder builder = original.newBuilder();
 
-                        // ⚙️ Evitar sobrescribir content-type cuando es multipart
                         if (original.header("Content-Type") == null) {
                             builder.header("Content-Type", "application/json");
                         }
@@ -82,35 +83,16 @@ public class RetrofitClient {
                             .retryOnConnectionFailure(true)
                             .build();
 
-                    // 🌐 Base URL dinámica
-                    String BASE_URL;
-                    if (isRunningOnEmulator()) {
-                        BASE_URL = "http://10.0.2.2:5027/api/"; // 💻 Emulador
-                        Log.i("Retrofit", "🧩 Emulador → usando 10.0.2.2");
-                    } else {
-                        BASE_URL = "http://192.168.1.33:5027/api/"; // 📱 Dispositivo físico
-                        Log.i("Retrofit", "📶 Dispositivo → usando IP local");
-                    }
-
                     retrofit = new Retrofit.Builder()
                             .baseUrl(BASE_URL)
                             .client(client)
                             .addConverterFactory(GsonConverterFactory.create())
                             .build();
 
-                    Log.i("Retrofit", "✅ Retrofit inicializado con URL base: " + BASE_URL);
+                    Log.i("Retrofit", "✅ Retrofit inicializado con URL base fija: " + BASE_URL);
                 }
             }
         }
         return retrofit;
-    }
-
-    // 🔎 Detecta si se ejecuta en un emulador Android
-    private static boolean isRunningOnEmulator() {
-        return android.os.Build.FINGERPRINT.startsWith("generic")
-                || android.os.Build.FINGERPRINT.startsWith("unknown")
-                || android.os.Build.MODEL.contains("google_sdk")
-                || android.os.Build.MODEL.contains("Emulator")
-                || android.os.Build.MODEL.contains("Android SDK built for x86");
     }
 }

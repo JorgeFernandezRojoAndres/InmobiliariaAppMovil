@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.jorge.inmobiliaria2025">
 
-    <!-- 🌍 Permisos de ubicación -->
+    <!-- 🌍 Permisos de red y ubicación -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -18,8 +18,9 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:networkSecurityConfig="@xml/network_security_config"
-        android:theme="@style/Theme.Inmobiliaria_2025">
+        android:theme="@style/Theme.Inmobiliaria_2025"
+        android:usesCleartextTraffic="true"
+        android:networkSecurityConfig="@xml/network_security_config"> 
 
         <!-- 🗺️ Clave de Google Maps -->
         <meta-data

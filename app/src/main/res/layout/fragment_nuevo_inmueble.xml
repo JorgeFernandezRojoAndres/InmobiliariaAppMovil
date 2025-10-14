@@ -35,8 +35,8 @@
             android:layout_height="wrap_content"
             android:hint="@string/hint_direccion"
             app:boxBackgroundMode="outline"
-            app:boxStrokeColor="?attr/colorPrimary"
-            app:hintTextColor="@color/purple_700"
+            app:boxStrokeColor="@color/purple_700"
+            app:hintTextColor="@color/teal_200"
             android:layout_marginBottom="12dp">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -55,8 +55,8 @@
             android:layout_height="wrap_content"
             android:hint="@string/hint_precio"
             app:boxBackgroundMode="outline"
-            app:boxStrokeColor="?attr/colorPrimary"
-            app:hintTextColor="@color/purple_700"
+            app:boxStrokeColor="@color/purple_700"
+            app:hintTextColor="@color/teal_200"
             android:layout_marginBottom="16dp">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -97,7 +97,7 @@
             app:iconGravity="textStart"
             app:iconPadding="10dp"
             app:elevation="6dp"
-            app:backgroundTint="?attr/colorPrimary"
+            app:backgroundTint="@color/colorSecondary"
             android:textColor="@android:color/white"
             android:layout_marginTop="10dp"
             android:layout_marginBottom="20dp" />

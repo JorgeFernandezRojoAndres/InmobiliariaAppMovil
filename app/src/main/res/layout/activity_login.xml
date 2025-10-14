@@ -5,7 +5,7 @@
     android:orientation="vertical"
     android:gravity="center"
     android:padding="24dp"
-    android:background="#F9F9F9">
+    android:background="#DD9D9595">
 
     <EditText
         android:id="@+id/etEmail"
@@ -28,7 +28,7 @@
         android:text="Iniciar Sesión"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:backgroundTint="@color/purple_500"
+        android:backgroundTint="@color/teal_700"
         android:textColor="@android:color/white" />
 
 </LinearLayout>

@@ -38,13 +38,10 @@ public class PerfilViewModel extends AndroidViewModel {
     private final MutableLiveData<Boolean> abrirGaleriaEvento = new MutableLiveData<>();
     private final MutableLiveData<Boolean> modoEdicion = new MutableLiveData<>(false);
     private final MutableLiveData<String> mensajeEvento = new MutableLiveData<>();
-
-    // 🆕 Evento para notificar a la Activity que actualice el header
     private final MutableLiveData<Propietario> eventoActualizarHeader = new MutableLiveData<>();
-
-    // 🆕 Nuevos eventos sin if
     private final MutableLiveData<Void> activarEdicionEvento = new MutableLiveData<>();
     private final MutableLiveData<Void> guardarCambiosEvento = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> permitirCambioAvatar = new MutableLiveData<>(false);
 
     private final SessionManager sessionManager;
 
@@ -52,10 +49,9 @@ public class PerfilViewModel extends AndroidViewModel {
         super(app);
         sessionManager = new SessionManager(app);
         cargarEmail();
-        cargarPropietario();
+        cargarPerfilDesdeApi(app);
     }
 
-    // -------------------- LiveData públicos --------------------
     public LiveData<String> getEmail() { return email; }
     public LiveData<Boolean> getCerrarSesionEvento() { return cerrarSesionEvento; }
     public LiveData<Propietario> getPropietario() { return propietario; }
@@ -66,8 +62,7 @@ public class PerfilViewModel extends AndroidViewModel {
     public LiveData<Propietario> getEventoActualizarHeader() { return eventoActualizarHeader; }
     public LiveData<Void> getActivarEdicionEvento() { return activarEdicionEvento; }
     public LiveData<Void> getGuardarCambiosEvento() { return guardarCambiosEvento; }
-
-    // -------------------- Lógica principal --------------------
+    public LiveData<Boolean> getPermitirCambioAvatar() { return permitirCambioAvatar; }
 
     public void cargarEmail() {
         String guardado = InmobiliariaApp.getInstance().obtenerEmail();
@@ -81,6 +76,46 @@ public class PerfilViewModel extends AndroidViewModel {
         cerrarSesionEvento.setValue(Boolean.TRUE);
     }
 
+    public void cargarPerfilDesdeApi(Context context) {
+        ApiService api = RetrofitClient.getInstance(context).create(ApiService.class);
+        String token = sessionManager.obtenerToken();
+        if (token == null || token.isEmpty()) {
+            Log.w("PerfilViewModel", "⚠️ Token no disponible. Cargando perfil local.");
+            cargarPropietario();
+            return;
+        }
+
+        Call<Propietario> call = api.obtenerPerfil("Bearer " + token);
+        call.enqueue(new Callback<Propietario>() {
+            @Override
+            public void onResponse(@NonNull Call<Propietario> call, @NonNull Response<Propietario> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    Propietario p = response.body();
+                    propietario.setValue(p);
+                    avatarUrl.setValue(sessionManager.getAvatarFullUrl(p.getAvatarUrl()));
+                    sessionManager.guardarPropietario(p);
+                    email.setValue(p.getEmail());
+                    eventoActualizarHeader.setValue(p);
+                    Log.d("PerfilViewModel", "✅ Perfil sincronizado con éxito");
+                } else if (response.code() == 401) {
+                    emitirMensaje("⚠️ Sesión expirada. Inicie sesión nuevamente.");
+                    sessionManager.logout();
+                    cerrarSesionEvento.setValue(Boolean.TRUE);
+                } else {
+                    Log.w("PerfilViewModel", "❌ Fallo al obtener perfil: " + response.code());
+                    cargarPropietario();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<Propietario> call, @NonNull Throwable t) {
+                Log.e("PerfilViewModel", "🌐 Error de red al obtener perfil: " + t.getMessage());
+                emitirMensaje("⚠️ Error de conexión al cargar el perfil");
+                cargarPropietario();
+            }
+        });
+    }
+
     public void cargarPropietario() {
         Propietario p = sessionManager.obtenerPropietarioActual();
         if (p == null) {
@@ -88,21 +123,17 @@ public class PerfilViewModel extends AndroidViewModel {
             avatarUrl.setValue("");
         } else {
             propietario.setValue(p);
-            avatarUrl.setValue(sessionManager.getAvatarFullUrl());
+            avatarUrl.setValue(sessionManager.getAvatarFullUrl(p.getAvatarUrl()));
         }
     }
 
-    // 🧩 Centraliza la actualización del propietario y emite evento para el header
     public void actualizarPropietario(Propietario p) {
         try {
             sessionManager.guardarPropietario(p);
             propietario.setValue(p);
             email.setValue(p.getEmail());
-            avatarUrl.setValue(sessionManager.getAvatarFullUrl());
-
-            // 🔔 Notificar actualización del header en la Activity
+            avatarUrl.setValue(sessionManager.getAvatarFullUrl(p.getAvatarUrl()));
             eventoActualizarHeader.setValue(p);
-
             emitirMensaje("✅ Datos actualizados correctamente");
         } catch (Exception e) {
             emitirMensaje("⚠️ No se pudieron guardar los cambios");
@@ -110,36 +141,107 @@ public class PerfilViewModel extends AndroidViewModel {
         }
     }
 
-    // -------------------- Modo edición --------------------
-
     public void alternarModoEdicion() {
         boolean nuevoEstado = !Boolean.TRUE.equals(modoEdicion.getValue());
         modoEdicion.setValue(nuevoEstado);
-
-        // 🔁 En lugar de if/else en el Fragment, emitimos eventos separados
-        if (nuevoEstado) {
-            activarEdicionEvento.setValue(null);
-        } else {
-            guardarCambiosEvento.setValue(null);
-        }
+        permitirCambioAvatar.setValue(nuevoEstado);
+        if (nuevoEstado) activarEdicionEvento.setValue(null);
+        else guardarCambiosEvento.setValue(null);
     }
 
     public void setModoEdicion(boolean activo) {
         modoEdicion.setValue(activo);
+        permitirCambioAvatar.setValue(activo);
     }
 
-    // -------------------- Avatar --------------------
-
     public void onAvatarClick(boolean estaEnModoEdicion) {
-        abrirGaleriaEvento.setValue(estaEnModoEdicion);
+        if (estaEnModoEdicion) abrirGaleriaEvento.setValue(true);
+        else emitirMensaje("Toca 'Editar' para poder cambiar la foto de perfil");
+    }
+
+    public void setPermitirCambioAvatar(boolean permitir) {
+        permitirCambioAvatar.setValue(permitir);
     }
 
     public void emitirMensaje(String msg) {
         mensajeEvento.setValue(msg);
     }
 
-    // -------------------- Procesar resultado del selector --------------------
+    // -------------------- ✅ NUEVO MÉTODO: validación + acceso a datos --------------------
+    public void guardarCambiosPerfil(String id, String documento, String nombre, String apellido,
+                                     String email, String clave, String telefono, Context context) {
 
+        // 🔍 Validaciones
+        if (nombre.isEmpty() || apellido.isEmpty() || email.isEmpty()) {
+            emitirMensaje("⚠️ Todos los campos obligatorios deben estar completos");
+            return;
+        }
+        if (!email.contains("@")) {
+            emitirMensaje("⚠️ Ingrese un email válido");
+            return;
+        }
+
+        try {
+            Propietario p = new Propietario();
+            p.setId(Integer.parseInt(id));
+            p.setDocumento(documento);
+            p.setNombre(nombre);
+            p.setApellido(apellido);
+            p.setEmail(email);
+            p.setClave(clave);
+            p.setTelefono(telefono);
+
+            // 🌐 Llamada a la API y guardado local
+            actualizarPropietario(p);
+            guardarPerfil(context);
+            emitirMensaje("✅ Datos actualizados correctamente");
+
+        } catch (Exception e) {
+            emitirMensaje("❌ Error al guardar los cambios: " + e.getMessage());
+            Log.e("PerfilViewModel", "Error guardarCambiosPerfil", e);
+        }
+    }
+
+    // -------------------- Guardar cambios en perfil --------------------
+    public void guardarPerfil(Context context) {
+        ApiService api = RetrofitClient.getInstance(context).create(ApiService.class);
+        String token = sessionManager.obtenerToken();
+        if (token == null || token.isEmpty()) {
+            emitirMensaje("⚠️ Sesión expirada. Inicie sesión nuevamente.");
+            return;
+        }
+
+        Propietario p = propietario.getValue();
+        if (p == null) {
+            emitirMensaje("❌ No hay datos de perfil para guardar.");
+            return;
+        }
+
+        if (p.getTelefono() == null) p.setTelefono("");
+
+        api.actualizarPerfil("Bearer " + token, p).enqueue(new Callback<Propietario>() {
+            @Override
+            public void onResponse(@NonNull Call<Propietario> call, @NonNull Response<Propietario> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    Propietario actualizado = response.body();
+                    propietario.postValue(actualizado);
+                    avatarUrl.postValue(sessionManager.getAvatarFullUrl(actualizado.getAvatarUrl()));
+                    sessionManager.guardarPropietario(actualizado);
+                    eventoActualizarHeader.postValue(actualizado);
+                    emitirMensaje("✅ Perfil actualizado correctamente");
+                } else {
+                    emitirMensaje("❌ No se pudo actualizar (" + response.code() + ")");
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<Propietario> call, @NonNull Throwable t) {
+                emitirMensaje("⚠️ Error de red: " + t.getMessage());
+            }
+        });
+    }
+
+    // -------------------- Procesar imagen y subir avatar --------------------
     public void procesarResultadoImagen(Uri uri, Context context) {
         if (uri == null) {
             emitirMensaje("⚠️ No se seleccionó ninguna imagen");
@@ -147,8 +249,6 @@ public class PerfilViewModel extends AndroidViewModel {
         }
         subirAvatar(uri, context);
     }
-
-    // -------------------- Subir Avatar --------------------
 
     public void subirAvatar(@NonNull Uri imageUri, @NonNull Context context) {
         try (InputStream inputStream = context.getContentResolver().openInputStream(imageUri);
@@ -174,7 +274,13 @@ public class PerfilViewModel extends AndroidViewModel {
         MultipartBody.Part body = MultipartBody.Part.createFormData("archivo", "avatar.jpg", requestFile);
 
         ApiService api = RetrofitClient.getInstance(context).create(ApiService.class);
-        Call<ResponseBody> call = api.subirAvatar(body);
+        String token = sessionManager.obtenerToken();
+        if (token == null || token.isEmpty()) {
+            emitirMensaje("⚠️ Sesión expirada. Inicie sesión nuevamente.");
+            return;
+        }
+
+        Call<ResponseBody> call = api.subirAvatar("Bearer " + token, body);
 
         call.enqueue(new Callback<ResponseBody>() {
             @Override
@@ -195,14 +301,10 @@ public class PerfilViewModel extends AndroidViewModel {
                     }
 
                     sessionManager.actualizarAvatarDesdeServidor(newUrl);
-                    avatarUrl.setValue(newUrl);
-                    cargarPropietario();
+                    avatarUrl.postValue(sessionManager.getAvatarFullUrl(newUrl));
 
-                    // 🔔 También avisar actualización de header tras cambio de avatar
                     Propietario actualizado = sessionManager.obtenerPropietarioActual();
-                    if (actualizado != null) {
-                        eventoActualizarHeader.setValue(actualizado);
-                    }
+                    if (actualizado != null) eventoActualizarHeader.postValue(actualizado);
 
                     emitirMensaje("✅ Avatar actualizado correctamente");
 

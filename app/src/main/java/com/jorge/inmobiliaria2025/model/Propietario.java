@@ -10,38 +10,37 @@ import java.io.Serializable;
  */
 public class Propietario implements Serializable {
 
-    @SerializedName("Id")
+    @SerializedName(value = "id", alternate = {"Id"})
     private int id;
 
-    @SerializedName(value = "Documento", alternate = {"dni"})
-    private String dni;
+    @SerializedName(value = "documento", alternate = {"Documento", "dni"})
+    private String documento;
 
-    @SerializedName("Nombre")
+    @SerializedName(value = "nombre", alternate = {"Nombre"})
     private String nombre;
 
-    @SerializedName("Apellido")
+    @SerializedName(value = "apellido", alternate = {"Apellido"})
     private String apellido;
 
-    @SerializedName("Email")
+    @SerializedName(value = "email", alternate = {"Email"})
     private String email;
 
-    @SerializedName(value = "Clave", alternate = {"password"})
+    @SerializedName(value = "clave", alternate = {"Clave", "password"})
     private String clave;
 
-    // ⚙️ Corregido: única definición de teléfono, evita duplicación
-    @SerializedName(value = "Telefono", alternate = {"telefono"})
+    @SerializedName(value = "telefono", alternate = {"Telefono"})
     private String telefono;
 
-    @SerializedName(value = "AvatarUrl", alternate = {"avatarUrl"})
+    @SerializedName(value = "avatarUrl", alternate = {"AvatarUrl"})
     private String avatarUrl;
 
     // 🔹 Constructores
     public Propietario() {}
 
-    public Propietario(int id, String dni, String nombre, String apellido,
+    public Propietario(int id, String documento, String nombre, String apellido,
                        String email, String clave, String telefono) {
         this.id = id;
-        this.dni = dni;
+        this.documento = documento;
         this.nombre = nombre;
         this.apellido = apellido;
         this.email = email;
@@ -50,9 +49,9 @@ public class Propietario implements Serializable {
     }
 
     // 🧩 Constructor extendido con avatar
-    public Propietario(int id, String dni, String nombre, String apellido,
+    public Propietario(int id, String documento, String nombre, String apellido,
                        String email, String clave, String telefono, String avatarUrl) {
-        this(id, dni, nombre, apellido, email, clave, telefono);
+        this(id, documento, nombre, apellido, email, clave, telefono);
         this.avatarUrl = avatarUrl;
     }
 
@@ -60,8 +59,8 @@ public class Propietario implements Serializable {
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
 
-    public String getDni() { return dni; }
-    public void setDni(String dni) { this.dni = dni; }
+    public String getDocumento() { return documento; }
+    public void setDocumento(String documento) { this.documento = documento; }
 
     public String getNombre() { return nombre; }
     public void setNombre(String nombre) { this.nombre = nombre; }

@@ -1,7 +1,6 @@
 package com.jorge.inmobiliaria2025.view;
 
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -31,13 +30,12 @@ import com.jorge.inmobiliaria2025.viewmodel.PerfilViewModel;
 public class PerfilFragment extends Fragment {
 
     private PerfilViewModel vm;
-    private EditText etCodigo, etDni, etNombre, etApellido, etEmail, etPassword, etTelefono;
+    private EditText etCodigo, etDocumento, etNombre, etApellido, etEmail, etPassword, etTelefono;
     private Button btnEditar, btnCerrar, btnCambiarClave;
     private boolean modoEdicion = false;
     private ImageView ivAvatar;
     private SessionManager sm;
     private TextView tvEmail;
-    private Uri imageUri;
 
     private final ActivityResultLauncher<PickVisualMediaRequest> pickImageLauncher =
             registerForActivityResult(
@@ -56,13 +54,12 @@ public class PerfilFragment extends Fragment {
         vm = new ViewModelProvider(this).get(PerfilViewModel.class);
         sm = new SessionManager(requireContext());
 
-        // 📧 Email visible
+        // Observadores
         vm.getEmail().observe(getViewLifecycleOwner(), tvEmail::setText);
 
-        // 👤 Datos del propietario
         vm.getPropietario().observe(getViewLifecycleOwner(), propietario -> {
             etCodigo.setText(String.valueOf(propietario.getId()));
-            etDni.setText(propietario.getDni());
+            etDocumento.setText(propietario.getDocumento());
             etNombre.setText(propietario.getNombre());
             etApellido.setText(propietario.getApellido());
             etEmail.setText(propietario.getEmail());
@@ -70,7 +67,6 @@ public class PerfilFragment extends Fragment {
             etTelefono.setText(propietario.getTelefono());
         });
 
-        // 🖼️ Avatar reactivo
         vm.getAvatarUrl().observe(getViewLifecycleOwner(), url -> {
             String urlSinCache = (url == null || url.isEmpty()) ? null : url + "?t=" + System.currentTimeMillis();
             Glide.with(this)
@@ -82,43 +78,41 @@ public class PerfilFragment extends Fragment {
                     .into(ivAvatar);
         });
 
-        // 🚪 Cerrar sesión
         vm.getCerrarSesionEvento().observe(getViewLifecycleOwner(), cerrar -> manejarCierreSesion());
+        vm.getAbrirGaleriaEvento().observe(getViewLifecycleOwner(), abrir -> {
+            pickImageLauncher.launch(new PickVisualMediaRequest.Builder()
+                    .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
+                    .build());
+        });
 
-        // 📸 Evento abrir galería
-        vm.getAbrirGaleriaEvento().observe(getViewLifecycleOwner(), abrir ->
-                pickImageLauncher.launch(new PickVisualMediaRequest.Builder()
-                        .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
-                        .build())
-        );
-
-        // 💬 Mensajes del ViewModel
         vm.getMensajeEvento().observe(getViewLifecycleOwner(),
                 msg -> Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show());
 
         vm.getActivarEdicionEvento().observe(getViewLifecycleOwner(), u -> activarModoEdicion());
         vm.getGuardarCambiosEvento().observe(getViewLifecycleOwner(), u -> guardarCambios());
 
-
-        // 🧭 Evento para actualizar header (sustituye el if final)
-        vm.getEventoActualizarHeader().observe(getViewLifecycleOwner(), propietario ->
-                ((MainActivity) requireActivity()).actualizarHeaderUsuario(propietario, propietario.getEmail())
-        );
+        vm.getEventoActualizarHeader().observe(getViewLifecycleOwner(), propietario -> {
+            ((MainActivity) requireActivity()).actualizarHeaderUsuario(propietario, propietario.getEmail());
+        });
 
         btnCerrar.setOnClickListener(v1 -> vm.cerrarSesion(requireContext()));
         btnCambiarClave.setOnClickListener(v1 -> tvEmail.setText("🔒 Cambiar clave aún no implementado"));
         btnEditar.setOnClickListener(v1 -> vm.alternarModoEdicion());
         ivAvatar.setOnClickListener(v2 -> vm.onAvatarClick(modoEdicion));
 
-        vm.cargarPropietario();
+        vm.getPermitirCambioAvatar().observe(getViewLifecycleOwner(), permitir -> {
+            ivAvatar.setEnabled(permitir);
+            ivAvatar.setAlpha(permitir ? 1f : 0.5f);
+        });
+
+        vm.cargarPerfilDesdeApi(requireContext());
+
         return v;
     }
 
-    // ------------------ MÉTODOS PRIVADOS ------------------
-
     private void inicializarVistas(View v) {
         etCodigo = v.findViewById(R.id.etCodigo);
-        etDni = v.findViewById(R.id.etDni);
+        etDocumento = v.findViewById(R.id.etDni);
         etNombre = v.findViewById(R.id.etNombre);
         etApellido = v.findViewById(R.id.etApellido);
         etEmail = v.findViewById(R.id.etEmail);
@@ -143,27 +137,30 @@ public class PerfilFragment extends Fragment {
         btnEditar.setText("GUARDAR");
         modoEdicion = true;
         vm.emitirMensaje("✏️ Modo edición activado");
+        vm.setPermitirCambioAvatar(true);
     }
 
     private void guardarCambios() {
-        Propietario p = new Propietario();
-        p.setId(Integer.parseInt(etCodigo.getText().toString()));
-        p.setDni(etDni.getText().toString());
-        p.setNombre(etNombre.getText().toString());
-        p.setApellido(etApellido.getText().toString());
-        p.setEmail(etEmail.getText().toString());
-        p.setClave(etPassword.getText().toString());
-        p.setTelefono(etTelefono.getText().toString());
+        // ⚡ Ahora solo delega al ViewModel toda la validación y el acceso a datos
+        vm.guardarCambiosPerfil(
+                etCodigo.getText().toString(),
+                etDocumento.getText().toString(),
+                etNombre.getText().toString(),
+                etApellido.getText().toString(),
+                etEmail.getText().toString(),
+                etPassword.getText().toString(),
+                etTelefono.getText().toString(),
+                requireContext()
+        );
 
-        vm.actualizarPropietario(p);
         setCamposEditable(false);
         btnEditar.setText("EDITAR");
         modoEdicion = false;
-        tvEmail.setText("✅ Datos actualizados correctamente");
+        vm.setPermitirCambioAvatar(false);
     }
 
     private void setCamposEditable(boolean editable) {
-        etDni.setEnabled(editable);
+        etDocumento.setEnabled(editable);
         etNombre.setEnabled(editable);
         etApellido.setEnabled(editable);
         etEmail.setEnabled(editable);

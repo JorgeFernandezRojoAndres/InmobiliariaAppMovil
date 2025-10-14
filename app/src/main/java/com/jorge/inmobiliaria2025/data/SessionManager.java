@@ -23,7 +23,7 @@ public class SessionManager {
     private final Gson gson = new Gson();
 
     // 🌐 IP base (modificable según red)
-    private static final String BASE_URL = "http://192.168.1.33:5027";
+    private static final String BASE_URL = "http://192.168.1.34:5027/";
 
     public SessionManager(Context context) {
         prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
@@ -81,7 +81,7 @@ public class SessionManager {
                 .remove(KEY_TOKEN)
                 .remove(KEY_EMAIL)
                 .remove(KEY_PROPIETARIO)
-                .remove(KEY_AVATAR) // 🆕 limpiar URL del avatar también
+                .remove(KEY_AVATAR)
                 .apply();
 
         InmobiliariaApp app = InmobiliariaApp.getInstance();
@@ -98,7 +98,7 @@ public class SessionManager {
             String json = gson.toJson(propietario);
             prefs.edit().putString(KEY_PROPIETARIO, json).apply();
             if (propietario.getAvatarUrl() != null) {
-                prefs.edit().putString(KEY_AVATAR, propietario.getAvatarUrl()).apply(); // 🆕 sincronizar campo separado
+                prefs.edit().putString(KEY_AVATAR, propietario.getAvatarUrl()).apply();
             }
             Log.d("SessionManager", "👤 Propietario guardado: " + propietario.getNombreCompleto());
         } catch (Exception e) {
@@ -106,14 +106,13 @@ public class SessionManager {
         }
     }
 
-    // 🧩 Obtener el propietario actual (seguro y tolerante a null)
+    // 🧩 Obtener el propietario actual
     public Propietario obtenerPropietarioActual() {
         String json = prefs.getString(KEY_PROPIETARIO, null);
         try {
             if (json != null && !json.trim().isEmpty()) {
                 Propietario propietario = gson.fromJson(json, Propietario.class);
                 if (propietario != null) {
-                    // 🆕 Asegura que el avatar se lea también desde la clave directa
                     String avatarExtra = prefs.getString(KEY_AVATAR, null);
                     if (avatarExtra != null && (propietario.getAvatarUrl() == null || propietario.getAvatarUrl().isEmpty())) {
                         propietario.setAvatarUrl(avatarExtra);
@@ -130,7 +129,6 @@ public class SessionManager {
             Log.e("SessionManager", "⚠️ Error al leer propietario: " + e.getMessage());
         }
 
-        // 🔒 Retorna objeto vacío (nunca null)
         Propietario empty = new Propietario();
         empty.setNombre("Sin nombre");
         empty.setApellido("");
@@ -139,7 +137,7 @@ public class SessionManager {
         return empty;
     }
 
-    // 🖼️ Guardar solo avatar del propietario (y sincronizar clave directa)
+    // 🖼️ Guardar solo avatar
     public void guardarAvatar(String avatarUrl) {
         if (avatarUrl == null || avatarUrl.isEmpty()) return;
 
@@ -149,11 +147,10 @@ public class SessionManager {
             guardarPropietario(propietario);
         }
 
-        prefs.edit().putString(KEY_AVATAR, avatarUrl).apply(); // ✅ persistente inmediato
+        prefs.edit().putString(KEY_AVATAR, avatarUrl).apply();
         Log.d("SessionManager", "🖼️ Avatar actualizado: " + avatarUrl);
     }
 
-    // 🖼️ Obtener solo la URL relativa del avatar guardado
     public String obtenerAvatar() {
         String avatar = prefs.getString(KEY_AVATAR, null);
         if (avatar == null || avatar.isEmpty()) {
@@ -163,7 +160,6 @@ public class SessionManager {
         return avatar;
     }
 
-    // 💾 Guardar login completo
     public void guardarSesionCompleta(String token, Propietario propietario) {
         if (token != null && !token.trim().isEmpty()) {
             saveToken(token);
@@ -175,7 +171,6 @@ public class SessionManager {
         Log.i("SessionManager", "✅ Sesión completa guardada correctamente.");
     }
 
-    // 🆕 Sincronizar avatar desde servidor tras actualización
     public void actualizarAvatarDesdeServidor(String nuevaUrl) {
         if (nuevaUrl == null || nuevaUrl.isEmpty()) {
             Log.w("SessionManager", "⚠️ No se recibió URL válida para avatar");
@@ -185,17 +180,21 @@ public class SessionManager {
         Log.i("SessionManager", "🌐 Avatar sincronizado con backend: " + nuevaUrl);
     }
 
-    // 🆕 Obtener URL completa del avatar (útil para Glide)
+    // 🆕 Obtener URL completa del avatar (corrigido para evitar duplicado de base)
     public String getAvatarFullUrl() {
         String avatar = obtenerAvatar();
-        if (avatar == null || avatar.isEmpty()) {
-            return null;
-        }
-        if (avatar.startsWith("http")) return avatar; // ya es absoluta
-        return BASE_URL + avatar;
+        if (avatar == null || avatar.isEmpty()) return null;
+        if (avatar.startsWith("http")) return avatar; // ya viene completa
+        return BASE_URL + (avatar.startsWith("/") ? avatar : "/" + avatar);
     }
 
-    // 🧩 Alias de compatibilidad para fragmentos antiguos
+    // ✅ Sobrecarga corregida compatible con PerfilViewModel
+    public String getAvatarFullUrl(String relativeUrl) {
+        if (relativeUrl == null || relativeUrl.isEmpty()) return "";
+        if (relativeUrl.startsWith("http")) return relativeUrl;
+        return BASE_URL + (relativeUrl.startsWith("/") ? relativeUrl : "/" + relativeUrl);
+    }
+
     public Propietario getPropietario() {
         return obtenerPropietarioActual();
     }

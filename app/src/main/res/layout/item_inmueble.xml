@@ -49,7 +49,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/precio_default"
-                android:textColor="@color/purple_500"
+                android:textColor="@color/teal_700"
                 android:textSize="15sp"
                 android:textStyle="bold"
                 android:layout_marginTop="4dp"

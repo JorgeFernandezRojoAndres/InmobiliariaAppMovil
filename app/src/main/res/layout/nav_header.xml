@@ -5,7 +5,7 @@
     android:orientation="vertical"
     android:padding="16dp"
     android:gravity="bottom"
-    android:background="?attr/colorPrimary">
+    android:background="@color/teal_700">
 
     <!-- 🏠 Logo o ícono del usuario -->
     <ImageView
