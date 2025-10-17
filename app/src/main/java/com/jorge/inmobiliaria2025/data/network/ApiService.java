@@ -7,7 +7,7 @@ import com.jorge.inmobiliaria2025.model.Pago;
 import com.jorge.inmobiliaria2025.model.LoginRequest;
 import com.jorge.inmobiliaria2025.model.TokenResponse;
 import com.jorge.inmobiliaria2025.model.Propietario;
-import com.jorge.inmobiliaria2025.model.CambioClaveDto; // ✅ agregado
+import com.jorge.inmobiliaria2025.model.CambioClaveDto;
 
 import java.util.List;
 
@@ -32,7 +32,6 @@ public interface ApiService {
 
     // -------------------- PERFIL / AVATAR --------------------
 
-    // ✅ Sube avatar con header Authorization
     @Multipart
     @POST("api/Propietarios/subirAvatar")
     Call<ResponseBody> subirAvatar(
@@ -40,18 +39,15 @@ public interface ApiService {
             @Part MultipartBody.Part archivo
     );
 
-    // ✅ Obtiene perfil del propietario autenticado
     @GET("api/Propietarios/perfil")
     Call<Propietario> obtenerPerfil(@Header("Authorization") String token);
 
-    // ✅ Actualiza datos del propietario
     @PUT("api/Propietarios/perfil")
     Call<ResponseBody> actualizarPerfil(
             @Header("Authorization") String token,
             @Body Propietario propietario
     );
 
-    // ✅ Cambiar contraseña usando DTO fuerte
     @PUT("api/Propietarios/cambiar-clave")
     Call<ResponseBody> cambiarClave(
             @Header("Authorization") String token,
@@ -60,8 +56,21 @@ public interface ApiService {
 
 
     // -------------------- INMUEBLES --------------------
+    // 🔹 Nuevo: obtiene los inmuebles del propietario autenticado (token)
+    @GET("api/Inmuebles/misInmuebles")
+    Call<List<Inmueble>> getMisInmuebles(@Header("Authorization") String token);
+
+    // 🔹 Viejo: aún disponible si lo usás en otra parte (alquilados)
     @GET("api/Inmuebles/alquilados")
     Call<List<Inmueble>> getInmueblesAlquilados();
+
+    // 🔹 Nuevo: cambia disponibilidad (Activo) del inmueble
+    @PUT("api/Inmuebles/{id}")
+    Call<ResponseBody> actualizarDisponibilidad(
+            @Header("Authorization") String token,
+            @Path("id") int idInmueble,
+            @Body Inmueble inmueble
+    );
 
 
     // -------------------- INQUILINOS --------------------

@@ -26,17 +26,27 @@ public class InmueblesAdapter extends RecyclerView.Adapter<InmueblesAdapter.View
 
     private final List<Inmueble> lista = new ArrayList<>();
     private final OnItemClickListener listener;
+    private final OnDisponibilidadChangeListener disponibilidadListener;
 
     // 🔹 Interfaz para manejar clics desde el Fragment
     public interface OnItemClickListener {
         void onItemClick(Inmueble inmueble);
     }
 
-    public InmueblesAdapter(List<Inmueble> listaInicial, OnItemClickListener listener) {
+    // 🔹 Interfaz para notificar cambio de disponibilidad
+    public interface OnDisponibilidadChangeListener {
+        void onDisponibilidadChanged(Inmueble inmueble);
+    }
+
+    // 🔹 Constructor mejorado con ambos listeners
+    public InmueblesAdapter(List<Inmueble> listaInicial,
+                            OnItemClickListener listener,
+                            OnDisponibilidadChangeListener disponibilidadListener) {
         if (listaInicial != null) {
             this.lista.addAll(listaInicial);
         }
         this.listener = listener;
+        this.disponibilidadListener = disponibilidadListener;
         setHasStableIds(true);
     }
 
@@ -62,19 +72,25 @@ public class InmueblesAdapter extends RecyclerView.Adapter<InmueblesAdapter.View
                 holder.itemView.getContext().getString(R.string.precio_formato, i.getPrecio())
         );
 
-        // 🖼️ Cargar imagen del inmueble (puede reemplazarse por i.getImagenUrl())
+        // 🖼️ Imagen (por ahora fija)
         Glide.with(holder.itemView.getContext())
                 .load(R.drawable.image_background)
                 .centerCrop()
                 .placeholder(R.drawable.ic_launcher_foreground)
                 .into(holder.ivInmueble);
 
-        // 🔄 Estado del Switch
+        // 🔄 Evita disparar evento al reciclar el switch
         holder.swDisponible.setOnCheckedChangeListener(null);
         holder.swDisponible.setChecked(i.isDisponible());
+
+        // 🧩 Notifica cambio de disponibilidad al ViewModel
         holder.swDisponible.setOnCheckedChangeListener((CompoundButton buttonView, boolean isChecked) -> {
             i.setDisponible(isChecked);
-            notifyItemChanged(position);
+            notifyItemChanged(holder.getAdapterPosition());
+
+            if (disponibilidadListener != null) {
+                disponibilidadListener.onDisponibilidadChanged(i);
+            }
         });
 
         // 🔹 Click en toda la tarjeta
@@ -82,10 +98,9 @@ public class InmueblesAdapter extends RecyclerView.Adapter<InmueblesAdapter.View
             if (listener != null) {
                 listener.onItemClick(i);
             } else {
-                // ✅ Navegación por defecto con NavController
+                // ✅ Navegación por defecto
                 Bundle bundle = new Bundle();
                 bundle.putSerializable("inmueble", i);
-
                 NavController navController = Navigation.findNavController(v);
                 navController.navigate(R.id.action_inmueblesFragment_to_detalleInmuebleFragment, bundle);
             }
@@ -97,7 +112,7 @@ public class InmueblesAdapter extends RecyclerView.Adapter<InmueblesAdapter.View
         return lista.size();
     }
 
-    // 🔹 Actualiza la lista de forma eficiente (reemplaza a setLista)
+    // 🔹 Método para actualizar lista (seguro y eficiente)
     public void actualizarLista(List<Inmueble> nuevaLista) {
         if (nuevaLista == null) return;
 
@@ -132,7 +147,7 @@ public class InmueblesAdapter extends RecyclerView.Adapter<InmueblesAdapter.View
         diffResult.dispatchUpdatesTo(this);
     }
 
-    // ✅ ViewHolder con imagen, texto y switch
+    // ✅ ViewHolder
     public static class ViewHolder extends RecyclerView.ViewHolder {
         ImageView ivInmueble;
         TextView tvDireccion, tvPrecio;

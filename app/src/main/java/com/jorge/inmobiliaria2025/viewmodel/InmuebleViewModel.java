@@ -11,6 +11,7 @@ import androidx.core.content.ContextCompat;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
 
 import com.jorge.inmobiliaria2025.data.InmobiliariaDatabase;
 import com.jorge.inmobiliaria2025.data.InmuebleDao;
@@ -46,7 +47,7 @@ public class InmuebleViewModel extends AndroidViewModel {
         listaInmueblesRoom = inmuebleDao.obtenerTodos();
         repo = new InmuebleRepository(application.getApplicationContext());
 
-        // 🔹 Carga inicial: intenta traer desde API, si falla usa Room
+        // 🚀 Carga inicial desde API
         cargarInmueblesDesdeApi();
     }
 
@@ -72,16 +73,21 @@ public class InmuebleViewModel extends AndroidViewModel {
         inmuebleSeleccionado.setValue(inmueble);
     }
 
-    // 🔹 Carga preferente desde la API
+    // 🔹 Carga preferente desde la API (trae TODOS los inmuebles del propietario)
     public void cargarInmueblesDesdeApi() {
-        repo.obtenerInmueblesAlquilados().observeForever(lista -> {
-            if (lista != null && !lista.isEmpty()) {
-                listaInmueblesRemotos.postValue(lista);
-                listaLiveData.postValue(lista);
-                Log.i("InmuebleVM", "✅ Inmuebles cargados desde API: " + lista.size());
-            } else {
-                Log.w("InmuebleVM", "⚠️ No hay inmuebles del propietario en API, usando Room...");
-                cargarInmueblesDesdeRoom();
+        LiveData<List<Inmueble>> respuestaApi = repo.obtenerMisInmuebles();
+        respuestaApi.observeForever(new Observer<List<Inmueble>>() {
+            @Override
+            public void onChanged(List<Inmueble> lista) {
+                respuestaApi.removeObserver(this);
+                if (lista != null && !lista.isEmpty()) {
+                    listaInmueblesRemotos.postValue(lista);
+                    listaLiveData.postValue(lista);
+                    Log.i("InmuebleVM", "✅ Inmuebles cargados desde API: " + lista.size());
+                } else {
+                    Log.w("InmuebleVM", "⚠️ API vacía o sin respuesta, usando Room...");
+                    cargarInmueblesDesdeRoom();
+                }
             }
         });
     }
@@ -122,7 +128,6 @@ public class InmuebleViewModel extends AndroidViewModel {
         });
     }
 
-    // 🔹 Carga sin lógica en Fragment
     public void cargarDesdeBundle(Bundle args) {
         if (args == null) return;
         Inmueble inmueble = (Inmueble) args.getSerializable("inmueble");
@@ -135,7 +140,7 @@ public class InmuebleViewModel extends AndroidViewModel {
         }
     }
 
-    // 🔹 Nuevo método centralizado (reemplaza el if/switch del Fragment)
+    // 🔹 Centraliza guardado (validaciones simples)
     public void procesarGuardado(String direccion, String precioStr, boolean disponible) {
         if (direccion.isEmpty() || precioStr.isEmpty()) {
             mensajeToast.postValue("⚠️ Complete todos los campos");
@@ -153,7 +158,6 @@ public class InmuebleViewModel extends AndroidViewModel {
         }
     }
 
-    // 🔹 Actualiza lista local tras inserción
     private void actualizarListaLocal(Inmueble nuevo) {
         List<Inmueble> actual = listaLiveData.getValue();
         if (actual == null) actual = new ArrayList<>();
@@ -161,7 +165,38 @@ public class InmuebleViewModel extends AndroidViewModel {
         listaLiveData.postValue(actual);
     }
 
-    // 🔹 Utilidad para mostrar toasts desde el Fragment sin lógica
+    // 🔹 Nuevo: actualiza disponibilidad en backend al cambiar el switch
+    public void actualizarDisponibilidad(Inmueble inmueble) {
+        if (inmueble == null) return;
+
+        Log.d("InmuebleVM", "🔄 Enviando actualización de disponibilidad ID=" + inmueble.getId()
+                + " estado=" + inmueble.isDisponible());
+
+        LiveData<Boolean> resultado = repo.actualizarDisponibilidad(inmueble);
+        resultado.observeForever(new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean exito) {
+                resultado.removeObserver(this);
+                if (Boolean.TRUE.equals(exito)) {
+                    mensajeToast.postValue("✅ Estado actualizado correctamente");
+                    // Actualiza la lista local reflejando el cambio
+                    List<Inmueble> actual = listaLiveData.getValue();
+                    if (actual != null) {
+                        for (Inmueble i : actual) {
+                            if (i.getId() == inmueble.getId()) {
+                                i.setDisponible(inmueble.isDisponible());
+                                break;
+                            }
+                        }
+                        listaLiveData.postValue(actual);
+                    }
+                } else {
+                    mensajeToast.postValue("⚠️ No se pudo actualizar disponibilidad");
+                }
+            }
+        });
+    }
+
     public void mostrarToast(Context context, String mensaje) {
         Toast.makeText(context, mensaje, Toast.LENGTH_SHORT).show();
     }
@@ -174,7 +209,6 @@ public class InmuebleViewModel extends AndroidViewModel {
         return navegarAtras;
     }
 
-    // 🔹 Métodos declarativos
     public String getTextoDisponibilidad(Inmueble inmueble) {
         return inmueble.isDisponible() ? "Disponible" : "No disponible";
     }
@@ -199,11 +233,11 @@ public class InmuebleViewModel extends AndroidViewModel {
         return filtrada;
     }
 
-    // 🔹 Compatibilidad con fragments antiguos
     public LiveData<List<Inmueble>> getListaLiveData() {
         return getInmuebles();
     }
 
+    // 🔹 Método público para recargar desde el Fragment
     public void cargarInmuebles() {
         cargarInmueblesDesdeApi();
     }

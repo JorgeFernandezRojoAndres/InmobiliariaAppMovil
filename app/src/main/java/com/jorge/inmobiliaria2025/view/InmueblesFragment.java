@@ -20,12 +20,12 @@ import com.jorge.inmobiliaria2025.model.Inmueble;
 import com.jorge.inmobiliaria2025.viewmodel.InmuebleViewModel;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class InmueblesFragment extends Fragment {
 
     private InmuebleViewModel vm;
     private InmueblesAdapter adapter;
+    private RecyclerView rv;
 
     @Nullable
     @Override
@@ -35,31 +35,45 @@ public class InmueblesFragment extends Fragment {
 
         View v = inflater.inflate(R.layout.fragment_inmuebles, container, false);
 
-        RecyclerView rv = v.findViewById(R.id.rvInmuebles);
+        rv = v.findViewById(R.id.rvInmuebles);
         FloatingActionButton fabAgregar = v.findViewById(R.id.fabAgregar);
 
-        // 🔹 Configurar vista en cuadrícula de 2 columnas
+        // 🧩 Configurar vista en cuadrícula (2 columnas)
         rv.setLayoutManager(new GridLayoutManager(getContext(), 2));
 
-        // 🔹 ViewModel compartido
+        // 🧩 Inicializar ViewModel
         vm = new ViewModelProvider(requireActivity()).get(InmuebleViewModel.class);
 
-        // 🔹 Adaptador con listener
-        adapter = new InmueblesAdapter(new ArrayList<>(), inmueble -> {
-            vm.setInmuebleSeleccionado(inmueble);
-            NavHostFragment.findNavController(this)
-                    .navigate(R.id.action_inmueblesFragment_to_detalleInmuebleFragment);
-        });
+        // 🧩 Crear adapter con listeners: click + cambio de disponibilidad
+        adapter = new InmueblesAdapter(
+                new ArrayList<>(),
+                inmueble -> { // 👉 Click en item
+                    vm.setInmuebleSeleccionado(inmueble);
+                    NavHostFragment.findNavController(this)
+                            .navigate(R.id.action_inmueblesFragment_to_detalleInmuebleFragment);
+                },
+                inmueble -> { // 👉 Cambio de switch
+                    vm.actualizarDisponibilidad(inmueble);
+                }
+        );
 
         rv.setAdapter(adapter);
 
-        // 🔹 Observa los inmuebles (ya filtrados por el VM)
-        vm.getListaFiltrada().observe(getViewLifecycleOwner(), adapter::actualizarLista);
+        // 🧠 Observa lista de inmuebles del ViewModel
+        vm.getListaFiltrada().observe(getViewLifecycleOwner(), lista -> {
+            if (lista != null && !lista.isEmpty()) {
+                adapter.actualizarLista(lista);
+            } else {
+                adapter.actualizarLista(new ArrayList<>()); // Evita NPE si viene vacía
+            }
+        });
 
-        // 🔹 Carga inicial (el VM decide fuente)
-        vm.cargarInmuebles();
+        // 🚀 Carga inicial: si el ViewModel aún no tiene datos, los trae del backend
+        if (vm.getListaFiltrada().getValue() == null || vm.getListaFiltrada().getValue().isEmpty()) {
+            vm.cargarInmuebles();
+        }
 
-        // 🔹 FAB para agregar
+        // ➕ Botón para agregar nuevo inmueble
         fabAgregar.setOnClickListener(view ->
                 NavHostFragment.findNavController(this)
                         .navigate(R.id.action_inmueblesFragment_to_nuevoInmuebleFragment)
