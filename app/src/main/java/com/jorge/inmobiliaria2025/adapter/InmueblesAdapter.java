@@ -28,23 +28,20 @@ public class InmueblesAdapter extends RecyclerView.Adapter<InmueblesAdapter.View
     private final OnItemClickListener listener;
     private final OnDisponibilidadChangeListener disponibilidadListener;
 
-    // 🔹 Interfaz para manejar clics desde el Fragment
+    // 🔹 Interfaz para clics
     public interface OnItemClickListener {
         void onItemClick(Inmueble inmueble);
     }
 
-    // 🔹 Interfaz para notificar cambio de disponibilidad
+    // 🔹 Interfaz para cambios de disponibilidad
     public interface OnDisponibilidadChangeListener {
         void onDisponibilidadChanged(Inmueble inmueble);
     }
 
-    // 🔹 Constructor mejorado con ambos listeners
     public InmueblesAdapter(List<Inmueble> listaInicial,
                             OnItemClickListener listener,
                             OnDisponibilidadChangeListener disponibilidadListener) {
-        if (listaInicial != null) {
-            this.lista.addAll(listaInicial);
-        }
+        if (listaInicial != null) this.lista.addAll(listaInicial);
         this.listener = listener;
         this.disponibilidadListener = disponibilidadListener;
         setHasStableIds(true);
@@ -72,33 +69,33 @@ public class InmueblesAdapter extends RecyclerView.Adapter<InmueblesAdapter.View
                 holder.itemView.getContext().getString(R.string.precio_formato, i.getPrecio())
         );
 
-        // 🖼️ Imagen (por ahora fija)
+        // 🖼️ Imagen real o fondo por defecto
+        String imgUrl = i.getImagenUrl();
         Glide.with(holder.itemView.getContext())
-                .load(R.drawable.image_background)
+                .load(imgUrl != null && !imgUrl.isEmpty() ? imgUrl : R.drawable.image_background)
                 .centerCrop()
                 .placeholder(R.drawable.ic_launcher_foreground)
                 .into(holder.ivInmueble);
 
-        // 🔄 Evita disparar evento al reciclar el switch
+        // 🔄 Evita loops por reciclado del switch
         holder.swDisponible.setOnCheckedChangeListener(null);
         holder.swDisponible.setChecked(i.isDisponible());
 
-        // 🧩 Notifica cambio de disponibilidad al ViewModel
         holder.swDisponible.setOnCheckedChangeListener((CompoundButton buttonView, boolean isChecked) -> {
-            i.setDisponible(isChecked);
-            notifyItemChanged(holder.getAdapterPosition());
-
-            if (disponibilidadListener != null) {
-                disponibilidadListener.onDisponibilidadChanged(i);
+            if (i.isDisponible() != isChecked) { // ✅ Evita repeticiones innecesarias
+                i.setDisponible(isChecked);
+                if (disponibilidadListener != null) {
+                    disponibilidadListener.onDisponibilidadChanged(i);
+                }
             }
         });
 
-        // 🔹 Click en toda la tarjeta
+        // 🎯 Click en la tarjeta completa
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onItemClick(i);
             } else {
-                // ✅ Navegación por defecto
+                // Navegación por defecto si no hay listener externo
                 Bundle bundle = new Bundle();
                 bundle.putSerializable("inmueble", i);
                 NavController navController = Navigation.findNavController(v);
@@ -112,7 +109,7 @@ public class InmueblesAdapter extends RecyclerView.Adapter<InmueblesAdapter.View
         return lista.size();
     }
 
-    // 🔹 Método para actualizar lista (seguro y eficiente)
+    // 🔹 Actualización eficiente con DiffUtil
     public void actualizarLista(List<Inmueble> nuevaLista) {
         if (nuevaLista == null) return;
 
@@ -138,7 +135,9 @@ public class InmueblesAdapter extends RecyclerView.Adapter<InmueblesAdapter.View
                 Inmueble newItem = nuevaLista.get(newItemPosition);
                 return oldItem.getDireccion().equals(newItem.getDireccion())
                         && oldItem.getPrecio() == newItem.getPrecio()
-                        && oldItem.isDisponible() == newItem.isDisponible();
+                        && oldItem.isDisponible() == newItem.isDisponible()
+                        && ((oldItem.getImagenUrl() == null && newItem.getImagenUrl() == null)
+                        || (oldItem.getImagenUrl() != null && oldItem.getImagenUrl().equals(newItem.getImagenUrl())));
             }
         });
 

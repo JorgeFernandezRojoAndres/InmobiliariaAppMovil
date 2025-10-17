@@ -6,6 +6,7 @@
     <color name="teal_700">#018786</color>
     <color name="black">#000000</color>
     <color name="white">#FFFFFF</color>
+    <color name="gray_light">#ECECEC</color>
 
     <!-- Agrego primarios modernos usados por Material3 -->
     <color name="colorPrimary">#6200EE</color>

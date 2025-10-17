@@ -29,7 +29,7 @@ public class RetrofitClient {
 
     private static volatile Retrofit retrofit = null; // 🧱 thread-safe singleton
 
-    // 🛠️ FIX: quitar /api/ del final para evitar el doble "api/api"
+    // 🛠️ Quitar /api/ final para no duplicar con las rutas internas de ApiService
     private static final String BASE_URL = "http://192.168.1.34:5027/"; // 📡 IP fija de la PC
 
     public static Retrofit getInstance(Context context) {
@@ -38,9 +38,15 @@ public class RetrofitClient {
                 if (retrofit == null) {
                     SessionManager session = new SessionManager(context);
 
-                    // 🛰️ Interceptor de logging
+                    // 🛰️ Interceptor de logging con etiquetas claras
                     HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor(
-                            message -> Log.d("Retrofit", "🛰️ " + message)
+                            message -> {
+                                if (message.startsWith("-->") || message.startsWith("<--")) {
+                                    Log.d("Retrofit", "🌐 " + message);
+                                } else if (message.contains("{") || message.contains("[")) {
+                                    Log.v("RetrofitBody", message); // cuerpo de la respuesta
+                                }
+                            }
                     );
                     loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 
@@ -50,21 +56,25 @@ public class RetrofitClient {
                         String token = session.obtenerToken();
                         Request.Builder builder = original.newBuilder();
 
+                        // Siempre enviar Content-Type JSON
                         if (original.header("Content-Type") == null) {
                             builder.header("Content-Type", "application/json");
                         }
 
                         if (token != null && !token.isEmpty()) {
                             builder.header("Authorization", "Bearer " + token);
-                            Log.d("Retrofit", "🔑 Token agregado a la petición");
+                            Log.d("RetrofitAuth", "🔑 Token agregado a la petición");
                         } else {
-                            Log.w("Retrofit", "⚠️ No hay token guardado en SessionManager");
+                            Log.w("RetrofitAuth", "⚠️ No hay token guardado en SessionManager");
                         }
 
                         try {
                             Response response = chain.proceed(builder.build());
-                            if (response.code() == 401) {
-                                Log.w("Retrofit", "🚫 Token inválido o expirado (401 Unauthorized)");
+                            int code = response.code();
+                            if (code == 401) {
+                                Log.w("RetrofitAuth", "🚫 Token inválido o expirado (401 Unauthorized)");
+                            } else if (code >= 400) {
+                                Log.e("RetrofitAuth", "⚠️ Error HTTP " + code + ": " + response.message());
                             }
                             return response;
                         } catch (IOException e) {
@@ -83,13 +93,14 @@ public class RetrofitClient {
                             .retryOnConnectionFailure(true)
                             .build();
 
+                    // 🧩 Retrofit con convertidor Gson
                     retrofit = new Retrofit.Builder()
                             .baseUrl(BASE_URL)
                             .client(client)
                             .addConverterFactory(GsonConverterFactory.create())
                             .build();
 
-                    Log.i("Retrofit", "✅ Retrofit inicializado con URL base fija: " + BASE_URL);
+                    Log.i("RetrofitInit", "✅ Retrofit inicializado con URL base: " + BASE_URL);
                 }
             }
         }

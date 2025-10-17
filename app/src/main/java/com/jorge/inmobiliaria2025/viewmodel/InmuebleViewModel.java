@@ -2,6 +2,7 @@ package com.jorge.inmobiliaria2025.viewmodel;
 
 import android.app.Application;
 import android.content.Context;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
@@ -17,6 +18,7 @@ import com.jorge.inmobiliaria2025.data.InmobiliariaDatabase;
 import com.jorge.inmobiliaria2025.data.InmuebleDao;
 import com.jorge.inmobiliaria2025.data.InmuebleRepository;
 import com.jorge.inmobiliaria2025.model.Inmueble;
+import com.jorge.inmobiliaria2025.model.TipoInmueble;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,13 +34,14 @@ public class InmuebleViewModel extends AndroidViewModel {
     private final MutableLiveData<EstadoGuardado> estadoGuardado = new MutableLiveData<>();
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
-    // 🔹 Repositorio remoto
     private final InmuebleRepository repo;
     private final MutableLiveData<List<Inmueble>> listaInmueblesRemotos = new MutableLiveData<>();
 
-    // 🔹 LiveData para mensajes y navegación
     private final MutableLiveData<String> mensajeToast = new MutableLiveData<>();
     private final MutableLiveData<Boolean> navegarAtras = new MutableLiveData<>();
+
+    // 🧱 LiveData para tipos de inmueble
+    private final MutableLiveData<List<TipoInmueble>> tiposInmueble = new MutableLiveData<>();
 
     public InmuebleViewModel(@NonNull Application application) {
         super(application);
@@ -46,36 +49,57 @@ public class InmuebleViewModel extends AndroidViewModel {
         inmuebleDao = db.inmuebleDao();
         listaInmueblesRoom = inmuebleDao.obtenerTodos();
         repo = new InmuebleRepository(application.getApplicationContext());
-
-        // 🚀 Carga inicial desde API
         cargarInmueblesDesdeApi();
+        cargarTiposInmueble(); // 🔹 carga automática al iniciar
+    }
+
+    // ✅ Método agregado correctamente
+    public void setInmuebleSeleccionado(Inmueble inmueble) {
+        if (inmueble != null) {
+            Log.d("InmuebleVM", "🏠 Inmueble seleccionado: " + inmueble.getDireccion());
+            inmuebleSeleccionado.postValue(inmueble);
+        } else {
+            Log.w("InmuebleVM", "⚠️ Se intentó seleccionar un inmueble nulo");
+        }
     }
 
     public enum EstadoGuardado { EXITO, CAMPOS_VACIOS, PRECIO_INVALIDO }
 
-    public LiveData<EstadoGuardado> getEstadoGuardado() {
-        return estadoGuardado;
+    public LiveData<EstadoGuardado> getEstadoGuardado() { return estadoGuardado; }
+    public LiveData<List<Inmueble>> getInmuebles() { return listaLiveData; }
+    public LiveData<List<Inmueble>> getInmueblesRemotos() { return listaInmueblesRemotos; }
+    public LiveData<Inmueble> getInmuebleSeleccionado() { return inmuebleSeleccionado; }
+    public LiveData<String> getMensajeToast() { return mensajeToast; }
+    public LiveData<Boolean> getNavegarAtras() { return navegarAtras; }
+    public LiveData<List<TipoInmueble>> getTiposInmueble() { return tiposInmueble; }
+
+    // ==========================
+    // 🔹 CARGA DE TIPOS DE INMUEBLE
+    // ==========================
+    public void cargarTiposInmueble() {
+        LiveData<List<TipoInmueble>> respuesta = repo.obtenerTiposInmueble();
+
+        respuesta.observeForever(new Observer<List<TipoInmueble>>() {
+            @Override
+            public void onChanged(List<TipoInmueble> tipos) {
+                respuesta.removeObserver(this);
+                if (tipos != null && !tipos.isEmpty()) {
+                    tiposInmueble.postValue(tipos);
+                    Log.i("InmuebleVM", "✅ Tipos de inmueble cargados desde API: " + tipos.size());
+                } else {
+                    tiposInmueble.postValue(new ArrayList<>());
+                    Log.w("InmuebleVM", "⚠️ Lista de tipos vacía o error de conexión");
+                }
+            }
+        });
     }
 
-    public LiveData<List<Inmueble>> getInmuebles() {
-        return listaLiveData;
-    }
-
-    public LiveData<List<Inmueble>> getInmueblesRemotos() {
-        return listaInmueblesRemotos;
-    }
-
-    public LiveData<Inmueble> getInmuebleSeleccionado() {
-        return inmuebleSeleccionado;
-    }
-
-    public void setInmuebleSeleccionado(Inmueble inmueble) {
-        inmuebleSeleccionado.setValue(inmueble);
-    }
-
-    // 🔹 Carga preferente desde la API (trae TODOS los inmuebles del propietario)
+    // ==========================
+    // 🔹 CARGA DE INMUEBLES
+    // ==========================
     public void cargarInmueblesDesdeApi() {
         LiveData<List<Inmueble>> respuestaApi = repo.obtenerMisInmuebles();
+
         respuestaApi.observeForever(new Observer<List<Inmueble>>() {
             @Override
             public void onChanged(List<Inmueble> lista) {
@@ -92,7 +116,6 @@ public class InmuebleViewModel extends AndroidViewModel {
         });
     }
 
-    // 🔹 Fallback si no hay conexión o API vacía
     private void cargarInmueblesDesdeRoom() {
         executor.execute(() -> {
             List<Inmueble> listaDB = listaInmueblesRoom.getValue();
@@ -106,7 +129,9 @@ public class InmuebleViewModel extends AndroidViewModel {
         });
     }
 
-    // 🔹 Inserta un inmueble nuevo y sincroniza la lista local
+    // ==========================
+    // 🔹 CRUD LOCAL
+    // ==========================
     public void insertar(Inmueble inmueble) {
         executor.execute(() -> {
             inmuebleDao.insertar(inmueble);
@@ -128,6 +153,9 @@ public class InmuebleViewModel extends AndroidViewModel {
         });
     }
 
+    // ==========================
+    // 🔹 DETALLE / EDICIÓN
+    // ==========================
     public void cargarDesdeBundle(Bundle args) {
         if (args == null) return;
         Inmueble inmueble = (Inmueble) args.getSerializable("inmueble");
@@ -140,7 +168,9 @@ public class InmuebleViewModel extends AndroidViewModel {
         }
     }
 
-    // 🔹 Centraliza guardado (validaciones simples)
+    // ==========================
+    // 🔹 GUARDADO SIMPLE
+    // ==========================
     public void procesarGuardado(String direccion, String precioStr, boolean disponible) {
         if (direccion.isEmpty() || precioStr.isEmpty()) {
             mensajeToast.postValue("⚠️ Complete todos los campos");
@@ -165,11 +195,13 @@ public class InmuebleViewModel extends AndroidViewModel {
         listaLiveData.postValue(actual);
     }
 
-    // 🔹 Nuevo: actualiza disponibilidad en backend al cambiar el switch
+    // ==========================
+    // 🔹 DISPONIBILIDAD
+    // ==========================
     public void actualizarDisponibilidad(Inmueble inmueble) {
         if (inmueble == null) return;
 
-        Log.d("InmuebleVM", "🔄 Enviando actualización de disponibilidad ID=" + inmueble.getId()
+        Log.d("InmuebleVM", "🔄 Actualizando disponibilidad ID=" + inmueble.getId()
                 + " estado=" + inmueble.isDisponible());
 
         LiveData<Boolean> resultado = repo.actualizarDisponibilidad(inmueble);
@@ -179,7 +211,6 @@ public class InmuebleViewModel extends AndroidViewModel {
                 resultado.removeObserver(this);
                 if (Boolean.TRUE.equals(exito)) {
                     mensajeToast.postValue("✅ Estado actualizado correctamente");
-                    // Actualiza la lista local reflejando el cambio
                     List<Inmueble> actual = listaLiveData.getValue();
                     if (actual != null) {
                         for (Inmueble i : actual) {
@@ -197,16 +228,30 @@ public class InmuebleViewModel extends AndroidViewModel {
         });
     }
 
+    // ==========================
+    // 🔹 ACTUALIZACIÓN COMPLETA
+    // ==========================
+    public void actualizarInmueble(Inmueble inmueble, Uri imagenUri) {
+        LiveData<Boolean> resultado = repo.actualizarInmueble(inmueble, imagenUri);
+        resultado.observeForever(new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean exito) {
+                resultado.removeObserver(this);
+                if (Boolean.TRUE.equals(exito)) {
+                    mensajeToast.postValue("✅ Inmueble actualizado en el servidor");
+                    cargarInmueblesDesdeApi();
+                } else {
+                    mensajeToast.postValue("⚠️ Error al actualizar inmueble");
+                }
+            }
+        });
+    }
+
+    // ==========================
+    // 🔹 UTILIDADES VISUALES
+    // ==========================
     public void mostrarToast(Context context, String mensaje) {
         Toast.makeText(context, mensaje, Toast.LENGTH_SHORT).show();
-    }
-
-    public LiveData<String> getMensajeToast() {
-        return mensajeToast;
-    }
-
-    public LiveData<Boolean> getNavegarAtras() {
-        return navegarAtras;
     }
 
     public String getTextoDisponibilidad(Inmueble inmueble) {
@@ -220,7 +265,9 @@ public class InmuebleViewModel extends AndroidViewModel {
         return ContextCompat.getColor(context, color);
     }
 
-    // 🔹 LiveData filtrado
+    // ==========================
+    // 🔹 FILTRO / RECARGA
+    // ==========================
     public LiveData<List<Inmueble>> getListaFiltrada() {
         MutableLiveData<List<Inmueble>> filtrada = new MutableLiveData<>();
         getListaLiveData().observeForever(lista -> {
@@ -237,7 +284,6 @@ public class InmuebleViewModel extends AndroidViewModel {
         return getInmuebles();
     }
 
-    // 🔹 Método público para recargar desde el Fragment
     public void cargarInmuebles() {
         cargarInmueblesDesdeApi();
     }

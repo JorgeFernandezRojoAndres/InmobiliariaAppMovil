@@ -8,10 +8,12 @@ import com.jorge.inmobiliaria2025.model.LoginRequest;
 import com.jorge.inmobiliaria2025.model.TokenResponse;
 import com.jorge.inmobiliaria2025.model.Propietario;
 import com.jorge.inmobiliaria2025.model.CambioClaveDto;
+import com.jorge.inmobiliaria2025.model.TipoInmueble; // ✅ nuevo modelo
 
 import java.util.List;
 
 import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -23,15 +25,18 @@ import retrofit2.http.PUT;
 import retrofit2.http.Part;
 import retrofit2.http.Path;
 
+/**
+ * ✅ ApiService
+ * Define todos los endpoints REST utilizados por la app móvil.
+ * Incluye: autenticación, perfil, inmuebles, tipos, contratos, inquilinos y pagos.
+ */
 public interface ApiService {
 
-    // -------------------- AUTENTICACIÓN --------------------
+    // -------------------- 🔐 AUTENTICACIÓN --------------------
     @POST("api/Propietarios/login")
     Call<TokenResponse> login(@Body LoginRequest request);
 
-
-    // -------------------- PERFIL / AVATAR --------------------
-
+    // -------------------- 👤 PERFIL / AVATAR --------------------
     @Multipart
     @POST("api/Propietarios/subirAvatar")
     Call<ResponseBody> subirAvatar(
@@ -54,17 +59,13 @@ public interface ApiService {
             @Body CambioClaveDto dto
     );
 
-
-    // -------------------- INMUEBLES --------------------
-    // 🔹 Nuevo: obtiene los inmuebles del propietario autenticado (token)
+    // -------------------- 🏠 INMUEBLES --------------------
     @GET("api/Inmuebles/misInmuebles")
     Call<List<Inmueble>> getMisInmuebles(@Header("Authorization") String token);
 
-    // 🔹 Viejo: aún disponible si lo usás en otra parte (alquilados)
     @GET("api/Inmuebles/alquilados")
-    Call<List<Inmueble>> getInmueblesAlquilados();
+    Call<List<Inmueble>> getInmueblesAlquilados(@Header("Authorization") String token);
 
-    // 🔹 Nuevo: cambia disponibilidad (Activo) del inmueble
     @PUT("api/Inmuebles/{id}")
     Call<ResponseBody> actualizarDisponibilidad(
             @Header("Authorization") String token,
@@ -72,18 +73,39 @@ public interface ApiService {
             @Body Inmueble inmueble
     );
 
+    @Multipart
+    @PUT("api/Inmuebles/{id}")
+    Call<ResponseBody> actualizarInmueble(
+            @Header("Authorization") String token,
+            @Path("id") int idInmueble,
+            @Part("Direccion") RequestBody direccion,
+            @Part("TipoId") RequestBody tipoId,
+            @Part("MetrosCuadrados") RequestBody metrosCuadrados,
+            @Part("Precio") RequestBody precio,
+            @Part("Activo") RequestBody activo,
+            @Part MultipartBody.Part imagenFile
+    );
 
-    // -------------------- INQUILINOS --------------------
+    // -------------------- 🏗️ TIPOS DE INMUEBLE --------------------
+    @GET("api/TiposInmuebleApi") // ✅ ruta real del controlador backend
+    Call<List<TipoInmueble>> getTiposInmueble(@Header("Authorization") String token);
+
+
+    // -------------------- 👥 INQUILINOS --------------------
     @GET("api/Inquilinos/{idInmueble}")
-    Call<Inquilino> getInquilinoPorInmueble(@Path("idInmueble") int idInmueble);
+    Call<Inquilino> getInquilinoPorInmueble(
+            @Header("Authorization") String token,
+            @Path("idInmueble") int idInmueble
+    );
 
-
-    // -------------------- CONTRATOS --------------------
+    // -------------------- 📄 CONTRATOS --------------------
     @GET("api/Contratos/vigentes")
-    Call<List<Contrato>> getContratosVigentes();
+    Call<List<Contrato>> getContratosVigentes(@Header("Authorization") String token);
 
-
-    // -------------------- PAGOS --------------------
+    // -------------------- 💰 PAGOS --------------------
     @GET("api/Pagos/{idContrato}")
-    Call<List<Pago>> getPagosPorContrato(@Path("idContrato") int idContrato);
+    Call<List<Pago>> getPagosPorContrato(
+            @Header("Authorization") String token,
+            @Path("idContrato") int idContrato
+    );
 }
