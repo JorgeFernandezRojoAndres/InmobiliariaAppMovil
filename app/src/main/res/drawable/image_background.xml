@@ -1,26 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android"
-    android:shape="rectangle">
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- 🎨 Fondo con degradado suave -->
-    <gradient
-        android:startColor="#EAEAEA"
-        android:centerColor="#F5F5F5"
-        android:endColor="#FFFFFF"
-        android:angle="90" />
+    <!-- 🌫️ Sombra interior simulada -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#1A000000" />
+            <corners android:radius="14dp" />
+        </shape>
+    </item>
 
-    <!-- 🔘 Esquinas redondeadas -->
-    <corners android:radius="12dp" />
+    <!-- 🎨 Fondo principal con degradado suave -->
+    <item android:left="1dp" android:top="1dp" android:right="1dp" android:bottom="1dp">
+        <shape android:shape="rectangle">
+            <gradient
+                android:startColor="#F2F2F2"
+                android:centerColor="#FAFAFA"
+                android:endColor="#FFFFFF"
+                android:angle="90" />
+            <corners android:radius="14dp" />
+            <stroke
+                android:width="1dp"
+                android:color="#CCCCCC" />
+            <padding
+                android:left="4dp"
+                android:top="4dp"
+                android:right="4dp"
+                android:bottom="4dp" />
+        </shape>
+    </item>
 
-    <!-- 🪶 Borde sutil -->
-    <stroke
-        android:width="1dp"
-        android:color="#DDDDDD" />
-
-    <!-- 🧱 Padding interno -->
-    <padding
-        android:left="4dp"
-        android:top="4dp"
-        android:right="4dp"
-        android:bottom="4dp" />
-</shape>
+</layer-list>

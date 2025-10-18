@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Interceptor;
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -22,85 +23,89 @@ import retrofit2.converter.gson.GsonConverterFactory;
  * Incluye:
  *  - Autenticación JWT (header Authorization)
  *  - Logging detallado en Logcat
- *  - Compatibilidad con multipart (subida de imágenes)
- *  - Base URL fija a la IP del backend local
+ *  - Soporte multipart (subida y actualización de imágenes)
+ *  - Base URL sin /api al final
  */
 public class RetrofitClient {
 
-    private static volatile Retrofit retrofit = null; // 🧱 thread-safe singleton
-
-    // 🛠️ Quitar /api/ final para no duplicar con las rutas internas de ApiService
-    private static final String BASE_URL = "http://192.168.1.34:5027/"; // 📡 IP fija de la PC
+    private static volatile Retrofit retrofit = null; // 🧱 Singleton seguro
+    public static final String BASE_URL = "http://192.168.1.34:5027/"; // 📡 Cambiar según tu red local
 
     public static Retrofit getInstance(Context context) {
         if (retrofit == null) {
-            synchronized (RetrofitClient.class) { // 🔒 evita doble inicialización
+            synchronized (RetrofitClient.class) {
                 if (retrofit == null) {
+
                     SessionManager session = new SessionManager(context);
 
-                    // 🛰️ Interceptor de logging con etiquetas claras
-                    HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor(
-                            message -> {
-                                if (message.startsWith("-->") || message.startsWith("<--")) {
-                                    Log.d("Retrofit", "🌐 " + message);
-                                } else if (message.contains("{") || message.contains("[")) {
-                                    Log.v("RetrofitBody", message); // cuerpo de la respuesta
-                                }
-                            }
-                    );
+                    // 🛰️ Interceptor de logging (detallado solo para JSON)
+                    HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor(message -> {
+                        if (message.startsWith("-->") || message.startsWith("<--")) {
+                            Log.d("Retrofit", "🌐 " + message);
+                        } else if (message.contains("{") || message.contains("[")) {
+                            Log.v("RetrofitBody", message);
+                        }
+                    });
                     loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 
-                    // 🔐 Interceptor de autenticación JWT
+                    // 🔐 Interceptor de autenticación y control de Content-Type
                     Interceptor authInterceptor = chain -> {
                         Request original = chain.request();
-                        String token = session.obtenerToken();
                         Request.Builder builder = original.newBuilder();
 
-                        // Siempre enviar Content-Type JSON
-                        if (original.header("Content-Type") == null) {
+                        String token = session.obtenerToken();
+                        MediaType mediaType = original.body() != null ? original.body().contentType() : null;
+                        String contentType = mediaType != null ? mediaType.toString() : "";
+
+                        // ✅ Evitar interferir en multipart
+                        if (contentType.contains("multipart")) {
+                            builder.removeHeader("Content-Type");
+                        } else if (!contentType.contains("json")) {
                             builder.header("Content-Type", "application/json");
                         }
 
+                        // ✅ Agregar token si existe
                         if (token != null && !token.isEmpty()) {
                             builder.header("Authorization", "Bearer " + token);
-                            Log.d("RetrofitAuth", "🔑 Token agregado a la petición");
-                        } else {
-                            Log.w("RetrofitAuth", "⚠️ No hay token guardado en SessionManager");
                         }
 
+                        Request request = builder.build();
+
                         try {
-                            Response response = chain.proceed(builder.build());
+                            Response response = chain.proceed(request);
                             int code = response.code();
+
                             if (code == 401) {
                                 Log.w("RetrofitAuth", "🚫 Token inválido o expirado (401 Unauthorized)");
                             } else if (code >= 400) {
                                 Log.e("RetrofitAuth", "⚠️ Error HTTP " + code + ": " + response.message());
                             }
                             return response;
+
                         } catch (IOException e) {
                             Log.e("Retrofit", "❌ Error al procesar la petición: " + e.getMessage());
                             throw e;
                         }
                     };
 
-                    // ⚙️ Configuración del cliente HTTP
+                    // ⚙️ Cliente HTTP configurado
                     OkHttpClient client = new OkHttpClient.Builder()
                             .addInterceptor(authInterceptor)
                             .addInterceptor(loggingInterceptor)
-                            .connectTimeout(40, TimeUnit.SECONDS)
-                            .readTimeout(40, TimeUnit.SECONDS)
-                            .writeTimeout(40, TimeUnit.SECONDS)
+                            .connectTimeout(45, TimeUnit.SECONDS)
+                            .readTimeout(45, TimeUnit.SECONDS)
+                            .writeTimeout(45, TimeUnit.SECONDS)
                             .retryOnConnectionFailure(true)
                             .build();
 
-                    // 🧩 Retrofit con convertidor Gson
+                    // 🧩 Retrofit con soporte JSON y multipart
                     retrofit = new Retrofit.Builder()
                             .baseUrl(BASE_URL)
                             .client(client)
                             .addConverterFactory(GsonConverterFactory.create())
                             .build();
 
-                    Log.i("RetrofitInit", "✅ Retrofit inicializado con URL base: " + BASE_URL);
+                    Log.i("RetrofitInit", "✅ Retrofit inicializado correctamente con base URL: " + BASE_URL);
                 }
             }
         }

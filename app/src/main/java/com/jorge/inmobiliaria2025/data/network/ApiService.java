@@ -8,7 +8,7 @@ import com.jorge.inmobiliaria2025.model.LoginRequest;
 import com.jorge.inmobiliaria2025.model.TokenResponse;
 import com.jorge.inmobiliaria2025.model.Propietario;
 import com.jorge.inmobiliaria2025.model.CambioClaveDto;
-import com.jorge.inmobiliaria2025.model.TipoInmueble; // ✅ nuevo modelo
+import com.jorge.inmobiliaria2025.model.TipoInmueble;
 
 import java.util.List;
 
@@ -66,6 +66,7 @@ public interface ApiService {
     @GET("api/Inmuebles/alquilados")
     Call<List<Inmueble>> getInmueblesAlquilados(@Header("Authorization") String token);
 
+    // ✅ Actualiza solo disponibilidad o datos JSON
     @PUT("api/Inmuebles/{id}")
     Call<ResponseBody> actualizarDisponibilidad(
             @Header("Authorization") String token,
@@ -73,23 +74,33 @@ public interface ApiService {
             @Body Inmueble inmueble
     );
 
+    // ✅ NUEVO: Actualizar inmueble completo (PUT /api/Inmuebles/{id}/form)
     @Multipart
-    @PUT("api/Inmuebles/{id}")
-    Call<ResponseBody> actualizarInmueble(
+    @PUT("api/Inmuebles/{id}/form")
+    Call<ResponseBody> actualizarInmuebleConImagen(
             @Header("Authorization") String token,
             @Path("id") int idInmueble,
+            @Part("Id") RequestBody id,
             @Part("Direccion") RequestBody direccion,
             @Part("TipoId") RequestBody tipoId,
-            @Part("MetrosCuadrados") RequestBody metrosCuadrados,
+            @Part("MetrosCuadrados") RequestBody metros,
             @Part("Precio") RequestBody precio,
             @Part("Activo") RequestBody activo,
-            @Part MultipartBody.Part imagenFile
+            @Part MultipartBody.Part imagen
+    );
+
+    // ✅ Subir imagen individual (si se hace por separado)
+    @Multipart
+    @POST("api/Inmuebles/upload")
+    Call<ResponseBody> subirImagenInmueble(
+            @Header("Authorization") String token,
+            @Part("idInmueble") RequestBody idInmueble,
+            @Part MultipartBody.Part imagen
     );
 
     // -------------------- 🏗️ TIPOS DE INMUEBLE --------------------
-    @GET("api/TiposInmuebleApi") // ✅ ruta real del controlador backend
+    @GET("api/TiposInmuebleApi")
     Call<List<TipoInmueble>> getTiposInmueble(@Header("Authorization") String token);
-
 
     // -------------------- 👥 INQUILINOS --------------------
     @GET("api/Inquilinos/{idInmueble}")
@@ -108,4 +119,13 @@ public interface ApiService {
             @Header("Authorization") String token,
             @Path("idContrato") int idContrato
     );
+
+    // ✅ Actualizar inmueble simple (sin imagen, JSON puro)
+    @PUT("api/Inmuebles/{id}")
+    Call<ResponseBody> actualizarInmueble(
+            @Header("Authorization") String token,
+            @Path("id") int idInmueble,
+            @Body Inmueble inmueble
+    );
+
 }

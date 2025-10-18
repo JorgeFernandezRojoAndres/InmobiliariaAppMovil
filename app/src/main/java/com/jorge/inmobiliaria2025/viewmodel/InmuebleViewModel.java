@@ -40,26 +40,54 @@ public class InmuebleViewModel extends AndroidViewModel {
     private final MutableLiveData<String> mensajeToast = new MutableLiveData<>();
     private final MutableLiveData<Boolean> navegarAtras = new MutableLiveData<>();
 
-    // 🧱 LiveData para tipos de inmueble
     private final MutableLiveData<List<TipoInmueble>> tiposInmueble = new MutableLiveData<>();
 
     public InmuebleViewModel(@NonNull Application application) {
         super(application);
-        InmobiliariaDatabase db = InmobiliariaDatabase.getDatabase(application);
+
+        // ✅ Inicializar correctamente la base local
+        InmobiliariaDatabase db = InmobiliariaDatabase.getInstance(application.getApplicationContext());
         inmuebleDao = db.inmuebleDao();
+
         listaInmueblesRoom = inmuebleDao.obtenerTodos();
         repo = new InmuebleRepository(application.getApplicationContext());
+
+        // ✅ Sincronización inicial
         cargarInmueblesDesdeApi();
-        cargarTiposInmueble(); // 🔹 carga automática al iniciar
+        cargarTiposInmueble();
     }
 
-    // ✅ Método agregado correctamente
     public void setInmuebleSeleccionado(Inmueble inmueble) {
         if (inmueble != null) {
             Log.d("InmuebleVM", "🏠 Inmueble seleccionado: " + inmueble.getDireccion());
             inmuebleSeleccionado.postValue(inmueble);
         } else {
             Log.w("InmuebleVM", "⚠️ Se intentó seleccionar un inmueble nulo");
+        }
+    }
+
+    public void procesarGuardado(String direccion, String precioTexto, boolean disponible) {
+        if (direccion == null || direccion.isEmpty() || precioTexto == null || precioTexto.isEmpty()) {
+            mensajeToast.postValue("⚠️ Complete todos los campos");
+            return;
+        }
+
+        try {
+            double precio = Double.parseDouble(precioTexto);
+            Inmueble nuevo = new Inmueble(direccion.trim(), precio, disponible);
+
+            executor.execute(() -> {
+                inmuebleDao.insertar(nuevo);
+                List<Inmueble> actual = listaLiveData.getValue();
+                if (actual == null) actual = new ArrayList<>();
+                actual.add(nuevo);
+                listaLiveData.postValue(actual);
+            });
+
+            mensajeToast.postValue("✅ Inmueble guardado correctamente");
+            navegarAtras.postValue(true);
+        } catch (NumberFormatException e) {
+            mensajeToast.postValue("❌ Precio inválido");
         }
     }
 
@@ -78,7 +106,6 @@ public class InmuebleViewModel extends AndroidViewModel {
     // ==========================
     public void cargarTiposInmueble() {
         LiveData<List<TipoInmueble>> respuesta = repo.obtenerTiposInmueble();
-
         respuesta.observeForever(new Observer<List<TipoInmueble>>() {
             @Override
             public void onChanged(List<TipoInmueble> tipos) {
@@ -95,15 +122,15 @@ public class InmuebleViewModel extends AndroidViewModel {
     }
 
     // ==========================
-    // 🔹 CARGA DE INMUEBLES
+    // 🔹 CARGA DE INMUEBLES (API + Room fallback)
     // ==========================
     public void cargarInmueblesDesdeApi() {
         LiveData<List<Inmueble>> respuestaApi = repo.obtenerMisInmuebles();
-
         respuestaApi.observeForever(new Observer<List<Inmueble>>() {
             @Override
             public void onChanged(List<Inmueble> lista) {
                 respuestaApi.removeObserver(this);
+
                 if (lista != null && !lista.isEmpty()) {
                     listaInmueblesRemotos.postValue(lista);
                     listaLiveData.postValue(lista);
@@ -130,69 +157,17 @@ public class InmuebleViewModel extends AndroidViewModel {
     }
 
     // ==========================
-    // 🔹 CRUD LOCAL
-    // ==========================
-    public void insertar(Inmueble inmueble) {
-        executor.execute(() -> {
-            inmuebleDao.insertar(inmueble);
-            actualizarListaLocal(inmueble);
-        });
-    }
-
-    public void actualizar(Inmueble inmueble) {
-        executor.execute(() -> {
-            inmuebleDao.actualizar(inmueble);
-            cargarInmueblesDesdeRoom();
-        });
-    }
-
-    public void eliminarInmueble(Inmueble inmueble) {
-        executor.execute(() -> {
-            inmuebleDao.eliminar(inmueble);
-            cargarInmueblesDesdeRoom();
-        });
-    }
-
-    // ==========================
     // 🔹 DETALLE / EDICIÓN
     // ==========================
     public void cargarDesdeBundle(Bundle args) {
         if (args == null) return;
         Inmueble inmueble = (Inmueble) args.getSerializable("inmueble");
-        mostrarInmuebleSiExiste(inmueble);
-    }
-
-    public void mostrarInmuebleSiExiste(Inmueble inmueble) {
         if (inmueble != null) {
             inmuebleSeleccionado.postValue(inmueble);
+            Log.d("InmuebleVM", "📦 Inmueble cargado desde Bundle: " + inmueble.getDireccion());
+        } else {
+            Log.w("InmuebleVM", "⚠️ Bundle sin inmueble válido");
         }
-    }
-
-    // ==========================
-    // 🔹 GUARDADO SIMPLE
-    // ==========================
-    public void procesarGuardado(String direccion, String precioStr, boolean disponible) {
-        if (direccion.isEmpty() || precioStr.isEmpty()) {
-            mensajeToast.postValue("⚠️ Complete todos los campos");
-            return;
-        }
-
-        try {
-            double precio = Double.parseDouble(precioStr);
-            Inmueble nuevo = new Inmueble(direccion.trim(), precio, disponible);
-            insertar(nuevo);
-            mensajeToast.postValue("✅ Inmueble guardado correctamente");
-            navegarAtras.postValue(true);
-        } catch (NumberFormatException e) {
-            mensajeToast.postValue("❌ Precio inválido");
-        }
-    }
-
-    private void actualizarListaLocal(Inmueble nuevo) {
-        List<Inmueble> actual = listaLiveData.getValue();
-        if (actual == null) actual = new ArrayList<>();
-        actual.add(nuevo);
-        listaLiveData.postValue(actual);
     }
 
     // ==========================
@@ -200,9 +175,6 @@ public class InmuebleViewModel extends AndroidViewModel {
     // ==========================
     public void actualizarDisponibilidad(Inmueble inmueble) {
         if (inmueble == null) return;
-
-        Log.d("InmuebleVM", "🔄 Actualizando disponibilidad ID=" + inmueble.getId()
-                + " estado=" + inmueble.isDisponible());
 
         LiveData<Boolean> resultado = repo.actualizarDisponibilidad(inmueble);
         resultado.observeForever(new Observer<Boolean>() {
@@ -229,19 +201,48 @@ public class InmuebleViewModel extends AndroidViewModel {
     }
 
     // ==========================
-    // 🔹 ACTUALIZACIÓN COMPLETA
+    // 🔹 ACTUALIZACIÓN COMPLETA (form-data)
     // ==========================
     public void actualizarInmueble(Inmueble inmueble, Uri imagenUri) {
-        LiveData<Boolean> resultado = repo.actualizarInmueble(inmueble, imagenUri);
+        if (inmueble == null) {
+            mensajeToast.postValue("⚠️ Inmueble nulo, no se puede actualizar");
+            return;
+        }
+
+        LiveData<Boolean> resultado = repo.actualizarInmuebleConImagenForm(inmueble, imagenUri);
         resultado.observeForever(new Observer<Boolean>() {
             @Override
             public void onChanged(Boolean exito) {
                 resultado.removeObserver(this);
                 if (Boolean.TRUE.equals(exito)) {
-                    mensajeToast.postValue("✅ Inmueble actualizado en el servidor");
+                    mensajeToast.postValue("✅ Inmueble actualizado correctamente");
                     cargarInmueblesDesdeApi();
                 } else {
-                    mensajeToast.postValue("⚠️ Error al actualizar inmueble");
+                    mensajeToast.postValue("⚠️ Error al actualizar el inmueble");
+                }
+            }
+        });
+    }
+
+    // ==========================
+    // 🆕 SUBIR IMAGEN INDIVIDUAL
+    // ==========================
+    public void subirImagenInmueble(int idInmueble, Uri imagenUri) {
+        if (imagenUri == null) {
+            mensajeToast.postValue("⚠️ Seleccione una imagen antes de guardar");
+            return;
+        }
+
+        LiveData<Boolean> resultado = repo.subirImagenInmueble(idInmueble, imagenUri);
+        resultado.observeForever(new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean exito) {
+                resultado.removeObserver(this);
+                if (Boolean.TRUE.equals(exito)) {
+                    mensajeToast.postValue("✅ Imagen subida correctamente");
+                    cargarInmueblesDesdeApi();
+                } else {
+                    mensajeToast.postValue("⚠️ Error al subir la imagen del inmueble");
                 }
             }
         });
@@ -265,9 +266,6 @@ public class InmuebleViewModel extends AndroidViewModel {
         return ContextCompat.getColor(context, color);
     }
 
-    // ==========================
-    // 🔹 FILTRO / RECARGA
-    // ==========================
     public LiveData<List<Inmueble>> getListaFiltrada() {
         MutableLiveData<List<Inmueble>> filtrada = new MutableLiveData<>();
         getListaLiveData().observeForever(lista -> {

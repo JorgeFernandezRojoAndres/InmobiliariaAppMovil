@@ -28,15 +28,31 @@
                 android:orientation="vertical"
                 android:gravity="center_horizontal">
 
-                <!-- 📸 Imagen -->
-                <ImageView
-                    android:id="@+id/imgInmueble"
+                <!-- 📸 Imagen del inmueble -->
+                <FrameLayout
                     android:layout_width="220dp"
                     android:layout_height="220dp"
-                    android:layout_marginBottom="16dp"
-                    android:background="@drawable/image_background"
-                    android:scaleType="centerCrop"
-                    android:contentDescription="@string/app_name" />
+                    android:layout_marginBottom="16dp">
+
+                    <ImageView
+                        android:id="@+id/imgInmueble"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/image_background"
+                        android:scaleType="centerCrop"
+                        android:contentDescription="@string/app_name"
+                        android:adjustViewBounds="true"
+                        android:clipToOutline="true"
+                        android:outlineProvider="background" />
+
+                    <!-- 🕓 Placeholder opcional durante carga -->
+                    <ProgressBar
+                        android:id="@+id/progressImg"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:layout_gravity="center"
+                        android:visibility="gone" />
+                </FrameLayout>
 
                 <Button
                     android:id="@+id/btnCambiarImg"
@@ -60,7 +76,7 @@
                     android:textAlignment="center"
                     android:imeOptions="actionNext" />
 
-                <!-- 🏗️ Tipo de inmueble (dinámico desde la API) -->
+                <!-- 🏗️ Tipo de inmueble -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

@@ -24,6 +24,9 @@
     <string name="label_disponible">Disponible</string>
     <string name="btn_guardar">Guardar</string>
 
+    <!-- 🖼️ Recursos de imagen -->
+    <string name="imagen_inmueble">Imagen del inmueble</string>
+
     <!-- ✅ Mensajes de estado y validación -->
     <string name="msg_inmueble_guardado">Inmueble guardado correctamente</string>
     <string name="msg_campos_vacios">Complete todos los campos</string>

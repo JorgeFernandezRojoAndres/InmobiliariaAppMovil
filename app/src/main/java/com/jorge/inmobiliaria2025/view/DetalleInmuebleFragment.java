@@ -45,7 +45,7 @@ public class DetalleInmuebleFragment extends Fragment {
     private ArrayAdapter<String> tipoAdapter;
     private final List<TipoInmueble> listaTipos = new ArrayList<>();
 
-    // 🎯 Selección de imagen
+    // 🎯 Selección de imagen desde galería
     private final ActivityResultLauncher<Intent> seleccionarImagenLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
                 if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
@@ -62,7 +62,7 @@ public class DetalleInmuebleFragment extends Fragment {
 
         View v = inflater.inflate(R.layout.fragment_detalle_inmueble, container, false);
 
-        // 🧱 Referencias
+        // 🧱 Referencias UI
         etDireccion = v.findViewById(R.id.etDireccionDetalle);
         etMetros = v.findViewById(R.id.etMetrosDetalle);
         etPrecio = v.findViewById(R.id.etPrecioDetalle);
@@ -76,17 +76,17 @@ public class DetalleInmuebleFragment extends Fragment {
 
         vm = new ViewModelProvider(requireActivity()).get(InmuebleViewModel.class);
 
-        // 🔹 Carga inicial
+        // 🔹 Carga inicial del inmueble recibido
         vm.cargarDesdeBundle(getArguments());
         vm.getInmuebleSeleccionado().observe(getViewLifecycleOwner(), this::mostrarInmueble);
 
-        // 🔹 Configura el spinner
+        // 🔹 Configura el spinner de tipos
         tipoAdapter = new ArrayAdapter<>(requireContext(),
                 android.R.layout.simple_spinner_item, new ArrayList<>());
         tipoAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spTipo.setAdapter(tipoAdapter);
 
-        // 🔹 Observa tipos de inmueble
+        // 🔹 Observa los tipos de inmueble
         vm.getTiposInmueble().observe(getViewLifecycleOwner(), tipos -> {
             listaTipos.clear();
             tipoAdapter.clear();
@@ -101,7 +101,7 @@ public class DetalleInmuebleFragment extends Fragment {
             }
             tipoAdapter.notifyDataSetChanged();
 
-            // 🔸 Selecciona el tipo del inmueble actual si existe
+            // 🔸 Selecciona el tipo actual si existe
             Inmueble inmueble = vm.getInmuebleSeleccionado().getValue();
             if (inmueble != null && inmueble.getTipoNombre() != null) {
                 int pos = tipoAdapter.getPosition(inmueble.getTipoNombre());
@@ -130,12 +130,13 @@ public class DetalleInmuebleFragment extends Fragment {
                         : "Propietario no disponible"
         );
 
-        // 🔹 Sincroniza tipo en spinner
-        if (inmueble.getTipoNombre() != null && tipoAdapter != null && tipoAdapter.getCount() > 0) {
+        // 🔹 Seleccionar tipo en spinner
+        if (inmueble.getTipoNombre() != null && tipoAdapter.getCount() > 0) {
             int position = tipoAdapter.getPosition(inmueble.getTipoNombre());
             if (position >= 0) spTipo.setSelection(position);
         }
 
+        // 🖼️ Carga imagen (URL o fondo)
         Glide.with(requireContext())
                 .load(inmueble.getImagenUrl() != null ? inmueble.getImagenUrl() : R.drawable.image_background)
                 .centerCrop()
@@ -183,8 +184,9 @@ public class DetalleInmuebleFragment extends Fragment {
                 }
             }
 
+            // 🆕 Llamada al ViewModel con multipart/form
             vm.actualizarInmueble(inmueble, imagenSeleccionadaUri);
-            vm.setInmuebleSeleccionado(inmueble); // 🆕 Sincroniza en el ViewModel
+            vm.setInmuebleSeleccionado(inmueble); // sincroniza estado
 
             habilitarEdicion(false);
             Toast.makeText(requireContext(), "✅ Inmueble actualizado correctamente", Toast.LENGTH_SHORT).show();

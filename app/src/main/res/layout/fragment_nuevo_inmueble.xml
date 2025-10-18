@@ -69,6 +69,37 @@
                 android:textColor="@android:color/black" />
         </com.google.android.material.textfield.TextInputLayout>
 
+        <!-- 🖼️ Vista previa de imagen -->
+        <ImageView
+            android:id="@+id/ivPreview"
+            android:layout_width="160dp"
+            android:layout_height="160dp"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_image_placeholder"
+            android:contentDescription="@string/imagen_inmueble"
+            android:scaleType="centerCrop"
+            android:background="@drawable/image_border"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="12dp" />
+
+        <!-- 📷 Botón Seleccionar Imagen -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSeleccionarImagen"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Seleccionar imagen"
+            android:textAllCaps="false"
+            android:paddingVertical="12dp"
+            android:textSize="16sp"
+            app:cornerRadius="16dp"
+            app:icon="@drawable/ic_baseline_photo_camera_24"
+            app:iconGravity="textStart"
+            app:iconPadding="10dp"
+            app:elevation="4dp"
+            app:backgroundTint="@color/purple_700"
+            android:textColor="@android:color/white"
+            android:layout_marginBottom="18dp" />
+
         <!-- 🔘 Switch de disponibilidad -->
         <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/swDisponibleForm"
@@ -78,7 +109,7 @@
             android:checked="true"
             android:textAppearance="?attr/textAppearanceBodyLarge"
             android:textColor="@android:color/white"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="8dp"
             android:layout_marginBottom="20dp" />
 
         <!-- 💾 Botón Guardar -->
@@ -90,8 +121,6 @@
             android:textAllCaps="false"
             android:paddingVertical="12dp"
             android:textSize="17sp"
-            android:insetTop="8dp"
-            android:insetBottom="8dp"
             app:cornerRadius="16dp"
             app:icon="@drawable/ic_baseline_save_24"
             app:iconGravity="textStart"

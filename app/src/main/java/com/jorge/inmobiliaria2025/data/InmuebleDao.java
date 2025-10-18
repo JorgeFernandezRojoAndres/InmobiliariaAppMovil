@@ -23,12 +23,27 @@ public interface InmuebleDao {
     @Update
     void actualizar(Inmueble inmueble);
 
-    // 🔹 Elimina un inmueble (nuevo método para usar en ViewModel)
+    // 🔹 Elimina un inmueble específico
     @Delete
     void eliminar(Inmueble inmueble);
 
     // 🔹 Obtiene todos los inmuebles, ordenados por id descendente
-    // ⚠️ Tabla corregida: "inmueble" (en singular)
     @Query("SELECT * FROM inmueble ORDER BY id DESC")
     LiveData<List<Inmueble>> obtenerTodos();
+
+    // ==============================================
+    // 🧩 Métodos añadidos para sincronización con API
+    // ==============================================
+
+    // Inserta una lista completa (usado al sincronizar desde el backend)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void insertAll(List<Inmueble> inmuebles);
+
+    // Elimina todos los registros (para limpiar antes de sincronizar)
+    @Query("DELETE FROM inmueble")
+    void deleteAll();
+
+    // Devuelve todos los inmuebles como lista (sin LiveData, para tareas en background)
+    @Query("SELECT * FROM inmueble")
+    List<Inmueble> getAll();
 }
