@@ -128,4 +128,11 @@ public interface ApiService {
             @Body Inmueble inmueble
     );
 
+    // ✅ Crear nuevo inmueble (POST /api/Inmuebles)
+    @POST("api/Inmuebles")
+    Call<Inmueble> crearInmueble(
+            @Header("Authorization") String token,
+            @Body Inmueble nuevo
+    );
+
 }

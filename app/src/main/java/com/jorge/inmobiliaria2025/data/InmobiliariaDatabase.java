@@ -13,7 +13,7 @@ import com.jorge.inmobiliaria2025.model.Inmueble;
  * Base de datos local con Room para almacenar inmuebles offline.
  * Usa patrón Singleton con método getInstance() compatible con el repositorio.
  */
-@Database(entities = {Inmueble.class}, version = 1, exportSchema = false)
+@Database(entities = {Inmueble.class}, version = 2, exportSchema = false)
 public abstract class InmobiliariaDatabase extends RoomDatabase {
 
     // Instancia única de la base de datos

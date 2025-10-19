@@ -403,5 +403,58 @@ public class InmuebleRepository {
         return resultado;
     }
 
+    // ================================
+// 🆕 CREAR NUEVO INMUEBLE (POST /api/Inmuebles)
+// ================================
+    public LiveData<Inmueble> crearInmueble(Inmueble nuevo) {
+        MutableLiveData<Inmueble> data = new MutableLiveData<>();
+        String token = sessionManager.getToken();
+
+        if (token == null || token.isEmpty()) {
+            Log.w("RepoInmueble", "⚠️ Token nulo al crear inmueble");
+            data.setValue(null);
+            return data;
+        }
+
+        apiService.crearInmueble("Bearer " + token, nuevo).enqueue(new Callback<Inmueble>() {
+            @Override
+            public void onResponse(Call<Inmueble> call, Response<Inmueble> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    Inmueble creado = response.body();
+                    Log.i("RepoInmueble", "✅ Inmueble creado en API (ID=" + creado.getId() + ")");
+
+                    // 💾 Insertar también en Room para mantener consistencia local
+                    InmobiliariaDatabase db = InmobiliariaDatabase.getInstance(context);
+                    InmuebleDao dao = db.inmuebleDao();
+                    new Thread(() -> {
+                        try {
+                            dao.insertar(creado);
+                            Log.i("RepoInmueble", "💾 Inmueble insertado localmente en Room");
+                        } catch (Exception e) {
+                            Log.e("RepoInmueble", "❌ Error al insertar inmueble en Room: " + e.getMessage());
+                        }
+                    }).start();
+
+                    data.setValue(creado);
+                } else {
+                    Log.w("RepoInmueble", "⚠️ Error HTTP " + response.code() + " al crear inmueble");
+                    if (response.errorBody() != null) {
+                        try {
+                            Log.e("RepoInmueble", "Detalles del error: " + response.errorBody().string());
+                        } catch (Exception ignored) {}
+                    }
+                    data.setValue(null);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Inmueble> call, Throwable t) {
+                Log.e("RepoInmueble", "❌ Error al crear inmueble: " + t.getMessage());
+                data.setValue(null);
+            }
+        });
+
+        return data;
+    }
 }
 

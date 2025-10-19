@@ -1,4 +1,4 @@
-package com.jorge.inmobiliaria2025.viewmodel;
+ package com.jorge.inmobiliaria2025.viewmodel;
 
 import android.app.Application;
 import android.content.Context;
@@ -6,6 +6,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
+import com.google.gson.Gson;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
@@ -76,12 +78,20 @@ public class InmuebleViewModel extends AndroidViewModel {
             double precio = Double.parseDouble(precioTexto);
             Inmueble nuevo = new Inmueble(direccion.trim(), precio, disponible);
 
+            // Guardar primero el inmueble
             executor.execute(() -> {
                 inmuebleDao.insertar(nuevo);
-                List<Inmueble> actual = listaLiveData.getValue();
-                if (actual == null) actual = new ArrayList<>();
-                actual.add(nuevo);
-                listaLiveData.postValue(actual);
+
+                // 🔹 Recargar la lista actualizada desde Room
+                List<Inmueble> listaActualizada = inmuebleDao.obtenerTodos().getValue();
+                if (listaActualizada != null) {
+                    listaLiveData.postValue(listaActualizada);
+                } else {
+                    List<Inmueble> actual = listaLiveData.getValue();
+                    if (actual == null) actual = new ArrayList<>();
+                    actual.add(nuevo);
+                    listaLiveData.postValue(actual);
+                }
             });
 
             mensajeToast.postValue("✅ Inmueble guardado correctamente");
@@ -223,30 +233,144 @@ public class InmuebleViewModel extends AndroidViewModel {
             }
         });
     }
+    // ✅ Método refactorizado para MVVM limpio con fix de navegación
+    public void onGuardarInmuebleClick(String direccion, String precioTexto, boolean disponible, Uri imagenUri) {
+        if (direccion == null || direccion.trim().isEmpty() || precioTexto == null || precioTexto.trim().isEmpty()) {
+            mensajeToast.postValue("⚠️ Complete todos los campos");
+            return;
+        }
+
+        double precio;
+        try {
+            precio = Double.parseDouble(precioTexto);
+        } catch (NumberFormatException e) {
+            mensajeToast.postValue("❌ Precio inválido");
+            return;
+        }
+
+        Inmueble nuevo = new Inmueble(direccion.trim(), precio, disponible);
+        nuevo.setTipoId(1); // TipoId por defecto, evita error de FK
+
+        // 🔎 Log para verificar el JSON que se envía a la API
+        Log.d("InmuebleVM", "📤 JSON enviado: " + new Gson().toJson(nuevo));
+
+        LiveData<Inmueble> creado = repo.crearInmueble(nuevo);
+
+        creado.observeForever(new Observer<Inmueble>() {
+            @Override
+            public void onChanged(Inmueble inmuebleCreado) {
+                creado.removeObserver(this);
+
+                if (inmuebleCreado == null) {
+                    mensajeToast.postValue("⚠️ Error al crear el inmueble en el servidor");
+                    return;
+                }
+
+                mensajeToast.postValue("✅ Inmueble creado correctamente");
+
+                if (imagenUri != null) {
+                    new android.os.Handler(android.os.Looper.getMainLooper()).post(() ->
+                            subirImagenInmueble(inmuebleCreado.getId(), imagenUri)
+                    );
+                }
+
+                cargarInmueblesDesdeApi();
+
+                // 🔹 Navegación atrás controlada sin pestañeo
+                navegarAtras.postValue(true);
+
+                executor.execute(() -> {
+                    try { Thread.sleep(300); } catch (InterruptedException ignored) {}
+                    navegarAtras.postValue(false);
+                });
+            }
+        });
+    }
+
+
 
     // ==========================
-    // 🆕 SUBIR IMAGEN INDIVIDUAL
-    // ==========================
+// 🆕 SUBIR IMAGEN INDIVIDUAL (corregido para ejecutar en hilo principal)
+// ==========================
     public void subirImagenInmueble(int idInmueble, Uri imagenUri) {
         if (imagenUri == null) {
             mensajeToast.postValue("⚠️ Seleccione una imagen antes de guardar");
             return;
         }
 
-        LiveData<Boolean> resultado = repo.subirImagenInmueble(idInmueble, imagenUri);
-        resultado.observeForever(new Observer<Boolean>() {
-            @Override
-            public void onChanged(Boolean exito) {
-                resultado.removeObserver(this);
-                if (Boolean.TRUE.equals(exito)) {
-                    mensajeToast.postValue("✅ Imagen subida correctamente");
-                    cargarInmueblesDesdeApi();
-                } else {
-                    mensajeToast.postValue("⚠️ Error al subir la imagen del inmueble");
+        // 👇 Asegura que observeForever se ejecute en el hilo principal
+        new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+            LiveData<Boolean> resultado = repo.subirImagenInmueble(idInmueble, imagenUri);
+            resultado.observeForever(new Observer<Boolean>() {
+                @Override
+                public void onChanged(Boolean exito) {
+                    resultado.removeObserver(this);
+                    if (Boolean.TRUE.equals(exito)) {
+                        mensajeToast.postValue("✅ Imagen subida correctamente");
+                        cargarInmueblesDesdeApi();
+                    } else {
+                        mensajeToast.postValue("⚠️ Error al subir la imagen del inmueble");
+                    }
                 }
-            }
+            });
         });
     }
+
+    public void guardarInmueble(String direccion, String precioTexto, boolean disponible, Uri imagenUri) {
+        if (direccion == null || direccion.trim().isEmpty() || precioTexto == null || precioTexto.trim().isEmpty()) {
+            mensajeToast.postValue("⚠️ Complete todos los campos");
+            return;
+        }
+
+        double precio;
+        try {
+            precio = Double.parseDouble(precioTexto);
+        } catch (NumberFormatException e) {
+            mensajeToast.postValue("❌ Precio inválido");
+            return;
+        }
+
+        Inmueble nuevo = new Inmueble(direccion.trim(), precio, disponible);
+        nuevo.setTipoId(1); // TipoId obligatorio por defecto
+
+        // ✅ Crear inmueble en el servidor
+        LiveData<Inmueble> creado = repo.crearInmueble(nuevo);
+
+        Observer<Inmueble> observer = new Observer<Inmueble>() {
+            @Override
+            public void onChanged(Inmueble inmuebleCreado) {
+                if (inmuebleCreado != null) {
+                    mensajeToast.postValue("✅ Inmueble creado correctamente");
+
+                    // 📤 Subir imagen si corresponde
+                    if (imagenUri != null) {
+                        new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+                            subirImagenInmueble(inmuebleCreado.getId(), imagenUri);
+                        });
+                    }
+
+                    // 🔄 Refrescar lista desde API
+                    cargarInmueblesDesdeApi();
+
+                    // 🔹 Navegación controlada sin “pestañeo”
+                    navegarAtras.postValue(true);
+                    executor.execute(() -> {
+                        try { Thread.sleep(300); } catch (InterruptedException ignored) {}
+                        navegarAtras.postValue(false);
+                    });
+
+                } else {
+                    mensajeToast.postValue("⚠️ Error al crear inmueble en el servidor");
+                }
+
+                creado.removeObserver(this);
+            }
+        };
+
+        creado.observeForever(observer);
+    }
+
+
 
     // ==========================
     // 🔹 UTILIDADES VISUALES

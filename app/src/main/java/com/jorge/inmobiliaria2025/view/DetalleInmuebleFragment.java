@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -101,7 +103,6 @@ public class DetalleInmuebleFragment extends Fragment {
             }
             tipoAdapter.notifyDataSetChanged();
 
-            // 🔸 Selecciona el tipo actual si existe
             Inmueble inmueble = vm.getInmuebleSeleccionado().getValue();
             if (inmueble != null && inmueble.getTipoNombre() != null) {
                 int pos = tipoAdapter.getPosition(inmueble.getTipoNombre());
@@ -114,6 +115,26 @@ public class DetalleInmuebleFragment extends Fragment {
         btnGuardar.setOnClickListener(view -> guardarCambios());
         btnCambiarImg.setOnClickListener(view -> abrirGaleria());
 
+        // 🆕 Mantener el texto “metros cuadrados” visible sin romper el valor numérico
+        etMetros.addTextChangedListener(new TextWatcher() {
+            private boolean editing = false;
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (editing) return;
+                editing = true;
+                String text = s.toString().replace(" metros cuadrados", "").trim();
+                if (!text.isEmpty()) {
+                    etMetros.setText(text + " metros cuadrados");
+                    etMetros.setSelection(text.length()); // el cursor queda antes del texto fijo
+                }
+                editing = false;
+            }
+        });
+
         return v;
     }
 
@@ -121,7 +142,7 @@ public class DetalleInmuebleFragment extends Fragment {
         if (inmueble == null) return;
 
         etDireccion.setText(inmueble.getDireccion());
-        etMetros.setText(String.valueOf(inmueble.getMetrosCuadrados()));
+        etMetros.setText(inmueble.getMetrosCuadrados() + " metros cuadrados");
         etPrecio.setText(String.valueOf(inmueble.getPrecio()));
         swActivo.setChecked(inmueble.isActivo());
         tvPropietario.setText(
@@ -130,13 +151,11 @@ public class DetalleInmuebleFragment extends Fragment {
                         : "Propietario no disponible"
         );
 
-        // 🔹 Seleccionar tipo en spinner
         if (inmueble.getTipoNombre() != null && tipoAdapter.getCount() > 0) {
             int position = tipoAdapter.getPosition(inmueble.getTipoNombre());
             if (position >= 0) spTipo.setSelection(position);
         }
 
-        // 🖼️ Carga imagen (URL o fondo)
         Glide.with(requireContext())
                 .load(inmueble.getImagenUrl() != null ? inmueble.getImagenUrl() : R.drawable.image_background)
                 .centerCrop()
@@ -169,24 +188,28 @@ public class DetalleInmuebleFragment extends Fragment {
 
         try {
             inmueble.setDireccion(etDireccion.getText().toString().trim());
-            inmueble.setMetrosCuadrados(Integer.parseInt(etMetros.getText().toString()));
+
+            // 🔹 Limpia el texto antes de convertir a número
+            String metrosTexto = etMetros.getText().toString().replace(" metros cuadrados", "").trim();
+            inmueble.setMetrosCuadrados(Integer.parseInt(metrosTexto));
+
             inmueble.setPrecio(Double.parseDouble(etPrecio.getText().toString()));
             inmueble.setActivo(swActivo.isChecked());
 
-            // 🔹 Tipo seleccionado
-            String tipoSeleccionado = (String) spTipo.getSelectedItem();
-            inmueble.setTipoNombre(tipoSeleccionado);
-
-            for (TipoInmueble tipo : listaTipos) {
-                if (tipo.getNombre().equals(tipoSeleccionado)) {
-                    inmueble.setTipoId(tipo.getId());
-                    break;
-                }
+            // ✅ Asignar TipoId correctamente antes de enviar
+            int pos = spTipo.getSelectedItemPosition();
+            if (pos >= 0 && pos < listaTipos.size()) {
+                TipoInmueble tipoSeleccionado = listaTipos.get(pos);
+                inmueble.setTipoId(tipoSeleccionado.getId());
+                inmueble.setTipoNombre(tipoSeleccionado.getNombre());
+            } else {
+                Toast.makeText(requireContext(), "⚠️ Tipo de inmueble no válido", Toast.LENGTH_SHORT).show();
+                return; // corta el guardado si no hay tipo seleccionado
             }
 
-            // 🆕 Llamada al ViewModel con multipart/form
+
             vm.actualizarInmueble(inmueble, imagenSeleccionadaUri);
-            vm.setInmuebleSeleccionado(inmueble); // sincroniza estado
+            vm.setInmuebleSeleccionado(inmueble);
 
             habilitarEdicion(false);
             Toast.makeText(requireContext(), "✅ Inmueble actualizado correctamente", Toast.LENGTH_SHORT).show();

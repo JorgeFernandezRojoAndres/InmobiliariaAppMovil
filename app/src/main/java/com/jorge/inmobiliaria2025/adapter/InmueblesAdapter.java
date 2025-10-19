@@ -79,7 +79,12 @@ public class InmueblesAdapter extends RecyclerView.Adapter<InmueblesAdapter.View
 
         // 🔄 Evita loops por reciclado del switch
         holder.swDisponible.setOnCheckedChangeListener(null);
-        holder.swDisponible.setChecked(i.isDisponible());
+
+// 🔒 Evita null o valores incorrectos
+        boolean disponible = i.isDisponible();
+
+        holder.swDisponible.setChecked(disponible);
+
 
         holder.swDisponible.setOnCheckedChangeListener((CompoundButton buttonView, boolean isChecked) -> {
             if (i.isDisponible() != isChecked) { // ✅ Evita repeticiones innecesarias

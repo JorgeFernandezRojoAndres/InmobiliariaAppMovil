@@ -42,9 +42,9 @@ public class NuevoInmuebleFragment extends Fragment {
                 }
             });
 
-    @Nullable
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater,
+      @Nullable
+      @Override
+      public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
 
@@ -60,39 +60,34 @@ public class NuevoInmuebleFragment extends Fragment {
         vm = new ViewModelProvider(requireActivity()).get(InmuebleViewModel.class);
         NavController navController = NavHostFragment.findNavController(this);
 
-        // 🧩 Observa mensajes
-        vm.getMensajeToast().observe(getViewLifecycleOwner(), mensaje -> {
-            if (mensaje == null || getContext() == null) return;
-            vm.mostrarToast(getContext(), mensaje);
-        });
+          // 🧩 Observa mensajes
+          vm.getMensajeToast().observe(getViewLifecycleOwner(),
+                  mensaje -> vm.mostrarToast(requireContext(), mensaje));
 
-        // 🧩 Navegación atrás controlada por ViewModel
-        vm.getNavegarAtras().observe(getViewLifecycleOwner(), navegar -> {
-            if (Boolean.TRUE.equals(navegar)) {
-                limpiarCampos();
-                navController.popBackStack();
-            }
-        });
 
-        // 📷 Botón seleccionar imagen
+// 🧩 Navegación atrás controlada por ViewModel
+          vm.getNavegarAtras().observe(getViewLifecycleOwner(), navegar -> {
+              if (Boolean.TRUE.equals(navegar)) {
+                  limpiarCampos();
+                  navController.popBackStack();
+              }
+          });
+
+
+          // 📷 Botón seleccionar imagen
         btnSeleccionarImagen.setOnClickListener(vw -> abrirSelectorImagen());
 
-        // 💾 Botón guardar inmueble
-        btnGuardar.setOnClickListener(view -> {
-            String direccion = etDireccion.getText().toString().trim();
-            String precioTexto = etPrecio.getText().toString().trim();
-            boolean disponible = swDisponible.isChecked();
+          btnGuardar.setOnClickListener(view -> {
+              vm.guardarInmueble(
+                      etDireccion.getText().toString(),
+                      etPrecio.getText().toString(),
+                      swDisponible.isChecked(),
+                      imagenUriSeleccionada
+              );
+          });
 
-            // ✅ Llamada corregida al ViewModel
-            vm.procesarGuardado(direccion, precioTexto, disponible);
 
-            // 🔹 Si hay imagen seleccionada, subirla luego de guardar
-            if (imagenUriSeleccionada != null) {
-                vm.subirImagenInmueble(1, imagenUriSeleccionada); // 👈 reemplazar por ID real del backend
-            }
-        });
-
-        return v;
+          return v;
     }
 
     private void abrirSelectorImagen() {
