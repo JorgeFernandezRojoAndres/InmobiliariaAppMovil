@@ -9,7 +9,9 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
+import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
@@ -20,6 +22,7 @@ import com.google.android.material.navigation.NavigationView;
 import com.jorge.inmobiliaria2025.data.SessionManager;
 import com.jorge.inmobiliaria2025.model.Propietario;
 import com.jorge.inmobiliaria2025.view.LoginActivity;
+import com.jorge.inmobiliaria2025.viewmodel.NavViewModel;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -78,6 +81,19 @@ public class MainActivity extends AppCompatActivity {
         actualizarHeaderUsuario(propietario, email);
 
         Log.d("MAIN", "👤 Header actualizado con los datos del propietario.");
+
+        // ================================
+        // 🧭 OBSERVA NAVEGACIÓN GLOBAL DESDE NAVVIEWMODEL
+        // ================================
+        NavViewModel navVM = new ViewModelProvider(this).get(NavViewModel.class);
+        navVM.getNavToDetalle().observe(this, args -> {
+            if (args != null) {
+                Log.i("MAIN", "➡️ Navegando al detalle desde NavViewModel");
+                NavHostFragment.findNavController(
+                        getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment)
+                ).navigate(R.id.action_inmueblesFragment_to_detalleInmuebleFragment, args);
+            }
+        });
     }
 
     // ✅ Actualiza el header del menú con nombre, email y avatar
@@ -95,7 +111,6 @@ public class MainActivity extends AppCompatActivity {
             tvNombre.setText(nombreCompleto.trim().isEmpty() ? "Mi Perfil" : nombreCompleto);
             tvEmail.setText(propietario.getEmail() != null ? propietario.getEmail() : fallbackEmail);
 
-            // 🖼️ Usar SessionManager para obtener la URL completa del avatar
             try {
                 SessionManager sm = new SessionManager(this);
                 String urlCompleta = sm.getAvatarFullUrl(propietario.getAvatarUrl());

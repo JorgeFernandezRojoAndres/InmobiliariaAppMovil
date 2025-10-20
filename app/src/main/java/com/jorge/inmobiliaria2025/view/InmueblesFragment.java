@@ -18,6 +18,7 @@ import com.jorge.inmobiliaria2025.R;
 import com.jorge.inmobiliaria2025.adapter.InmueblesAdapter;
 import com.jorge.inmobiliaria2025.model.Inmueble;
 import com.jorge.inmobiliaria2025.viewmodel.InmuebleViewModel;
+import com.jorge.inmobiliaria2025.viewmodel.NavViewModel; // ✅ importa este
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,31 +40,21 @@ public class InmueblesFragment extends Fragment {
         rv = v.findViewById(R.id.rvInmuebles);
         FloatingActionButton fabAgregar = v.findViewById(R.id.fabAgregar);
 
-        // 🧩 Vista en cuadrícula (2 columnas)
         rv.setLayoutManager(new GridLayoutManager(getContext(), 2));
 
-        // 🧩 ViewModel compartido con la Activity
+        // 🧠 ViewModels
         vm = new ViewModelProvider(requireActivity()).get(InmuebleViewModel.class);
 
-        // 🧩 Adapter con listeners: click + cambio de disponibilidad
+        // ✅ Conectamos el NavViewModel compartido
+        NavViewModel navVM = new ViewModelProvider(requireActivity()).get(NavViewModel.class);
+        vm.setNavViewModel(navVM);
+
+        // 🔹 Adapter sin lógica en el fragment
         adapter = new InmueblesAdapter(
                 new ArrayList<>(),
-                inmueble -> { // 👉 Click en item
-                    if (inmueble != null) {
-                        vm.setInmuebleSeleccionado(inmueble); // 🔹 Sincroniza en ViewModel
-                        Bundle bundle = new Bundle();
-                        bundle.putSerializable("inmueble", inmueble);
-                        NavHostFragment.findNavController(this)
-                                .navigate(R.id.action_inmueblesFragment_to_detalleInmuebleFragment, bundle);
-                    }
-                },
-                inmueble -> { // 👉 Cambio de switch
-                    if (inmueble != null) {
-                        vm.actualizarDisponibilidad(inmueble);
-                    }
-                }
+                vm::onInmuebleClick,
+                vm::onCambiarDisponibilidad
         );
-
         rv.setAdapter(adapter);
 
         // 🧠 Observa la lista filtrada del ViewModel
@@ -72,10 +63,7 @@ public class InmueblesFragment extends Fragment {
             adapter.actualizarLista(inmuebles);
         });
 
-        // 🚀 Carga inicial
-        if (vm.getListaFiltrada().getValue() == null || vm.getListaFiltrada().getValue().isEmpty()) {
-            vm.cargarInmuebles();
-        }
+        vm.cargarInmuebles();
 
         // ➕ Botón agregar inmueble
         fabAgregar.setOnClickListener(view ->
