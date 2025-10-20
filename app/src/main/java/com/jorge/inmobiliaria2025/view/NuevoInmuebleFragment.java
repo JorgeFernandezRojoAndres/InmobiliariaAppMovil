@@ -33,18 +33,14 @@ public class NuevoInmuebleFragment extends Fragment {
     private Uri imagenUriSeleccionada;
     private InmuebleViewModel vm;
 
-    // 📷 Launcher para seleccionar imagen
     private final ActivityResultLauncher<Intent> seleccionarImagenLauncher =
-            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
-                if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
-                    imagenUriSeleccionada = result.getData().getData();
-                    ivPreview.setImageURI(imagenUriSeleccionada);
-                }
-            });
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result ->
+                    vm.procesarSeleccionImagen(result, ivPreview)
+            );
 
-      @Nullable
-      @Override
-      public View onCreateView(@NonNull LayoutInflater inflater,
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
 
@@ -60,34 +56,25 @@ public class NuevoInmuebleFragment extends Fragment {
         vm = new ViewModelProvider(requireActivity()).get(InmuebleViewModel.class);
         NavController navController = NavHostFragment.findNavController(this);
 
-          // 🧩 Observa mensajes
-          vm.getMensajeToast().observe(getViewLifecycleOwner(),
-                  mensaje -> vm.mostrarToast(requireContext(), mensaje));
+        // 🔹 Observadores reactivos sin if
+        vm.getMensajeToast().observe(getViewLifecycleOwner(),
+                mensaje -> vm.mostrarToast(requireContext(), mensaje));
 
+        vm.getAccionLimpiarCampos().observe(getViewLifecycleOwner(),
+                limpiar -> limpiarCampos());
 
-// 🧩 Navegación atrás controlada por ViewModel
-          vm.getNavegarAtras().observe(getViewLifecycleOwner(), navegar -> {
-              if (Boolean.TRUE.equals(navegar)) {
-                  limpiarCampos();
-                  navController.popBackStack();
-              }
-          });
+        vm.getAccionNavegarAtras().observe(getViewLifecycleOwner(),
+                accion -> navController.popBackStack());
 
-
-          // 📷 Botón seleccionar imagen
         btnSeleccionarImagen.setOnClickListener(vw -> abrirSelectorImagen());
+        btnGuardar.setOnClickListener(view -> vm.guardarInmueble(
+                etDireccion.getText().toString(),
+                etPrecio.getText().toString(),
+                swDisponible.isChecked(),
+                vm.getImagenUriSeleccionada().getValue()
+        ));
 
-          btnGuardar.setOnClickListener(view -> {
-              vm.guardarInmueble(
-                      etDireccion.getText().toString(),
-                      etPrecio.getText().toString(),
-                      swDisponible.isChecked(),
-                      imagenUriSeleccionada
-              );
-          });
-
-
-          return v;
+        return v;
     }
 
     private void abrirSelectorImagen() {
