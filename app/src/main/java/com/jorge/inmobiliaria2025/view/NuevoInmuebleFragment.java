@@ -26,7 +26,7 @@ import com.jorge.inmobiliaria2025.viewmodel.InmuebleViewModel;
 
 public class NuevoInmuebleFragment extends Fragment {
 
-    private EditText etDireccion, etPrecio;
+    private EditText etDireccion, etPrecio, etMetros;
     private SwitchCompat swDisponible;
     private Button btnGuardar, btnSeleccionarImagen;
     private ImageView ivPreview;
@@ -48,6 +48,7 @@ public class NuevoInmuebleFragment extends Fragment {
 
         etDireccion = v.findViewById(R.id.etDireccion);
         etPrecio = v.findViewById(R.id.etPrecio);
+        etMetros = v.findViewById(R.id.etMetros); // 🆕 nuevo campo
         swDisponible = v.findViewById(R.id.swDisponibleForm);
         btnGuardar = v.findViewById(R.id.btnGuardar);
         btnSeleccionarImagen = v.findViewById(R.id.btnSeleccionarImagen);
@@ -56,7 +57,7 @@ public class NuevoInmuebleFragment extends Fragment {
         vm = new ViewModelProvider(requireActivity()).get(InmuebleViewModel.class);
         NavController navController = NavHostFragment.findNavController(this);
 
-        // 🔹 Observadores reactivos sin if
+        // 🔹 Observadores (sin if)
         vm.getMensajeToast().observe(getViewLifecycleOwner(),
                 mensaje -> vm.mostrarToast(requireContext(), mensaje));
 
@@ -67,9 +68,11 @@ public class NuevoInmuebleFragment extends Fragment {
                 accion -> navController.popBackStack());
 
         btnSeleccionarImagen.setOnClickListener(vw -> abrirSelectorImagen());
+
         btnGuardar.setOnClickListener(view -> vm.guardarInmueble(
                 etDireccion.getText().toString(),
                 etPrecio.getText().toString(),
+                etMetros.getText().toString(), // 🆕 se pasa como string
                 swDisponible.isChecked(),
                 vm.getImagenUriSeleccionada().getValue()
         ));
@@ -86,6 +89,7 @@ public class NuevoInmuebleFragment extends Fragment {
     private void limpiarCampos() {
         etDireccion.setText("");
         etPrecio.setText("");
+        etMetros.setText(""); // 🆕 limpiar metros
         swDisponible.setChecked(false);
         ivPreview.setImageResource(R.drawable.ic_image_placeholder);
         imagenUriSeleccionada = null;

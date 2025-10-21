@@ -240,9 +240,11 @@ public class InmuebleViewModel extends AndroidViewModel {
         });
     }
 
-    // ✅ Versión refactorizada para MVVM limpio (sin lógica condicional en Fragment)
-    public void guardarInmueble(String direccion, String precioTexto, boolean disponible, Uri imagenUri) {
-        // 🔹 Validaciones de campos
+    // ✅ Versión extendida con validación de Metros²
+    public void guardarInmueble(String direccion, String precioTexto, String metrosTexto,
+                                boolean disponible, Uri imagenUri) {
+
+        // 🔹 Validaciones mínimas (controladas desde el ViewModel)
         if (direccion == null || direccion.trim().isEmpty()) {
             mensajeToast.postValue("⚠️ La dirección es obligatoria");
             return;
@@ -251,8 +253,14 @@ public class InmuebleViewModel extends AndroidViewModel {
             mensajeToast.postValue("⚠️ El precio es obligatorio");
             return;
         }
+        if (metrosTexto == null || metrosTexto.trim().isEmpty()) {
+            mensajeToast.postValue("⚠️ Los metros cuadrados son obligatorios");
+            return;
+        }
 
         double precio;
+        int metros;
+
         try {
             precio = Double.parseDouble(precioTexto);
         } catch (NumberFormatException e) {
@@ -260,8 +268,16 @@ public class InmuebleViewModel extends AndroidViewModel {
             return;
         }
 
-        // 🔹 Crear el objeto y setear TipoId por defecto
+        try {
+            metros = Integer.parseInt(metrosTexto);
+        } catch (NumberFormatException e) {
+            mensajeToast.postValue("❌ Metros inválidos");
+            return;
+        }
+
+        // 🔹 Crear el objeto con todos los datos
         Inmueble nuevo = new Inmueble(direccion.trim(), precio, disponible);
+        nuevo.setMetrosCuadrados(metros); // 🆕 agregar metros al modelo
         nuevo.setTipoId(1);
 
         LiveData<Inmueble> creado = repo.crearInmueble(nuevo);
@@ -287,20 +303,14 @@ public class InmuebleViewModel extends AndroidViewModel {
 
                 // 🔄 Refrescar lista y emitir eventos
                 cargarInmueblesDesdeApi();
-
-                // 🔹 Enviar eventos al Fragment sin if: limpieza + navegación
                 estadoGuardado.postValue(EstadoGuardado.EXITO);
                 accionLimpiarCampos.postValue(null);
                 accionNavegarAtras.postValue(null);
-
             }
         };
 
         creado.observeForever(observer);
     }
-
-
-
 
     // ==========================
     // 🔹 UTILIDADES VISUALES

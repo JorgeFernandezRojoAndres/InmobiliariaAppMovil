@@ -21,6 +21,7 @@
     <string name="disponible_label">Disponible</string>
     <string name="hint_direccion">Dirección</string>
     <string name="hint_precio">Precio</string>
+    <string name="hint_metros">Metros²</string>
     <string name="label_disponible">Disponible</string>
     <string name="btn_guardar">Guardar</string>
 
@@ -31,6 +32,7 @@
     <string name="msg_inmueble_guardado">Inmueble guardado correctamente</string>
     <string name="msg_campos_vacios">Complete todos los campos</string>
     <string name="msg_precio_invalido">Precio inválido</string>
+    <string name="msg_metros_invalidos">Metros inválidos</string>
     <string name="msg_error_generico">Ocurrió un error. Intente nuevamente.</string>
     <string name="msg_cargando_inmuebles">Cargando lista de inmuebles...</string>
 

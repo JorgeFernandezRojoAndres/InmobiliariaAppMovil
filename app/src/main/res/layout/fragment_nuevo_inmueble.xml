@@ -19,7 +19,7 @@
             android:id="@+id/tvTituloForm"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Agregar nuevo inmueble"
+            android:text="@string/titulo_nuevo_inmueble"
             android:textSize="20sp"
             android:textStyle="bold"
             android:textColor="@android:color/white"
@@ -44,6 +44,26 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="textPostalAddress"
+                android:imeOptions="actionNext"
+                android:padding="10dp"
+                android:textColor="@android:color/black" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- 📏 Campo de Metros² -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/hint_metros"
+            app:boxBackgroundMode="outline"
+            app:boxStrokeColor="@color/purple_700"
+            app:hintTextColor="@color/teal_200"
+            android:layout_marginBottom="12dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etMetros"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="number"
                 android:imeOptions="actionNext"
                 android:padding="10dp"
                 android:textColor="@android:color/black" />
