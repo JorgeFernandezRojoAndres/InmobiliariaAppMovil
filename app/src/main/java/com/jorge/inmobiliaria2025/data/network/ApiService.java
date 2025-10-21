@@ -67,12 +67,13 @@ public interface ApiService {
     Call<List<Inmueble>> getInmueblesAlquilados(@Header("Authorization") String token);
 
     // ✅ Actualiza solo disponibilidad o datos JSON
-    @PUT("api/Inmuebles/{id}")
+    @PUT("api/Inmuebles/{id}/disponibilidad")
     Call<ResponseBody> actualizarDisponibilidad(
             @Header("Authorization") String token,
             @Path("id") int idInmueble,
             @Body Inmueble inmueble
     );
+
 
     // ✅ NUEVO: Actualizar inmueble completo (PUT /api/Inmuebles/{id}/form)
     @Multipart
