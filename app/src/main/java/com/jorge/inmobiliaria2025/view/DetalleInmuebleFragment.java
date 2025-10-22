@@ -58,8 +58,7 @@ public class DetalleInmuebleFragment extends Fragment {
         vm = new ViewModelProvider(this).get(DetalleInmuebleViewModel.class);
         vm.cargarInmueble((Inmueble) requireArguments().getSerializable("inmueble"));
 
-        // 🔹 Observadores
-        vm.getInmueble().observe(getViewLifecycleOwner(), vm::mostrarInmuebleEn);
+        // 🔹 Observadores (se eliminó vm.getInmueble() para evitar repoblado global)
         vm.getImagenSeleccionada().observe(getViewLifecycleOwner(), uri -> imagenSeleccionadaUri = uri);
         vm.getMensajeToast().observe(getViewLifecycleOwner(),
                 msg -> Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show());
@@ -75,7 +74,15 @@ public class DetalleInmuebleFragment extends Fragment {
             tipoAdapter.notifyDataSetChanged();
         });
 
-        // 🖼️ Mostrar imagen sin usar if: Glide maneja nulos automáticamente
+        // 🆕 Observadores de campos individuales (sin ifs)
+        vm.getDireccion().observe(getViewLifecycleOwner(), binding.etDireccionDetalle::setText);
+        vm.getMetros().observe(getViewLifecycleOwner(), binding.etMetrosDetalle::setText);
+        vm.getPrecio().observe(getViewLifecycleOwner(), binding.etPrecioDetalle::setText);
+        vm.getActivo().observe(getViewLifecycleOwner(), binding.swActivoDetalle::setChecked);
+        vm.getTipoSeleccionado().observe(getViewLifecycleOwner(),
+                tipo -> binding.spTipoInmuebleDetalle.setSelection(listaTipos.indexOf(tipo)));
+
+        // 🖼️ Mostrar imagen sin if: Glide maneja nulos automáticamente
         vm.getImagenUrl().observe(getViewLifecycleOwner(), url ->
                 Glide.with(requireContext())
                         .load(Objects.requireNonNullElse(url, R.drawable.ic_image_placeholder))
@@ -91,17 +98,24 @@ public class DetalleInmuebleFragment extends Fragment {
         binding.spTipoInmuebleDetalle.setAdapter(tipoAdapter);
 
         // 🎛️ Botones
-        binding.btnEditar.setOnClickListener(v -> habilitarEdicion(true));
-        binding.btnGuardar.setOnClickListener(v ->
-                vm.guardarCambios(
-                        binding.etDireccionDetalle.getText().toString(),
-                        binding.etMetrosDetalle.getText().toString(),
-                        binding.etPrecioDetalle.getText().toString(),
-                        binding.swActivoDetalle.isChecked(),
-                        binding.spTipoInmuebleDetalle.getSelectedItemPosition(),
-                        listaTipos,
-                        imagenSeleccionadaUri
-                ));
+        binding.btnEditar.setOnClickListener(v -> {
+            vm.setEnEdicion(true);
+            habilitarEdicion(true);
+        });
+
+        binding.btnGuardar.setOnClickListener(v -> {
+            vm.setEnEdicion(false);
+            vm.guardarCambios(
+                    binding.etDireccionDetalle.getText().toString(),
+                    binding.etMetrosDetalle.getText().toString(),
+                    binding.etPrecioDetalle.getText().toString(),
+                    binding.swActivoDetalle.isChecked(),
+                    binding.spTipoInmuebleDetalle.getSelectedItemPosition(),
+                    listaTipos,
+                    imagenSeleccionadaUri
+            );
+        });
+
         binding.btnCambiarImg.setOnClickListener(v -> abrirGaleria());
 
         // 🆕 Formateo delegado sin condicionales
@@ -114,12 +128,13 @@ public class DetalleInmuebleFragment extends Fragment {
         });
     }
 
+
     private void habilitarEdicion(boolean habilitar) {
         binding.etDireccionDetalle.setEnabled(habilitar);
-        binding.etMetrosDetalle.setEnabled(habilitar);
         binding.etPrecioDetalle.setEnabled(habilitar);
         binding.swActivoDetalle.setEnabled(habilitar);
         binding.spTipoInmuebleDetalle.setEnabled(habilitar);
+        binding.etMetrosDetalle.setEnabled(false);
         binding.btnGuardar.setVisibility(habilitar ? View.VISIBLE : View.GONE);
         binding.btnCambiarImg.setVisibility(habilitar ? View.VISIBLE : View.GONE);
         binding.btnEditar.setVisibility(habilitar ? View.GONE : View.VISIBLE);
