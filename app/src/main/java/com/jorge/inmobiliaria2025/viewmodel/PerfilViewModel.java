@@ -8,7 +8,7 @@ import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-
+import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
@@ -83,30 +83,46 @@ public class PerfilViewModel extends AndroidViewModel {
     public void cargarPerfilDesdeApi(Context context) {
         ApiService api = RetrofitClient.getInstance(context).create(ApiService.class);
         String token = sessionManager.obtenerToken();
-        if (token == null || token.isEmpty()) {
+
+        // 🔹 Validación de sesión centralizada
+        if (token == null || token.isBlank())
+        {
             Log.w("PerfilViewModel", "⚠️ Token no disponible. Cargando perfil local.");
+            emitirMensaje("⚠️ Sesión expirada. Inicie sesión nuevamente.");
             cargarPropietario();
+            cerrarSesionEvento.postValue(Boolean.TRUE);
             return;
         }
 
-        Call<Propietario> call = api.obtenerPerfil("Bearer " + token);
-        call.enqueue(new Callback<Propietario>() {
+        api.obtenerPerfil("Bearer " + token).enqueue(new Callback<Propietario>() {
             @Override
             public void onResponse(@NonNull Call<Propietario> call, @NonNull Response<Propietario> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    Propietario p = response.body();
-                    propietario.setValue(p);
-                    avatarUrl.setValue(sessionManager.getAvatarFullUrl(p.getAvatarUrl()));
-                    sessionManager.guardarPropietario(p);
-                    email.setValue(p.getEmail());
-                    eventoActualizarHeader.setValue(p);
-                    Log.d("PerfilViewModel", "✅ Perfil sincronizado con éxito");
-                } else if (response.code() == 401) {
-                    emitirMensaje("⚠️ Sesión expirada. Inicie sesión nuevamente.");
-                    sessionManager.logout();
-                    cerrarSesionEvento.setValue(Boolean.TRUE);
-                } else {
-                    Log.w("PerfilViewModel", "❌ Fallo al obtener perfil: " + response.code());
+                try {
+                    if (response.isSuccessful() && response.body() != null) {
+                        Propietario p = response.body();
+                        propietario.postValue(p);
+                        avatarUrl.postValue(sessionManager.getAvatarFullUrl(p.getAvatarUrl()));
+                        sessionManager.guardarPropietario(p);
+                        email.postValue(p.getEmail());
+                        eventoActualizarHeader.postValue(p);
+                        Log.d("PerfilViewModel", "✅ Perfil sincronizado correctamente");
+                    }
+                    else {
+                        String mensaje = (response.code() == 401)
+                                ? "⚠️ Sesión expirada. Inicie sesión nuevamente."
+                                : "❌ No se pudo obtener el perfil (" + response.code() + ")";
+                        emitirMensaje(mensaje);
+
+                        if (response.code() == 401) {
+                            sessionManager.logout();
+                            cerrarSesionEvento.postValue(Boolean.TRUE);
+                        } else {
+                            cargarPropietario();
+                        }
+                    }
+                } catch (Exception e) {
+                    Log.e("PerfilViewModel", "❌ Error procesando respuesta de perfil", e);
+                    emitirMensaje("⚠️ Error procesando perfil: " + e.getMessage());
                     cargarPropietario();
                 }
             }
@@ -114,7 +130,7 @@ public class PerfilViewModel extends AndroidViewModel {
             @Override
             public void onFailure(@NonNull Call<Propietario> call, @NonNull Throwable t) {
                 Log.e("PerfilViewModel", "🌐 Error de red al obtener perfil: " + t.getMessage());
-                emitirMensaje("⚠️ Error de conexión al cargar el perfil");
+                emitirMensaje("⚠️ No se pudo conectar con el servidor");
                 cargarPropietario();
             }
         });
@@ -344,7 +360,8 @@ public class PerfilViewModel extends AndroidViewModel {
                         return;
                     }
 
-                    sessionManager.actualizarAvatarDesdeServidor(newUrl);
+                    // ✅ Actualiza directamente el avatar en la sesión
+                    sessionManager.guardarAvatar(newUrl);
                     avatarUrl.postValue(sessionManager.getAvatarFullUrl(newUrl));
 
                     Propietario actualizado = sessionManager.obtenerPropietarioActual();
@@ -364,6 +381,7 @@ public class PerfilViewModel extends AndroidViewModel {
             }
         });
     }
+
     // -------------------- 🔐 Cambio de contraseña --------------------
     public void cambiarClave(String claveActual, String nuevaClave, Context context) {
         if (claveActual.isEmpty() || nuevaClave.isEmpty()) {

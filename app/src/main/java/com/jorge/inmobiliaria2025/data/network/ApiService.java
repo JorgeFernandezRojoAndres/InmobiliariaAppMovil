@@ -26,9 +26,9 @@ import retrofit2.http.Part;
 import retrofit2.http.Path;
 
 /**
- * ✅ ApiService
+ * ✅ ApiService (versión actualizada)
  * Define todos los endpoints REST utilizados por la app móvil.
- * Incluye: autenticación, perfil, inmuebles, tipos, contratos, inquilinos y pagos.
+ * Incluye autenticación, perfil, inmuebles, tipos, contratos, inquilinos y pagos.
  */
 public interface ApiService {
 
@@ -66,7 +66,6 @@ public interface ApiService {
     @GET("api/Inmuebles/alquilados")
     Call<List<Inmueble>> getInmueblesAlquilados(@Header("Authorization") String token);
 
-    // ✅ Actualiza solo disponibilidad o datos JSON
     @PUT("api/Inmuebles/{id}/disponibilidad")
     Call<ResponseBody> actualizarDisponibilidad(
             @Header("Authorization") String token,
@@ -74,8 +73,6 @@ public interface ApiService {
             @Body Inmueble inmueble
     );
 
-
-    // ✅ NUEVO: Actualizar inmueble completo (PUT /api/Inmuebles/{id}/form)
     @Multipart
     @PUT("api/Inmuebles/{id}/form")
     Call<ResponseBody> actualizarInmuebleConImagen(
@@ -90,7 +87,6 @@ public interface ApiService {
             @Part MultipartBody.Part imagen
     );
 
-    // ✅ Subir imagen individual (si se hace por separado)
     @Multipart
     @POST("api/Inmuebles/upload")
     Call<ResponseBody> subirImagenInmueble(
@@ -111,17 +107,19 @@ public interface ApiService {
     );
 
     // -------------------- 📄 CONTRATOS --------------------
-    @GET("api/Contratos/vigentes")
+    // ✅ Corregido: tu backend usa ContratosApiController → /api/ContratosApi/vigentes
+    @GET("api/ContratosApi/vigentes")
     Call<List<Contrato>> getContratosVigentes(@Header("Authorization") String token);
 
     // -------------------- 💰 PAGOS --------------------
-    @GET("api/Pagos/{idContrato}")
+    // ✅ Corregido: tu backend usa ContratosApiController → /api/ContratosApi/{id}/pagos
+    @GET("api/ContratosApi/{id}/pagos")
     Call<List<Pago>> getPagosPorContrato(
             @Header("Authorization") String token,
-            @Path("idContrato") int idContrato
+            @Path("id") int idContrato
     );
 
-    // ✅ Actualizar inmueble simple (sin imagen, JSON puro)
+    // -------------------- ✏️ ACTUALIZAR / CREAR INMUEBLE --------------------
     @PUT("api/Inmuebles/{id}")
     Call<ResponseBody> actualizarInmueble(
             @Header("Authorization") String token,
@@ -129,11 +127,9 @@ public interface ApiService {
             @Body Inmueble inmueble
     );
 
-    // ✅ Crear nuevo inmueble (POST /api/Inmuebles)
     @POST("api/Inmuebles")
     Call<Inmueble> crearInmueble(
             @Header("Authorization") String token,
             @Body Inmueble nuevo
     );
-
 }

@@ -4,6 +4,14 @@ import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+/**
+ * ✅ InmobiliariaApp
+ * Punto de entrada global estable.
+ * Proporciona:
+ *  - Contexto global de aplicación.
+ *  - Preferencias persistentes.
+ *  - Métodos para guardar/cerrar sesión.
+ */
 public class InmobiliariaApp extends Application {
 
     private static InmobiliariaApp instance;
@@ -16,10 +24,17 @@ public class InmobiliariaApp extends Application {
         prefs = getSharedPreferences("inmobiliaria_prefs", Context.MODE_PRIVATE);
     }
 
+    // 🔹 Devuelve la instancia global
     public static InmobiliariaApp getInstance() {
         return instance;
     }
 
+    // 🔹 Devuelve el contexto global
+    public static Context getAppContext() {
+        return instance.getApplicationContext();
+    }
+
+    // 🔹 Preferencias compartidas
     public SharedPreferences getPrefs() {
         return prefs;
     }

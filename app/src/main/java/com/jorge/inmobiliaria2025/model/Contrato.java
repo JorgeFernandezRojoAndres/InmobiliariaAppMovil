@@ -1,15 +1,20 @@
 package com.jorge.inmobiliaria2025.model;
 
-public class Contrato {
+import java.io.Serializable;
+
+public class Contrato implements Serializable {
     private int id;
     private int idInquilino;
     private int idInmueble;
     private String fechaInicio;
     private String fechaFin;
     private double montoMensual;
+    private String estado;          // ✅ nuevo campo
+    private Inmueble inmueble;      // ✅ referencia completa (para mostrar dirección, etc.)
 
     public Contrato() {}
 
+    // === Getters y Setters ===
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
 
@@ -27,4 +32,17 @@ public class Contrato {
 
     public double getMontoMensual() { return montoMensual; }
     public void setMontoMensual(double montoMensual) { this.montoMensual = montoMensual; }
+
+    public String getEstado() { return estado; }
+    public void setEstado(String estado) { this.estado = estado; }
+
+    public Inmueble getInmueble() { return inmueble; }
+    public void setInmueble(Inmueble inmueble) { this.inmueble = inmueble; }
+
+    // === Helper opcional para mostrar texto amigable ===
+    public String getResumen() {
+        String dir = (inmueble != null && inmueble.getDireccion() != null)
+                ? inmueble.getDireccion() : "(sin dirección)";
+        return "Inmueble: " + dir + " | Estado: " + (estado != null ? estado : "N/A");
+    }
 }

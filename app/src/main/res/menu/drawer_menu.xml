@@ -1,10 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
+
     <group android:checkableBehavior="single">
-        <item android:id="@+id/nav_perfil" android:title="Perfil"/>
-        <item android:id="@+id/nav_inmuebles" android:title="Inmuebles"/>
-        <item android:id="@+id/nav_contratos" android:title="Contratos"/>
-        <item android:id="@+id/nav_pagos" android:title="Pagos"/>
-        <item android:id="@+id/nav_logout" android:title="Cerrar sesión"/>
+
+        <!-- 👤 Perfil -->
+        <item
+            android:id="@+id/nav_perfil"
+            android:title="Perfil"
+            android:icon="@drawable/ic_person" />
+
+        <!-- 🏠 Inmuebles -->
+        <item
+            android:id="@+id/nav_inmuebles"
+            android:title="Inmuebles"
+            android:icon="@drawable/ic_baseline_home_24" />
+
+        <!-- 📄 Contratos -->
+        <item
+            android:id="@+id/nav_contratos"
+            android:title="Contratos"
+            android:icon="@drawable/ic_baseline_description_24" />
+
+        <!-- 💰 Pagos -->
+        <item
+            android:id="@+id/nav_pagos"
+            android:title="Pagos"
+            android:icon="@drawable/ic_baseline_attach_money_24" />
+
+        <!-- ⚙️ Configuración -->
+        <item
+            android:id="@+id/settingsFragment"
+            android:title="Configuración"
+            android:icon="@drawable/ic_baseline_settings_24" />
+
+        <!-- 🚪 Cerrar sesión -->
+        <item
+            android:id="@+id/nav_logout"
+            android:title="Cerrar sesión"
+            android:icon="@drawable/ic_baseline_logout_24" />
     </group>
 </menu>

@@ -41,9 +41,6 @@ public class InmuebleRepository {
         this.sessionManager = new SessionManager(context);
     }
 
-    // ================================
-// 🔹 OBTENER INMUEBLES
-// ================================
     public LiveData<List<Inmueble>> obtenerMisInmuebles() {
         MutableLiveData<List<Inmueble>> data = new MutableLiveData<>();
         String token = sessionManager.getToken();
@@ -65,9 +62,8 @@ public class InmuebleRepository {
                         Log.i("RepoInmueble", "📦 Imagen cruda desde API: " + img);
 
                         if (img != null && !img.isEmpty()) {
-                            // ⚙️ Si ya empieza con http → la dejamos igual
+                            // ⚙️ Si no empieza con http → le agregamos la base URL fija
                             if (!img.startsWith("http")) {
-                                // ✅ Evita duplicar /uploads/
                                 String base = RetrofitClient.BASE_URL.replaceAll("/$", "");
                                 String clean = img.replaceFirst("^/+", ""); // quita barras iniciales
                                 i.setImagenUrl(base + "/" + clean);
@@ -78,7 +74,6 @@ public class InmuebleRepository {
 
                         Log.i("RepoInmueble", "🖼️ URL final: " + i.getImagenUrl());
                     }
-
 
                     // 🧩 Actualizar base local (sincronización Room)
                     InmobiliariaDatabase db = InmobiliariaDatabase.getInstance(context);

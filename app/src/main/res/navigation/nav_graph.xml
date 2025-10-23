@@ -54,16 +54,41 @@
     <!-- 📄 Contratos -->
     <fragment
         android:id="@+id/nav_contratos"
-        android:name="com.jorge.inmobiliaria2025.view.PlaceholderFragment"
+        android:name="com.jorge.inmobiliaria2025.view.ContratosFragment"
         android:label="Contratos"
-        tools:layout="@layout/fragment_placeholder" />
+        tools:layout="@layout/fragment_contratos">
+
+        <!-- ➡️ Acción: ir al detalle del contrato -->
+        <action
+            android:id="@+id/action_contratosFragment_to_detalleContratoFragment"
+            app:destination="@id/detalleContratoFragment" />
+    </fragment>
+
+    <!-- 📜 Detalle de contrato -->
+    <fragment
+        android:id="@+id/detalleContratoFragment"
+        android:name="com.jorge.inmobiliaria2025.view.DetalleContratoFragment"
+        android:label="Detalle del Contrato"
+        tools:layout="@layout/fragment_detalle_contrato">
+
+        <!-- 💰 Acción: ir al listado de pagos -->
+        <action
+            android:id="@+id/action_detalleContratoFragment_to_pagosFragment"
+            app:destination="@id/nav_pagos" />
+    </fragment>
 
     <!-- 💰 Pagos -->
     <fragment
         android:id="@+id/nav_pagos"
-        android:name="com.jorge.inmobiliaria2025.view.PlaceholderFragment"
+        android:name="com.jorge.inmobiliaria2025.view.PagosFragment"
         android:label="Pagos"
-        tools:layout="@layout/fragment_placeholder" />
+        tools:layout="@layout/fragment_pagos">
+
+        <!-- 🔙 Acción opcional: volver al detalle del contrato -->
+        <action
+            android:id="@+id/action_pagosFragment_to_detalleContratoFragment"
+            app:destination="@id/detalleContratoFragment" />
+    </fragment>
 
     <!-- 🚪 Cerrar sesión -->
     <fragment
