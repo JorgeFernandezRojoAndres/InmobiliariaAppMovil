@@ -44,7 +44,7 @@
 
         <!-- 🔹 Menú principal -->
         <activity
-            android:name=".MainActivity"
+            android:name=".ui.nav.MainActivity"
             android:exported="true" />
 
     </application>

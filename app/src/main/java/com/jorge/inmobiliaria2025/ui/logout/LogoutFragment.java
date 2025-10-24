@@ -1,4 +1,4 @@
-package com.jorge.inmobiliaria2025.view;
+package com.jorge.inmobiliaria2025.ui.logout;
 
 import android.content.Intent;
 import android.os.Bundle;

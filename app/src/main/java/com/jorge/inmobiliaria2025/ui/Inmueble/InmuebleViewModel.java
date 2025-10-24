@@ -21,7 +21,7 @@ import androidx.lifecycle.Observer;
 import com.jorge.inmobiliaria2025.localdata.InmobiliariaDatabase;
 import com.jorge.inmobiliaria2025.model.Inmueble;
 import com.jorge.inmobiliaria2025.model.TipoInmueble;
-import com.jorge.inmobiliaria2025.viewmodel.NavViewModel;
+import com.jorge.inmobiliaria2025.ui.nav.NavViewModel;
 
 import java.util.ArrayList;
 import java.util.List;

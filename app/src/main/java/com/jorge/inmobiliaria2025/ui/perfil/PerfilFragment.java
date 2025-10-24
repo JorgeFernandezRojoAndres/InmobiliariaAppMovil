@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
+import com.jorge.inmobiliaria2025.ui.nav.MainViewModel;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.PickVisualMediaRequest;
@@ -18,7 +19,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.jorge.inmobiliaria2025.MainActivity;
+import com.jorge.inmobiliaria2025.ui.nav.MainActivity;
 import com.jorge.inmobiliaria2025.R;
 import com.jorge.inmobiliaria2025.databinding.DialogCambiarClaveBinding;
 import com.jorge.inmobiliaria2025.databinding.FragmentPerfilBinding;
@@ -83,9 +84,14 @@ public class PerfilFragment extends Fragment {
         vm.getActivarEdicionEvento().observe(getViewLifecycleOwner(), u -> setCamposEditable(true));
         vm.getGuardarCambiosEvento().observe(getViewLifecycleOwner(), u -> setCamposEditable(false));
 
-        vm.getEventoActualizarHeader().observe(getViewLifecycleOwner(),
-                propietario -> ((MainActivity) requireActivity())
-                        .actualizarHeaderUsuario(propietario, propietario.getEmail()));
+        vm.getEventoActualizarHeader().observe(getViewLifecycleOwner(), propietario -> {
+            MainViewModel mainVM = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
+            mainVM.actualizarHeader(propietario);
+        });
+
+
+
+
 
         vm.getPermitirCambioAvatar().observe(getViewLifecycleOwner(), permitir -> {
             binding.ivAvatar.setEnabled(permitir);

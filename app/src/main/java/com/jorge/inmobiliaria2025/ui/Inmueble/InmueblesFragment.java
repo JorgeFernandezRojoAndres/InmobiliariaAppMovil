@@ -16,7 +16,7 @@ import android.view.ViewGroup;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.jorge.inmobiliaria2025.R;
 import com.jorge.inmobiliaria2025.model.Inmueble;
-import com.jorge.inmobiliaria2025.viewmodel.NavViewModel; // ✅ importa este
+import com.jorge.inmobiliaria2025.ui.nav.NavViewModel; // ✅ importa este
 
 import java.util.ArrayList;
 import java.util.List;

@@ -7,7 +7,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.jorge.inmobiliaria2025.MainActivity;
+import com.jorge.inmobiliaria2025.ui.nav.MainActivity;
 import com.jorge.inmobiliaria2025.databinding.ActivityLoginBinding;
 
 public class LoginActivity extends AppCompatActivity {
