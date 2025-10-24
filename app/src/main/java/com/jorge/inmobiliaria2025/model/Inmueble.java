@@ -4,6 +4,8 @@ import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 import androidx.room.Ignore;
+import androidx.annotation.NonNull;
+import androidx.room.Ignore;
 
 import com.google.gson.annotations.SerializedName;
 
@@ -21,11 +23,10 @@ public class Inmueble implements Serializable {
     @ColumnInfo(name = "precio")
     private double precio;
 
-    // 🔹 Cambiado a Boolean (permite null de la API)
+    // 🔹 Permite null si viene así de la API
     @ColumnInfo(name = "disponible")
     private Boolean disponible;
 
-    // 🆕 Nuevos campos compatibles con la API .NET
     @SerializedName("tipoId")
     @ColumnInfo(name = "tipo_id")
     private int tipoId;
@@ -39,7 +40,6 @@ public class Inmueble implements Serializable {
     @ColumnInfo(name = "propietario_id")
     private int propietarioId;
 
-    // 🔹 Vinculado con el campo "activo" del backend (.NET)
     @SerializedName("activo")
     @ColumnInfo(name = "activo")
     private Boolean activo;
@@ -85,11 +85,16 @@ public class Inmueble implements Serializable {
     public double getPrecio() { return precio; }
     public void setPrecio(double precio) { this.precio = precio; }
 
-    // ✅ Sincroniza disponible ↔ activo y evita null
-    public boolean isDisponible() {
+    // ✅ Ahora devuelve Boolean (coherente con el tipo del campo)
+    public Boolean isDisponible() {
         if (disponible != null) return disponible;
-        return activo != null && activo;
+        return activo != null ? activo : false;
     }
+    @Ignore
+    public boolean isActivo() {
+        return getActivo();
+    }
+
 
     public void setDisponible(Boolean disponible) {
         this.disponible = disponible;
@@ -108,9 +113,10 @@ public class Inmueble implements Serializable {
     public int getPropietarioId() { return propietarioId; }
     public void setPropietarioId(int propietarioId) { this.propietarioId = propietarioId; }
 
-    public boolean isActivo() {
+    // ✅ También devuelve Boolean para eliminar warning
+    public Boolean getActivo() {
         if (activo != null) return activo;
-        return disponible != null && disponible;
+        return disponible != null ? disponible : false;
     }
 
     public void setActivo(Boolean activo) {
@@ -125,6 +131,7 @@ public class Inmueble implements Serializable {
     public void setImagenUrl(String imagenUrl) { this.imagenUrl = imagenUrl; }
 
     // 🧠 Log útil
+    @NonNull
     @Override
     public String toString() {
         return "Inmueble{" +

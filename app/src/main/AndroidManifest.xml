@@ -34,7 +34,7 @@
 
         <!-- 🔹 Login: pantalla inicial -->
         <activity
-            android:name=".view.LoginActivity"
+            android:name=".ui.login.LoginActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -19,9 +19,9 @@ import androidx.navigation.ui.NavigationUI;
 import com.bumptech.glide.Glide;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.navigation.NavigationView;
-import com.jorge.inmobiliaria2025.data.SessionManager;
+import com.jorge.inmobiliaria2025.localdata.SessionManager;
 import com.jorge.inmobiliaria2025.model.Propietario;
-import com.jorge.inmobiliaria2025.view.LoginActivity;
+import com.jorge.inmobiliaria2025.ui.login.LoginActivity;
 import com.jorge.inmobiliaria2025.viewmodel.NavViewModel;
 
 public class MainActivity extends AppCompatActivity {

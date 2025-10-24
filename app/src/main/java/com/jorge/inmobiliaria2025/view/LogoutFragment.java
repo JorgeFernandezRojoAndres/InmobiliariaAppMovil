@@ -11,7 +11,8 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.jorge.inmobiliaria2025.InmobiliariaApp;
-import com.jorge.inmobiliaria2025.data.SessionManager;
+import com.jorge.inmobiliaria2025.localdata.SessionManager;
+import com.jorge.inmobiliaria2025.ui.login.LoginActivity;
 
 public class LogoutFragment extends Fragment {
 

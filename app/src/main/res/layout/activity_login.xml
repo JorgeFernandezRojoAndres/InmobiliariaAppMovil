@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/layoutLoginRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:gravity="center"
     android:padding="24dp"
-    android:background="#DD9D9595">
+    android:background="#DD9D9595"
+    tools:context=".ui.login.LoginActivity">
 
     <EditText
         android:id="@+id/etEmail"
@@ -13,7 +16,9 @@
         android:inputType="textEmailAddress"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp" />
+        android:layout_marginBottom="16dp"
+        android:importantForAutofill="no"
+        tools:ignore="Autofill" />
 
     <EditText
         android:id="@+id/etPassword"
@@ -21,7 +26,9 @@
         android:inputType="textPassword"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="24dp" />
+        android:layout_marginBottom="24dp"
+        android:importantForAutofill="no"
+        tools:ignore="Autofill" />
 
     <Button
         android:id="@+id/btnLogin"
@@ -29,6 +36,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:backgroundTint="@color/teal_700"
-        android:textColor="@android:color/white" />
+        android:textColor="@android:color/white"
+        android:elevation="3dp"
+        android:paddingVertical="10dp" />
 
 </LinearLayout>
