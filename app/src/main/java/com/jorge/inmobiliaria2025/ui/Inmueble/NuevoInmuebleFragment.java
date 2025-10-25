@@ -1,39 +1,38 @@
 package com.jorge.inmobiliaria2025.ui.Inmueble;
 
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ImageView;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.widget.SwitchCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.jorge.inmobiliaria2025.R;
+import com.jorge.inmobiliaria2025.databinding.FragmentNuevoInmuebleBinding;
 
 public class NuevoInmuebleFragment extends Fragment {
 
-    private EditText etDireccion, etPrecio, etMetros;
-    private SwitchCompat swDisponible;
-    private Button btnGuardar, btnSeleccionarImagen;
-    private ImageView ivPreview;
-    private Uri imagenUriSeleccionada;
+    private FragmentNuevoInmuebleBinding binding;
     private InmuebleViewModel vm;
 
     private final ActivityResultLauncher<Intent> seleccionarImagenLauncher =
-            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result ->
-                    vm.procesarSeleccionImagen(result, ivPreview)
+            registerForActivityResult(
+                    new ActivityResultContracts.StartActivityForResult(),
+                    result -> {
+                        if (vm != null) {
+                            // ✅ Solo pasamos el resultado al ViewModel
+                            vm.procesarSeleccionImagen(result);
+                        }
+                    }
             );
 
     @Nullable
@@ -42,36 +41,41 @@ public class NuevoInmuebleFragment extends Fragment {
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
 
-        View v = inflater.inflate(R.layout.fragment_nuevo_inmueble, container, false);
-
-        etDireccion = v.findViewById(R.id.etDireccion);
-        etPrecio = v.findViewById(R.id.etPrecio);
-        etMetros = v.findViewById(R.id.etMetros); // 🆕 nuevo campo
-        swDisponible = v.findViewById(R.id.swDisponibleForm);
-        btnGuardar = v.findViewById(R.id.btnGuardar);
-        btnSeleccionarImagen = v.findViewById(R.id.btnSeleccionarImagen);
-        ivPreview = v.findViewById(R.id.ivPreview);
+        binding = FragmentNuevoInmuebleBinding.inflate(inflater, container, false);
+        View v = binding.getRoot();
 
         vm = new ViewModelProvider(requireActivity()).get(InmuebleViewModel.class);
         NavController navController = NavHostFragment.findNavController(this);
 
-        // 🔹 Observadores (sin if)
+        // Observadores LiveData
         vm.getMensajeToast().observe(getViewLifecycleOwner(),
-                mensaje -> vm.mostrarToast(requireContext(), mensaje));
+                mensaje -> Toast.makeText(requireContext(), mensaje, Toast.LENGTH_SHORT).show());
 
         vm.getAccionLimpiarCampos().observe(getViewLifecycleOwner(),
-                limpiar -> limpiarCampos());
+                limpiar -> {
+                    binding.etDireccion.setText("");
+                    binding.etPrecio.setText("");
+                    binding.etMetros.setText("");
+                    binding.swDisponibleForm.setChecked(false);
+                    binding.ivPreview.setImageResource(R.drawable.ic_image_placeholder);
+                });
 
         vm.getAccionNavegarAtras().observe(getViewLifecycleOwner(),
                 accion -> navController.popBackStack());
 
-        btnSeleccionarImagen.setOnClickListener(vw -> abrirSelectorImagen());
+        vm.getImagenUriSeleccionada().observe(getViewLifecycleOwner(), uri ->
+                binding.ivPreview.setImageURI(uri)
+        );
 
-        btnGuardar.setOnClickListener(view -> vm.guardarInmueble(
-                etDireccion.getText().toString(),
-                etPrecio.getText().toString(),
-                etMetros.getText().toString(), // 🆕 se pasa como string
-                swDisponible.isChecked(),
+        // Selector de imagen
+        binding.btnSeleccionarImagen.setOnClickListener(vw -> abrirSelectorImagen());
+
+        // Guardar inmueble (validaciones dentro del ViewModel)
+        binding.btnGuardar.setOnClickListener(view -> vm.guardarInmueble(
+                binding.etDireccion.getText().toString(),
+                binding.etPrecio.getText().toString(),
+                binding.etMetros.getText().toString(),
+                binding.swDisponibleForm.isChecked(),
                 vm.getImagenUriSeleccionada().getValue()
         ));
 
@@ -84,12 +88,4 @@ public class NuevoInmuebleFragment extends Fragment {
         seleccionarImagenLauncher.launch(intent);
     }
 
-    private void limpiarCampos() {
-        etDireccion.setText("");
-        etPrecio.setText("");
-        etMetros.setText(""); // 🆕 limpiar metros
-        swDisponible.setChecked(false);
-        ivPreview.setImageResource(R.drawable.ic_image_placeholder);
-        imagenUriSeleccionada = null;
-    }
 }

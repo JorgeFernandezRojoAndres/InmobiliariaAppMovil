@@ -57,7 +57,7 @@ public class InmuebleViewModel extends AndroidViewModel {
         inmuebleDao = db.inmuebleDao();
 
         listaInmueblesRoom = inmuebleDao.obtenerTodos();
-        repo = new InmuebleRepository(application.getApplicationContext());
+        repo = new InmuebleRepository(application);
 
         // ✅ Sincronización inicial
         cargarInmueblesDesdeApi();
@@ -73,6 +73,24 @@ public class InmuebleViewModel extends AndroidViewModel {
         }
     }
 
+    public void actualizarInmuebleEnLista(Inmueble actualizado) {
+        if (actualizado == null) return;
+
+        List<Inmueble> listaActual = listaLiveData.getValue();
+        if (listaActual == null || listaActual.isEmpty()) return;
+
+        // 🔹 Buscar y reemplazar el inmueble actualizado en la lista actual
+        List<Inmueble> nuevaLista = new ArrayList<>(listaActual);
+        for (int i = 0; i < nuevaLista.size(); i++) {
+            if (nuevaLista.get(i).getId() == actualizado.getId()) {
+                nuevaLista.set(i, actualizado);
+                break;
+            }
+        }
+
+        listaLiveData.postValue(nuevaLista);
+        Log.i("InmuebleVM", "🔁 Lista actualizada con cambios del inmueble ID=" + actualizado.getId());
+    }
 
 
     // ====================================================
@@ -81,13 +99,12 @@ public class InmuebleViewModel extends AndroidViewModel {
     private final MutableLiveData<Uri> imagenUriSeleccionadaLiveData = new MutableLiveData<>();
     public LiveData<Uri> getImagenUriSeleccionada() { return imagenUriSeleccionadaLiveData; }
 
-    public void procesarSeleccionImagen(ActivityResult result, ImageView ivPreview) {
+    public void procesarSeleccionImagen(ActivityResult result) {
         if (result == null) return;
 
         if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
             Uri uri = result.getData().getData();
             if (uri != null) {
-                ivPreview.setImageURI(uri);
                 imagenUriSeleccionadaLiveData.postValue(uri); // 🔹 Guarda la URI seleccionada
                 Log.d("InmuebleVM", "📸 Imagen seleccionada: " + uri);
             }
@@ -95,6 +112,7 @@ public class InmuebleViewModel extends AndroidViewModel {
             mensajeToast.postValue("⚠️ No se seleccionó ninguna imagen");
         }
     }
+
 
     // 🧭 ViewModel global para manejar navegación
     private NavViewModel navVM;
@@ -243,7 +261,7 @@ public class InmuebleViewModel extends AndroidViewModel {
     public void guardarInmueble(String direccion, String precioTexto, String metrosTexto,
                                 boolean disponible, Uri imagenUri) {
 
-        // 🔹 Validaciones mínimas (controladas desde el ViewModel)
+        // 🔹 Validaciones mínimas dentro del ViewModel
         if (direccion == null || direccion.trim().isEmpty()) {
             mensajeToast.postValue("⚠️ La dirección es obligatoria");
             return;
@@ -274,14 +292,15 @@ public class InmuebleViewModel extends AndroidViewModel {
             return;
         }
 
-        // 🔹 Crear el objeto con todos los datos
+        // 🔹 Crear objeto Inmueble
         Inmueble nuevo = new Inmueble(direccion.trim(), precio, disponible);
-        nuevo.setMetrosCuadrados(metros); // 🆕 agregar metros al modelo
+        nuevo.setMetrosCuadrados(metros);
         nuevo.setTipoId(1);
 
         LiveData<Inmueble> creado = repo.crearInmueble(nuevo);
 
-        Observer<Inmueble> observer = new Observer<Inmueble>() {
+        // 🔹 Observer anónimo, todo controlado desde el ViewModel
+        creado.observeForever(new Observer<Inmueble>() {
             @Override
             public void onChanged(Inmueble inmuebleCreado) {
                 creado.removeObserver(this);
@@ -293,22 +312,20 @@ public class InmuebleViewModel extends AndroidViewModel {
 
                 mensajeToast.postValue("✅ Inmueble creado correctamente");
 
-                // 📤 Subir imagen si corresponde
+                // 📤 Subir imagen (si corresponde) sin tocar UI
                 if (imagenUri != null) {
                     new android.os.Handler(android.os.Looper.getMainLooper()).post(() ->
                             subirImagenInmueble(inmuebleCreado.getId(), imagenUri)
                     );
                 }
 
-                // 🔄 Refrescar lista y emitir eventos
+                // 🔄 Refrescar lista y emitir eventos al Fragment vía LiveData
                 cargarInmueblesDesdeApi();
                 estadoGuardado.postValue(EstadoGuardado.EXITO);
                 accionLimpiarCampos.postValue(null);
                 accionNavegarAtras.postValue(null);
             }
-        };
-
-        creado.observeForever(observer);
+        });
     }
 
     // ==========================

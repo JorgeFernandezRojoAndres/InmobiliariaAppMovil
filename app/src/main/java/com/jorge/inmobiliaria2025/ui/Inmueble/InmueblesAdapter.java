@@ -80,11 +80,8 @@ public class InmueblesAdapter extends RecyclerView.Adapter<InmueblesAdapter.View
         // 🔄 Evita loops por reciclado del switch
         holder.swDisponible.setOnCheckedChangeListener(null);
 
-// 🔒 Evita null o valores incorrectos
         boolean disponible = i.isDisponible();
-
         holder.swDisponible.setChecked(disponible);
-
 
         holder.swDisponible.setOnCheckedChangeListener((CompoundButton buttonView, boolean isChecked) -> {
             if (i.isDisponible() != isChecked) { // ✅ Evita repeticiones innecesarias
@@ -95,19 +92,15 @@ public class InmueblesAdapter extends RecyclerView.Adapter<InmueblesAdapter.View
             }
         });
 
-        // 🎯 Click en la tarjeta completa
+        // 🎯 Click en la tarjeta completa usando solo el listener
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onItemClick(i);
-            } else {
-                // Navegación por defecto si no hay listener externo
-                Bundle bundle = new Bundle();
-                bundle.putSerializable("inmueble", i);
-                NavController navController = Navigation.findNavController(v);
-                navController.navigate(R.id.action_inmueblesFragment_to_detalleInmuebleFragment, bundle);
             }
+            // Si listener es nulo, no hacer nada → MVVM puro
         });
     }
+
 
     @Override
     public int getItemCount() {

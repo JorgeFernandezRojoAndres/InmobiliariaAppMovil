@@ -1,6 +1,7 @@
 package com.jorge.inmobiliaria2025.ui.Inmueble;
 
-import android.content.Context;
+import android.app.Application;
+
 import android.net.Uri;
 import android.util.Log;
 
@@ -30,15 +31,14 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class InmuebleRepository {
-
+    private final Application app;
     private final ApiService apiService;
     private final SessionManager sessionManager;
-    private final Context context;
 
-    public InmuebleRepository(Context context) {
-        this.context = context;
-        this.apiService = RetrofitClient.getInstance(context).create(ApiService.class);
-        this.sessionManager = new SessionManager(context);
+    public InmuebleRepository(Application app) {
+        this.app = app;
+        this.apiService = RetrofitClient.getInstance(app).create(ApiService.class);
+        this.sessionManager = new SessionManager(app);
     }
 
     public LiveData<List<Inmueble>> obtenerMisInmuebles() {
@@ -76,7 +76,8 @@ public class InmuebleRepository {
                     }
 
                     // 🧩 Actualizar base local (sincronización Room)
-                    InmobiliariaDatabase db = InmobiliariaDatabase.getInstance(context);
+                    InmobiliariaDatabase db = InmobiliariaDatabase.getInstance(app);
+
                     InmuebleDao dao = db.inmuebleDao();
 
                     new Thread(() -> {
@@ -100,7 +101,8 @@ public class InmuebleRepository {
             @Override
             public void onFailure(Call<List<Inmueble>> call, Throwable t) {
                 Log.e("RepoInmueble", "❌ Error al obtener inmuebles: " + t.getMessage());
-                InmobiliariaDatabase db = InmobiliariaDatabase.getInstance(context);
+                InmobiliariaDatabase db = InmobiliariaDatabase.getInstance(app);
+
                 InmuebleDao dao = db.inmuebleDao();
 
                 new Thread(() -> {
@@ -189,10 +191,9 @@ public class InmuebleRepository {
 
         return data;
     }
-
     // ================================
-    // 🔹 ACTUALIZAR INMUEBLE (auto JSON o form-data)
-    // ================================
+// 🔹 ACTUALIZAR INMUEBLE (auto JSON o form-data)
+// ================================
     public LiveData<Boolean> actualizarInmueble(Inmueble inmueble, Uri imagenUri) {
         MutableLiveData<Boolean> resultado = new MutableLiveData<>();
         String token = sessionManager.getToken();
@@ -203,7 +204,7 @@ public class InmuebleRepository {
             return resultado;
         }
 
-        // Si NO hay imagen → JSON normal
+        // ✅ Caso 1: sin imagen → JSON normal
         if (imagenUri == null) {
             apiService.actualizarInmueble("Bearer " + token, inmueble.getId(), inmueble)
                     .enqueue(new Callback<ResponseBody>() {
@@ -212,6 +213,14 @@ public class InmuebleRepository {
                             if (response.isSuccessful()) {
                                 Log.i("RepoInmueble", "✅ Inmueble actualizado correctamente (JSON)");
                                 resultado.setValue(true);
+
+                                // 💾 Actualizar también en Room
+                                InmobiliariaDatabase db = InmobiliariaDatabase.getInstance(app);
+                                InmuebleDao dao = db.inmuebleDao();
+                                new Thread(() -> {
+                                    dao.actualizar(inmueble);
+                                    Log.i("RepoInmueble", "💾 Inmueble sincronizado en Room (JSON)");
+                                }).start();
                             } else {
                                 Log.w("RepoInmueble", "⚠️ Error HTTP " + response.code() + " al actualizar inmueble (JSON)");
                                 resultado.setValue(false);
@@ -227,21 +236,21 @@ public class InmuebleRepository {
             return resultado;
         }
 
-        // Si hay imagen → usar form-data
+        // ✅ Caso 2: con imagen → actualización multipart/form-data
         try {
-            File file = new File(FileUtils.getPathFromUri(context, imagenUri));
+            File file = new File(FileUtils.getPathFromUri(app, imagenUri));
             if (!file.exists()) {
-                Log.e("RepoInmueble", "❌ Archivo de imagen no encontrado");
+                Log.e("RepoInmueble", "❌ Archivo de imagen no encontrado: " + imagenUri);
                 resultado.setValue(false);
                 return resultado;
             }
 
+            RequestBody id = RequestBody.create(MediaType.parse("text/plain"), String.valueOf(inmueble.getId()));
             RequestBody direccion = RequestBody.create(MediaType.parse("text/plain"), inmueble.getDireccion());
             RequestBody tipoId = RequestBody.create(MediaType.parse("text/plain"), String.valueOf(inmueble.getTipoId()));
             RequestBody metros = RequestBody.create(MediaType.parse("text/plain"), String.valueOf(inmueble.getMetrosCuadrados()));
             RequestBody precio = RequestBody.create(MediaType.parse("text/plain"), String.valueOf(inmueble.getPrecio()));
             RequestBody activo = RequestBody.create(MediaType.parse("text/plain"), String.valueOf(inmueble.isActivo()));
-            RequestBody id = RequestBody.create(MediaType.parse("text/plain"), String.valueOf(inmueble.getId()));
 
             RequestBody requestFile = RequestBody.create(MediaType.parse("image/*"), file);
             MultipartBody.Part imagenPart = MultipartBody.Part.createFormData("imagen", file.getName(), requestFile);
@@ -256,6 +265,14 @@ public class InmuebleRepository {
                     if (response.isSuccessful()) {
                         Log.i("RepoInmueble", "✅ Inmueble actualizado correctamente con imagen");
                         resultado.setValue(true);
+
+                        // 💾 Actualizar también en Room
+                        InmobiliariaDatabase db = InmobiliariaDatabase.getInstance(app);
+                        InmuebleDao dao = db.inmuebleDao();
+                        new Thread(() -> {
+                            dao.actualizar(inmueble);
+                            Log.i("RepoInmueble", "💾 Inmueble sincronizado en Room (form-data)");
+                        }).start();
                     } else {
                         Log.w("RepoInmueble", "⚠️ Falló actualización inmueble (HTTP " + response.code() + ")");
                         resultado.setValue(false);
@@ -268,6 +285,7 @@ public class InmuebleRepository {
                     resultado.setValue(false);
                 }
             });
+
         } catch (Exception e) {
             Log.e("RepoInmueble", "❌ Excepción al preparar imagen: " + e.getMessage());
             resultado.setValue(false);
@@ -275,6 +293,7 @@ public class InmuebleRepository {
 
         return resultado;
     }
+
 
     // ================================
 // 🆕 SUBIR IMAGEN DE INMUEBLE
@@ -296,7 +315,7 @@ public class InmuebleRepository {
         }
 
         try {
-            File file = new File(FileUtils.getPathFromUri(context, imagenUri));
+            File file = new File(FileUtils.getPathFromUri(app, imagenUri));
             if (!file.exists()) {
                 Log.e("RepoInmueble", "❌ Archivo no encontrado: " + file.getAbsolutePath());
                 resultado.setValue(false);
@@ -353,7 +372,7 @@ public class InmuebleRepository {
         MultipartBody.Part imagenPart = null;
         try {
             if (imagenUri != null) {
-                File file = new File(FileUtils.getPathFromUri(context, imagenUri));
+                File file = new File(FileUtils.getPathFromUri(app, imagenUri));
                 if (file.exists()) {
                     RequestBody requestFile = RequestBody.create(MediaType.parse("image/*"), file);
                     imagenPart = MultipartBody.Part.createFormData("imagen", file.getName(), requestFile);
@@ -382,6 +401,19 @@ public class InmuebleRepository {
                 if (response.isSuccessful()) {
                     Log.i("RepoInmueble", "✅ Inmueble actualizado correctamente con imagen (ID=" + inmueble.getId() + ")");
                     resultado.setValue(true);
+
+                    // 💾 Actualizar también en Room
+                    InmobiliariaDatabase db = InmobiliariaDatabase.getInstance(app);
+                    InmuebleDao dao = db.inmuebleDao();
+                    new Thread(() -> {
+                        try {
+                            dao.actualizar(inmueble);
+                            Log.i("RepoInmueble", "💾 Inmueble actualizado localmente en Room (ID=" + inmueble.getId() + ")");
+                        } catch (Exception e) {
+                            Log.e("RepoInmueble", "❌ Error al actualizar inmueble en Room: " + e.getMessage());
+                        }
+                    }).start();
+
                 } else {
                     Log.w("RepoInmueble", "⚠️ Falló actualización inmueble (HTTP " + response.code() + ")");
                     resultado.setValue(false);
@@ -419,7 +451,7 @@ public class InmuebleRepository {
                     Log.i("RepoInmueble", "✅ Inmueble creado en API (ID=" + creado.getId() + ")");
 
                     // 💾 Insertar también en Room para mantener consistencia local
-                    InmobiliariaDatabase db = InmobiliariaDatabase.getInstance(context);
+                    InmobiliariaDatabase db = InmobiliariaDatabase.getInstance(app);
                     InmuebleDao dao = db.inmuebleDao();
                     new Thread(() -> {
                         try {

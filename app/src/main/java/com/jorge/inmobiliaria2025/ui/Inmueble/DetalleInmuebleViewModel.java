@@ -4,6 +4,7 @@ import android.app.Application;
 import android.net.Uri;
 import android.util.Log;
 import java.util.Objects;
+import android.view.View;
 
 import android.widget.ImageView;
 
@@ -33,18 +34,27 @@ public class DetalleInmuebleViewModel extends AndroidViewModel {
     private final MutableLiveData<String> metrosFormateados = new MutableLiveData<>();
     private final MutableLiveData<String> direccion = new MutableLiveData<>();
     private final MutableLiveData<String> precio = new MutableLiveData<>();
+    private final MutableLiveData<Integer> visibilidadGuardar = new MutableLiveData<>(View.GONE);
+    private final MutableLiveData<Integer> visibilidadEditar = new MutableLiveData<>(View.VISIBLE);
+    private final MutableLiveData<Integer> visibilidadCambiarImg = new MutableLiveData<>(View.GONE);
     private final MutableLiveData<String> metros = new MutableLiveData<>();
     private final MutableLiveData<Boolean> activo = new MutableLiveData<>();
     private final MutableLiveData<TipoInmueble> tipoSeleccionado = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> modoEdicion = new MutableLiveData<>(false);
+    public LiveData<Boolean> getModoEdicion() { return modoEdicion; }
 
     public LiveData<String> getDireccion() { return direccion; }
     public LiveData<String> getPrecio() { return precio; }
     public LiveData<String> getMetros() { return metros; }
+    public LiveData<Integer> getVisibilidadGuardar() { return visibilidadGuardar; }
+    public LiveData<Integer> getVisibilidadEditar() { return visibilidadEditar; }
+    public LiveData<Integer> getVisibilidadCambiarImg() { return visibilidadCambiarImg; }
     public LiveData<Boolean> getActivo() { return activo; }
     public LiveData<TipoInmueble> getTipoSeleccionado() { return tipoSeleccionado; }
     public DetalleInmuebleViewModel(@NonNull Application app) {
         super(app);
-        repo = new InmuebleRepository(app.getApplicationContext());
+        repo = new InmuebleRepository(app);
+
         cargarTiposInmueble();
     }
 
@@ -119,7 +129,8 @@ public class DetalleInmuebleViewModel extends AndroidViewModel {
     }
 
     public void guardarCambios(String direccion, String metros, String precio,
-                               boolean activo, int indiceTipo, List<TipoInmueble> tipos, Uri imagenUri) {
+                               boolean activo, int indiceTipo, List<TipoInmueble> tipos, Uri imagenUri,
+                               InmuebleViewModel globalVM) {
 
         Inmueble actual = inmueble.getValue();
         if (actual == null) {
@@ -127,17 +138,14 @@ public class DetalleInmuebleViewModel extends AndroidViewModel {
             return;
         }
 
-        // 🔹 Usa valores actuales si están vacíos
         String dir = (direccion != null && !direccion.trim().isEmpty())
                 ? direccion.trim()
                 : actual.getDireccion();
 
-        // 🔹 Normalizar precio (sin formatear, tal cual el usuario lo ingresa)
         String prec = (precio != null && !precio.trim().isEmpty())
                 ? precio.replace(",", ".").trim()
                 : new java.text.DecimalFormat("0.##").format(actual.getPrecio());
 
-        // 🔹 Limpia metros: elimina símbolos o letras
         String met = (metros != null && !metros.trim().isEmpty())
                 ? metros.replaceAll("[^0-9.]", "").trim()
                 : String.valueOf(actual.getMetrosCuadrados());
@@ -166,11 +174,26 @@ public class DetalleInmuebleViewModel extends AndroidViewModel {
                 activo
         );
         actualizado.setMetrosCuadrados(metrosInt);
-        actualizado.setTipoId(
-                (tipos != null && indiceTipo >= 0 && indiceTipo < tipos.size())
-                        ? tipos.get(indiceTipo).getId()
-                        : actual.getTipoId()
-        );
+
+        // 🔹 Determinar tipo seleccionado
+        TipoInmueble tipo = (tipos != null && indiceTipo >= 0 && indiceTipo < tipos.size())
+                ? tipos.get(indiceTipo)
+                : Optional.ofNullable(tiposInmueble.getValue())
+                .flatMap(lista -> lista.stream()
+                        .filter(t -> t.getId() == actual.getTipoId())
+                        .findFirst())
+                .orElse(null);
+
+        if (tipo != null) {
+            actualizado.setTipoId(tipo.getId());
+            actualizado.setTipoNombre(tipo.getNombre());
+        } else {
+            actualizado.setTipoId(actual.getTipoId());
+            actualizado.setTipoNombre(actual.getTipoNombre());
+        }
+
+        Log.d("DetalleVM", "🔹 Guardando inmueble: tipoId=" + actualizado.getTipoId()
+                + " tipoNombre=" + actualizado.getTipoNombre());
 
         // ✅ Mantener imagen existente
         Uri uriFinal = imagenUri != null
@@ -186,61 +209,57 @@ public class DetalleInmuebleViewModel extends AndroidViewModel {
             return;
         }
 
+        // 🔹 Guardar mediante repo y actualizar LiveData **antes de navegar**
+        final TipoInmueble tipoFinal = tipo;
         repo.actualizarInmuebleConImagenForm(actualizado, uriFinal)
                 .observeForever(ok -> {
                     mensajeToast.postValue(Boolean.TRUE.equals(ok)
                             ? "✅ Inmueble actualizado correctamente"
                             : "⚠️ Error al guardar los cambios");
+
                     if (Boolean.TRUE.equals(ok)) {
+                        // 🔹 Actualiza el LiveData local y tipo seleccionado inmediatamente
+                        inmueble.postValue(actualizado);
+                        tipoSeleccionado.postValue(tipoFinal);
+
+                        // 🔹 Evita sobrescribir en mostrarInmuebleEn()
+                        setEnEdicion(false);
+
+                        // 🔹 Actualizar lista global también si se pasó el ViewModel
+                        if (globalVM != null) {
+                            globalVM.actualizarInmuebleEnLista(actualizado);
+                        }
+
                         accionNavegarAtras.postValue(null);
-                        Log.i("DetalleVM", "💾 Inmueble actualizado y sincronizado con API");
+                        Log.i("DetalleVM", "💾 Inmueble actualizado y LiveData local actualizado");
                     }
                 });
-    }
-
-
-    // 🔹 Mostrar inmueble actual en UI (sin ifs en fragment)
-    private <T> void postIfChanged(MutableLiveData<T> liveData, T nuevoValor) {
-        if (!Objects.equals(liveData.getValue(), nuevoValor)) {
-            liveData.postValue(nuevoValor);
-        }
     }
 
     private boolean enEdicion = false;
     public void setEnEdicion(boolean valor) { enEdicion = valor; }
 
 
-    public void mostrarInmuebleEn(Inmueble inm) {
-        if (enEdicion) return; // 🚫 No repoblar mientras el usuario edita
 
-        Optional.ofNullable(inm)
-                .ifPresentOrElse(
-                        i -> {
-                            inmueble.postValue(i);
-                            imagenUrl.postValue(
-                                    Optional.ofNullable(i.getImagenUrl())
-                                            .filter(url -> !url.isEmpty())
-                                            .orElse(null)
-                            );
-
-                            // ✳️ Emitir valores individuales solo si cambian
-                            postIfChanged(direccion, i.getDireccion());
-                            postIfChanged(precio, String.valueOf(i.getPrecio()));
-                            postIfChanged(metros, String.valueOf(i.getMetrosCuadrados()));
-                            postIfChanged(activo, i.isActivo());
-
-                            // 🌀 Selección de tipo por ID, usando el LiveData existente
-                            Optional.ofNullable(tiposInmueble.getValue())
-                                    .flatMap(lista -> lista.stream()
-                                            .filter(t -> t.getId() == i.getTipoId())
-                                            .findFirst())
-                                    .ifPresent(t -> postIfChanged(tipoSeleccionado, t));
-                        },
-                        () -> {
-                            inmueble.postValue(null);
-                            imagenUrl.postValue(null);
-                        }
-                );
+    public void habilitarEdicion() {
+        modoEdicion.postValue(true);
+        visibilidadGuardar.postValue(View.VISIBLE);
+        visibilidadEditar.postValue(View.GONE);
+        visibilidadCambiarImg.postValue(View.VISIBLE);
     }
 
+
+    // 🔹 Reemplaza formatearMetros(String)
+    public void actualizarMetrosTexto(String texto) {
+        if (texto == null) return;
+
+        String limpio = texto.replaceAll("[^0-9]", "");
+        String textoFormateado = limpio.isEmpty() ? "0 m²" : limpio + " m²";
+        metrosFormateados.postValue(textoFormateado);
+    }
+
+    // 🔹 Getter para que el fragment observe el texto formateado
+    public LiveData<String> getMetrosFormateados() {
+        return metrosFormateados;
+    }
 }

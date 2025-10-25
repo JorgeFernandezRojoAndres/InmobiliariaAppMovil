@@ -39,7 +39,7 @@ android {
         jvmToolchain(17)
     }
 
-    // 🧠 Habilitar ViewBinding
+    // 🧠 Habilitar ViewBinding (esto genera FragmentInmueblesBinding automáticamente)
     buildFeatures {
         viewBinding = true
     }

@@ -57,12 +57,18 @@ public class DetalleInmuebleFragment extends Fragment {
         vm = new ViewModelProvider(this).get(DetalleInmuebleViewModel.class);
         vm.cargarInmueble((Inmueble) requireArguments().getSerializable("inmueble"));
 
-        // 🔹 Observadores (se eliminó vm.getInmueble() para evitar repoblado global)
-        vm.getImagenSeleccionada().observe(getViewLifecycleOwner(), uri -> imagenSeleccionadaUri = uri);
+        // 🔹 Observadores
+        vm.getImagenSeleccionada().observe(getViewLifecycleOwner(), uri -> {
+            imagenSeleccionadaUri = uri;
+            if (uri != null) binding.imgInmueble.setImageURI(uri);
+        });
+
         vm.getMensajeToast().observe(getViewLifecycleOwner(),
                 msg -> Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show());
+
         vm.getAccionNavegarAtras().observe(getViewLifecycleOwner(),
                 a -> NavHostFragment.findNavController(this).popBackStack());
+
         vm.getTiposInmueble().observe(getViewLifecycleOwner(), tipos -> {
             listaTipos.clear();
             tipoAdapter.clear();
@@ -73,7 +79,6 @@ public class DetalleInmuebleFragment extends Fragment {
             tipoAdapter.notifyDataSetChanged();
         });
 
-        // 🆕 Observadores de campos individuales (sin ifs)
         vm.getDireccion().observe(getViewLifecycleOwner(), binding.etDireccionDetalle::setText);
         vm.getMetros().observe(getViewLifecycleOwner(), binding.etMetrosDetalle::setText);
         vm.getPrecio().observe(getViewLifecycleOwner(), binding.etPrecioDetalle::setText);
@@ -81,7 +86,7 @@ public class DetalleInmuebleFragment extends Fragment {
         vm.getTipoSeleccionado().observe(getViewLifecycleOwner(),
                 tipo -> binding.spTipoInmuebleDetalle.setSelection(listaTipos.indexOf(tipo)));
 
-        // 🖼️ Mostrar imagen sin if: Glide maneja nulos automáticamente
+        // 🖼️ Imagen
         vm.getImagenUrl().observe(getViewLifecycleOwner(), url ->
                 Glide.with(requireContext())
                         .load(Objects.requireNonNullElse(url, R.drawable.ic_image_placeholder))
@@ -96,36 +101,45 @@ public class DetalleInmuebleFragment extends Fragment {
         tipoAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         binding.spTipoInmuebleDetalle.setAdapter(tipoAdapter);
 
-        // 🎛️ Botones
-        binding.btnEditar.setOnClickListener(v -> {
-            vm.setEnEdicion(true);
-            habilitarEdicion(true);
-        });
+        // 🎛️ Observador del modo edición
+        vm.getModoEdicion().observe(getViewLifecycleOwner(), this::habilitarEdicion);
 
-        binding.btnGuardar.setOnClickListener(v -> {
-            vm.setEnEdicion(false);
-            vm.guardarCambios(
-                    binding.etDireccionDetalle.getText().toString(),
-                    binding.etMetrosDetalle.getText().toString(),
-                    binding.etPrecioDetalle.getText().toString(),
-                    binding.swActivoDetalle.isChecked(),
-                    binding.spTipoInmuebleDetalle.getSelectedItemPosition(),
-                    listaTipos,
-                    imagenSeleccionadaUri
-            );
-        });
+        // 🎛️ Botón Editar
+        binding.btnEditar.setOnClickListener(v -> vm.habilitarEdicion());
 
+        // 🎛️ Botón Guardar
+        binding.btnGuardar.setOnClickListener(v -> vm.guardarCambios(
+                binding.etDireccionDetalle.getText().toString(),
+                binding.etMetrosDetalle.getText().toString(),
+                binding.etPrecioDetalle.getText().toString(),
+                binding.swActivoDetalle.isChecked(),
+                binding.spTipoInmuebleDetalle.getSelectedItemPosition(),
+                listaTipos,
+                imagenSeleccionadaUri,
+                new ViewModelProvider(requireActivity()).get(InmuebleViewModel.class)
+        ));
+
+        // 🎛️ Botón Cambiar Imagen
         binding.btnCambiarImg.setOnClickListener(v -> abrirGaleria());
 
-        // 🆕 Formateo delegado sin condicionales
+        // 🆕 TextWatcher simple (solo notifica texto)
         binding.etMetrosDetalle.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
             @Override public void afterTextChanged(Editable s) {
-                vm.formatearMetros(s.toString());
+                vm.actualizarMetrosTexto(s.toString());
             }
         });
+
+        // 🧮 Observa metros formateados desde el VM
+        vm.getMetrosFormateados().observe(getViewLifecycleOwner(),
+                m -> binding.etMetrosDetalle.setText(m));
+
+        vm.getVisibilidadGuardar().observe(getViewLifecycleOwner(), binding.btnGuardar::setVisibility);
+        vm.getVisibilidadEditar().observe(getViewLifecycleOwner(), binding.btnEditar::setVisibility);
+        vm.getVisibilidadCambiarImg().observe(getViewLifecycleOwner(), binding.btnCambiarImg::setVisibility);
     }
+
 
 
     private void habilitarEdicion(boolean habilitar) {
@@ -133,11 +147,14 @@ public class DetalleInmuebleFragment extends Fragment {
         binding.etPrecioDetalle.setEnabled(habilitar);
         binding.swActivoDetalle.setEnabled(habilitar);
         binding.spTipoInmuebleDetalle.setEnabled(habilitar);
-        binding.etMetrosDetalle.setEnabled(false);
+        binding.etMetrosDetalle.setEnabled(false); // siempre deshabilitado
+
+        // Visibilidad botones
         binding.btnGuardar.setVisibility(habilitar ? View.VISIBLE : View.GONE);
         binding.btnCambiarImg.setVisibility(habilitar ? View.VISIBLE : View.GONE);
         binding.btnEditar.setVisibility(habilitar ? View.GONE : View.VISIBLE);
     }
+
 
     private void abrirGaleria() {
         Intent intent = new Intent(Intent.ACTION_PICK);

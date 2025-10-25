@@ -33,12 +33,15 @@ public class InmueblesFragment extends Fragment {
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
 
-        View v = inflater.inflate(R.layout.fragment_inmuebles, container, false);
+        // ✅ Usamos ViewBinding
+        com.jorge.inmobiliaria2025.databinding.FragmentInmueblesBinding binding =
+                com.jorge.inmobiliaria2025.databinding.FragmentInmueblesBinding.inflate(inflater, container, false);
+        View v = binding.getRoot();
 
-        rv = v.findViewById(R.id.rvInmuebles);
-        FloatingActionButton fabAgregar = v.findViewById(R.id.fabAgregar);
+        rv = binding.rvInmuebles;
+        FloatingActionButton fabAgregar = binding.fabAgregar;
 
-        rv.setLayoutManager(new GridLayoutManager(getContext(), 2));
+        rv.setLayoutManager(new GridLayoutManager(requireContext(), 2));
 
         // 🧠 ViewModels
         vm = new ViewModelProvider(requireActivity()).get(InmuebleViewModel.class);
@@ -61,6 +64,7 @@ public class InmueblesFragment extends Fragment {
             adapter.actualizarLista(inmuebles);
         });
 
+        // 📦 Carga inicial movida acá
         vm.cargarInmuebles();
 
         // ➕ Botón agregar inmueble
@@ -71,6 +75,8 @@ public class InmueblesFragment extends Fragment {
 
         return v;
     }
+
+
 
     @Override
     public void onResume() {
