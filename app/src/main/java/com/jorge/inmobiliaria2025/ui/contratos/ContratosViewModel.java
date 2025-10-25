@@ -25,8 +25,9 @@ public class ContratosViewModel extends AndroidViewModel {
 
     public ContratosViewModel(@NonNull Application app) {
         super(app);
-        sessionManager = new SessionManager(app.getApplicationContext());
-        repo = new ContratoRepository(app.getApplicationContext());
+        // ✅ Usar getApplication() para no pasar context de la vista
+        sessionManager = new SessionManager(getApplication());
+        repo = new ContratoRepository(getApplication());
         contratos = repo.getContratosLiveData();
     }
 
@@ -42,12 +43,12 @@ public class ContratosViewModel extends AndroidViewModel {
     // 🔹 Lógica de carga desde el repo
     // ================================
     public void cargarContratos() {
+        // 🔹 Toda la lógica de validación de token queda en el ViewModel
         String token = sessionManager.obtenerToken();
         if (token != null && !token.isEmpty()) {
             repo.cargarContratosVigentes(token);
         }
     }
-
     // ================================
     // 🔹 Lógica de navegación
     // ================================

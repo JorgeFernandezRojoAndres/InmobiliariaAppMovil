@@ -336,16 +336,11 @@ public class InmuebleViewModel extends AndroidViewModel {
     }
 
     public LiveData<List<Inmueble>> getListaFiltrada() {
-        MutableLiveData<List<Inmueble>> filtrada = new MutableLiveData<>();
-        getListaLiveData().observeForever(lista -> {
-            if (lista == null || lista.isEmpty()) {
-                filtrada.postValue(new ArrayList<>());
-            } else {
-                filtrada.postValue(lista);
-            }
+        return androidx.lifecycle.Transformations.map(listaLiveData, lista -> {
+            return (lista == null) ? new ArrayList<>() : lista;
         });
-        return filtrada;
     }
+
 
     public LiveData<List<Inmueble>> getListaLiveData() {
         return getInmuebles();

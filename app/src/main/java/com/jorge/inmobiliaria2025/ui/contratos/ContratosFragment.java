@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.jorge.inmobiliaria2025.R;
+import com.jorge.inmobiliaria2025.databinding.FragmentContratosBinding;
 
 public class ContratosFragment extends Fragment {
 
@@ -27,24 +28,28 @@ public class ContratosFragment extends Fragment {
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
 
-        View v = inflater.inflate(R.layout.fragment_contratos, container, false);
-
-        rv = v.findViewById(R.id.rvContratos);
-        rv.setLayoutManager(new LinearLayoutManager(getContext()));
+        // 🔹 Usamos el binding correcto para ContratosFragment
+        FragmentContratosBinding binding = FragmentContratosBinding.inflate(inflater, container, false);
 
         vm = new ViewModelProvider(this).get(ContratosViewModel.class);
 
+        // 🔹 LayoutManager para RecyclerView
+        binding.rvContratos.setLayoutManager(new LinearLayoutManager(requireContext()));
+
+        // 🔹 Adapter y LiveData
         adapter = new ContratoAdapter(null, vm::onContratoSeleccionado);
-        rv.setAdapter(adapter);
+        binding.rvContratos.setAdapter(adapter);
 
         vm.getContratos().observe(getViewLifecycleOwner(), adapter::updateData);
-
         vm.getAccionNavegarADetalle().observe(getViewLifecycleOwner(), bundle ->
                 NavHostFragment.findNavController(this)
                         .navigate(R.id.detalleContratoFragment, bundle)
         );
 
         vm.cargarContratos();
-        return v;
+
+        return binding.getRoot();
     }
+
+
 }

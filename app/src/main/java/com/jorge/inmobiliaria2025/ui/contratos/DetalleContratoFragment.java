@@ -14,6 +14,7 @@ import androidx.navigation.fragment.NavHostFragment;
 
 import com.google.android.material.button.MaterialButton;
 import com.jorge.inmobiliaria2025.R;
+import com.jorge.inmobiliaria2025.databinding.FragmentDetalleContratoBinding;
 
 public class DetalleContratoFragment extends Fragment {
 
@@ -27,22 +28,17 @@ public class DetalleContratoFragment extends Fragment {
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
 
-        View v = inflater.inflate(R.layout.fragment_detalle_contrato, container, false);
-
-        tvIdContrato = v.findViewById(R.id.tvIdContrato);
-        tvFechas = v.findViewById(R.id.tvFechasDetalle);
-        tvMonto = v.findViewById(R.id.tvMontoDetalle);
-        tvEstado = v.findViewById(R.id.tvEstadoDetalle);
-        btnPagos = v.findViewById(R.id.btnVerPagos);
+        // 🔹 Usamos ViewBinding
+        FragmentDetalleContratoBinding binding = FragmentDetalleContratoBinding.inflate(inflater, container, false);
 
         vm = new ViewModelProvider(this).get(DetalleContratoViewModel.class);
 
         // 🟢 Observa los datos del contrato (sin condicionales)
         vm.getContrato().observe(getViewLifecycleOwner(), contrato -> {
-            tvIdContrato.setText(String.valueOf(contrato.getId()));
-            tvFechas.setText(contrato.getFechaInicio() + " → " + contrato.getFechaFin());
-            tvMonto.setText("Monto: $" + contrato.getMontoMensual());
-            tvEstado.setText("Estado: " + contrato.getEstado());
+            binding.tvIdContrato.setText(String.valueOf(contrato.getId()));
+            binding.tvFechasDetalle.setText(contrato.getFechaInicio() + " → " + contrato.getFechaFin());
+            binding.tvMontoDetalle.setText("Monto: $" + contrato.getMontoMensual());
+            binding.tvEstadoDetalle.setText("Estado: " + contrato.getEstado());
         });
 
         // 🟢 Observa la acción de navegación a pagos (sin if)
@@ -52,11 +48,12 @@ public class DetalleContratoFragment extends Fragment {
         );
 
         // 🟢 Botón solo notifica al ViewModel
-        btnPagos.setOnClickListener(v1 -> vm.onVerPagosClick());
+        binding.btnVerPagos.setOnClickListener(v -> vm.onVerPagosClick());
 
         // 🟢 El ViewModel maneja los argumentos y validaciones
         vm.inicializarDesdeArgs(getArguments());
 
-        return v;
+        return binding.getRoot();
     }
+
 }

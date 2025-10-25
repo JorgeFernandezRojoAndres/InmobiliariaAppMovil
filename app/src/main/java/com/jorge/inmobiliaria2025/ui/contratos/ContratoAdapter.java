@@ -10,6 +10,7 @@ import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.jorge.inmobiliaria2025.R;
+import com.jorge.inmobiliaria2025.databinding.ItemContratoBinding;
 import com.jorge.inmobiliaria2025.model.Contrato;
 import com.jorge.inmobiliaria2025.model.Inmueble;
 
@@ -41,11 +42,11 @@ public class ContratoAdapter extends RecyclerView.Adapter<ContratoAdapter.ViewHo
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_contrato, parent, false);
-        return new ViewHolder(view);
+        // 🔹 Usando ViewBinding para item_contrato.xml
+        LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+        ItemContratoBinding binding = ItemContratoBinding.inflate(inflater, parent, false);
+        return new ViewHolder(binding);
     }
-
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Contrato contrato = contratos.get(position);
@@ -56,23 +57,23 @@ public class ContratoAdapter extends RecyclerView.Adapter<ContratoAdapter.ViewHo
                 ? inmueble.getDireccion()
                 : "Inmueble #" + contrato.getIdInmueble();
 
-        holder.tvDireccion.setText("🏠 " + direccion);
+        holder.binding.tvDireccionContrato.setText("🏠 " + direccion);
 
         // 🔹 Formato de moneda (Argentina)
         NumberFormat formatoMoneda = NumberFormat.getCurrencyInstance(new Locale("es", "AR"));
         String montoFormateado = formatoMoneda.format(contrato.getMontoMensual());
-        holder.tvMonto.setText("💰 " + montoFormateado);
+        holder.binding.tvMontoContrato.setText("💰 " + montoFormateado);
 
         // 🔹 Fechas legibles
         String fechas = String.format("📅 %s → %s", contrato.getFechaInicio(), contrato.getFechaFin());
-        holder.tvFechas.setText(fechas);
+        holder.binding.tvFechasContrato.setText(fechas);
 
         // 🔹 Estado si existe
         if (contrato.getEstado() != null && !contrato.getEstado().isEmpty()) {
-            holder.tvEstado.setVisibility(View.VISIBLE);
-            holder.tvEstado.setText("📋 Estado: " + contrato.getEstado());
+            holder.binding.tvEstadoContrato.setVisibility(View.VISIBLE);
+            holder.binding.tvEstadoContrato.setText("📋 Estado: " + contrato.getEstado());
         } else {
-            holder.tvEstado.setVisibility(View.GONE);
+            holder.binding.tvEstadoContrato.setVisibility(View.GONE);
         }
 
         // 🔹 Click
@@ -85,16 +86,12 @@ public class ContratoAdapter extends RecyclerView.Adapter<ContratoAdapter.ViewHo
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tvDireccion, tvMonto, tvFechas, tvEstado;
-        CardView card;
+        final ItemContratoBinding binding;
 
-        ViewHolder(@NonNull View itemView) {
-            super(itemView);
-            card = itemView.findViewById(R.id.cardContrato);
-            tvDireccion = itemView.findViewById(R.id.tvDireccionContrato);
-            tvMonto = itemView.findViewById(R.id.tvMontoContrato);
-            tvFechas = itemView.findViewById(R.id.tvFechasContrato);
-            tvEstado = itemView.findViewById(R.id.tvEstadoContrato);
+        ViewHolder(@NonNull ItemContratoBinding binding) {
+            super(binding.getRoot());
+            this.binding = binding;
         }
     }
+
 }

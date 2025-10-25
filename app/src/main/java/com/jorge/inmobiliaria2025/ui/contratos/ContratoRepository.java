@@ -1,34 +1,29 @@
 package com.jorge.inmobiliaria2025.ui.contratos;
 
-import android.content.Context;
-import android.util.Log;
 
+import android.util.Log;
+import android.app.Application;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-
 import com.jorge.inmobiliaria2025.Retrofit.ApiService;
 import com.jorge.inmobiliaria2025.Retrofit.RetrofitClient;
 import com.jorge.inmobiliaria2025.model.Contrato;
-
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-
 public class ContratoRepository {
 
     private static final String TAG = "ContratoRepo";
     private final ApiService api;
     private final MutableLiveData<List<Contrato>> contratosLiveData = new MutableLiveData<>();
 
-    public ContratoRepository(Context context) {
-        api = RetrofitClient.getInstance(context).create(ApiService.class);
+    public ContratoRepository(Application app) {
+        api = RetrofitClient.getInstance(app).create(ApiService.class);
     }
 
     public LiveData<List<Contrato>> getContratosLiveData() {
