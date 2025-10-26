@@ -16,13 +16,14 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.jorge.inmobiliaria2025.model.Inmueble;
 import com.jorge.inmobiliaria2025.model.TipoInmueble;
-
+import androidx.lifecycle.MediatorLiveData;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 public class DetalleInmuebleViewModel extends AndroidViewModel {
-
+    private final MediatorLiveData<TipoInmueble> _tipoSeleccionadoMediator = new MediatorLiveData<>();
+    private final MutableLiveData<Boolean> modoEdicion = new MutableLiveData<>(false);
     private final InmuebleRepository repo;
     private final MutableLiveData<Inmueble> inmueble = new MutableLiveData<>();
     private final MutableLiveData<List<TipoInmueble>> tiposInmueble = new MutableLiveData<>(new ArrayList<>());
@@ -40,7 +41,7 @@ public class DetalleInmuebleViewModel extends AndroidViewModel {
     private final MutableLiveData<String> metros = new MutableLiveData<>();
     private final MutableLiveData<Boolean> activo = new MutableLiveData<>();
     private final MutableLiveData<TipoInmueble> tipoSeleccionado = new MutableLiveData<>();
-    private final MutableLiveData<Boolean> modoEdicion = new MutableLiveData<>(false);
+
     public LiveData<Boolean> getModoEdicion() { return modoEdicion; }
 
     public LiveData<String> getDireccion() { return direccion; }
@@ -50,12 +51,44 @@ public class DetalleInmuebleViewModel extends AndroidViewModel {
     public LiveData<Integer> getVisibilidadEditar() { return visibilidadEditar; }
     public LiveData<Integer> getVisibilidadCambiarImg() { return visibilidadCambiarImg; }
     public LiveData<Boolean> getActivo() { return activo; }
-    public LiveData<TipoInmueble> getTipoSeleccionado() { return tipoSeleccionado; }
+    public LiveData<TipoInmueble> getTipoSeleccionado() { return _tipoSeleccionadoMediator; }
     public DetalleInmuebleViewModel(@NonNull Application app) {
         super(app);
         repo = new InmuebleRepository(app);
 
         cargarTiposInmueble();
+
+        // 🔴 Añade esta lógica para configurar el MediatorLiveData
+        _tipoSeleccionadoMediator.addSource(inmueble, currentInmueble -> {
+            Log.d("DetalleVM", "Mediator - Inmueble actualizado. Llamando sincronizarTipoSeleccionado.");
+            sincronizarTipoSeleccionado(currentInmueble, tiposInmueble.getValue());
+        });
+        _tipoSeleccionadoMediator.addSource(tiposInmueble, currentTipos -> {
+            Log.d("DetalleVM", "Mediator - Tipos actualizado. Llamando sincronizarTipoSeleccionado.");
+            sincronizarTipoSeleccionado(inmueble.getValue(), currentTipos);
+        });
+    }
+    // 🔴 Añade este método auxiliar a tu clase DetalleInmuebleViewModel
+    private void sincronizarTipoSeleccionado(Inmueble currentInmueble, List<TipoInmueble> currentTipos) {
+        Log.d("DetalleVM", "sincronizarTipoSeleccionado - Inmueble: " + (currentInmueble != null ? currentInmueble.getDireccion() + " (TipoID: " + currentInmueble.getTipoId() + ")" : "null"));
+        Log.d("DetalleVM", "sincronizarTipoSeleccionado - Tipos cargados: " + (currentTipos != null ? currentTipos.size() + " elementos" : "null"));
+
+        if (currentInmueble != null && currentTipos != null && !currentTipos.isEmpty()) {
+            Optional<TipoInmueble> foundType = currentTipos.stream()
+                    .filter(t -> t.getId() == currentInmueble.getTipoId())
+                    .findFirst();
+
+            if (foundType.isPresent()) {
+                _tipoSeleccionadoMediator.postValue(foundType.get()); // Actualiza el MediatorLiveData
+                Log.d("DetalleVM", "sincronizarTipoSeleccionado - Tipo encontrado y publicado: " + foundType.get().getNombre());
+            } else {
+                _tipoSeleccionadoMediator.postValue(null); // No se encontró el tipo, o manejar un default
+                Log.w("DetalleVM", "sincronizarTipoSeleccionado - No se encontró el tipo con ID: " + currentInmueble.getTipoId() + " para el inmueble.");
+            }
+        } else {
+            _tipoSeleccionadoMediator.postValue(null); // No hay datos suficientes para sincronizar
+            Log.d("DetalleVM", "sincronizarTipoSeleccionado - Datos insuficientes (inmueble o tipos null/vacíos).");
+        }
     }
 
 
@@ -85,18 +118,14 @@ public class DetalleInmuebleViewModel extends AndroidViewModel {
                             .orElse(null)
             );
 
-            // 🌀 Cargar tipo de inmueble si ya está disponible
-            Optional.ofNullable(tiposInmueble.getValue())
-                    .flatMap(lista -> lista.stream()
-                            .filter(t -> t.getId() == recibido.getTipoId())
-                            .findFirst())
-                    .ifPresent(tipoSeleccionado::postValue);
+
         } else {
             imagenUrl.postValue(null);
         }
 
         Log.d("DetalleVM", "📦 Inmueble recibido: " + (recibido != null ? recibido.getDireccion() : "null"));
     }
+
 
     // 🔹 Cargar lista de tipos de inmueble desde el repositorio
     private void cargarTiposInmueble() {
@@ -155,18 +184,13 @@ public class DetalleInmuebleViewModel extends AndroidViewModel {
 
         try {
             precioDouble = Double.parseDouble(prec);
-        } catch (NumberFormatException e) {
-            mensajeToast.postValue("❌ Precio inválido");
-            return;
-        }
-
-        try {
             metrosInt = (int) Double.parseDouble(met);
         } catch (NumberFormatException e) {
-            mensajeToast.postValue("❌ Metros cuadrados inválidos");
+            mensajeToast.postValue("❌ Datos numéricos inválidos");
             return;
         }
 
+        // 🧱 Crear inmueble actualizado con los datos nuevos
         Inmueble actualizado = new Inmueble(
                 actual.getId(),
                 dir,
@@ -175,12 +199,12 @@ public class DetalleInmuebleViewModel extends AndroidViewModel {
         );
         actualizado.setMetrosCuadrados(metrosInt);
 
-        // 🔹 Determinar tipo seleccionado
+        // 🔹 Determinar tipo seleccionado correctamente
         TipoInmueble tipo = (tipos != null && indiceTipo >= 0 && indiceTipo < tipos.size())
                 ? tipos.get(indiceTipo)
                 : Optional.ofNullable(tiposInmueble.getValue())
                 .flatMap(lista -> lista.stream()
-                        .filter(t -> t.getId() == actual.getTipoId())
+                        .filter(t -> t.getId() == actual.getTipoId())  // Usar tipoId del inmueble original
                         .findFirst())
                 .orElse(null);
 
@@ -188,14 +212,16 @@ public class DetalleInmuebleViewModel extends AndroidViewModel {
             actualizado.setTipoId(tipo.getId());
             actualizado.setTipoNombre(tipo.getNombre());
         } else {
+            // Si no se seleccionó tipo, mantener el tipo original
             actualizado.setTipoId(actual.getTipoId());
             actualizado.setTipoNombre(actual.getTipoNombre());
         }
 
-        Log.d("DetalleVM", "🔹 Guardando inmueble: tipoId=" + actualizado.getTipoId()
-                + " tipoNombre=" + actualizado.getTipoNombre());
+        Log.d("DetalleVM", "💾 Guardando inmueble id=" + actualizado.getId() +
+                ", tipoId=" + actualizado.getTipoId() +
+                ", tipoNombre=" + actualizado.getTipoNombre());
 
-        // ✅ Mantener imagen existente
+        // ✅ Mantener o usar imagen existente
         Uri uriFinal = imagenUri != null
                 ? imagenUri
                 : (imagenUrl.getValue() != null ? Uri.parse(imagenUrl.getValue()) : null);
@@ -209,7 +235,7 @@ public class DetalleInmuebleViewModel extends AndroidViewModel {
             return;
         }
 
-        // 🔹 Guardar mediante repo y actualizar LiveData **antes de navegar**
+        // 🔹 Guardar mediante repo
         final TipoInmueble tipoFinal = tipo;
         repo.actualizarInmuebleConImagenForm(actualizado, uriFinal)
                 .observeForever(ok -> {
@@ -218,27 +244,25 @@ public class DetalleInmuebleViewModel extends AndroidViewModel {
                             : "⚠️ Error al guardar los cambios");
 
                     if (Boolean.TRUE.equals(ok)) {
-                        // 🔹 Actualiza el LiveData local y tipo seleccionado inmediatamente
+                        // 🧩 Actualiza LiveData locales
                         inmueble.postValue(actualizado);
                         tipoSeleccionado.postValue(tipoFinal);
-
-                        // 🔹 Evita sobrescribir en mostrarInmuebleEn()
                         setEnEdicion(false);
 
-                        // 🔹 Actualizar lista global también si se pasó el ViewModel
-                        if (globalVM != null) {
+                        // 🧭 Sincroniza lista global si existe
+                        if (globalVM != null && actualizado.getId() != 0) {
                             globalVM.actualizarInmuebleEnLista(actualizado);
                         }
 
                         accionNavegarAtras.postValue(null);
-                        Log.i("DetalleVM", "💾 Inmueble actualizado y LiveData local actualizado");
+                        Log.i("DetalleVM", "🏠 Inmueble actualizado en LiveData y lista global");
                     }
                 });
     }
 
+
     private boolean enEdicion = false;
     public void setEnEdicion(boolean valor) { enEdicion = valor; }
-
 
 
     public void habilitarEdicion() {
@@ -247,7 +271,6 @@ public class DetalleInmuebleViewModel extends AndroidViewModel {
         visibilidadEditar.postValue(View.GONE);
         visibilidadCambiarImg.postValue(View.VISIBLE);
     }
-
 
     // 🔹 Reemplaza formatearMetros(String)
     public void actualizarMetrosTexto(String texto) {

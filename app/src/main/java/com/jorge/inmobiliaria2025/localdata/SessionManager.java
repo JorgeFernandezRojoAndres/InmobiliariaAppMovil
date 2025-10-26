@@ -23,20 +23,21 @@ public class SessionManager {
     private final Gson gson = new Gson();
 
     // 🌐 IP base (modificable según red actual)
-    private static final String BASE_URL = "http://192.168.1.33:5027/";
+    private static final String BASE_URL = "http://192.168.1.34:5027/";
 
     public SessionManager(Context context) {
         prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
     }
 
-    // 🔐 Token JWT
     public void saveToken(String token) {
         prefs.edit().putString(KEY_TOKEN, token).apply();
-        Log.d("SessionManager", "✅ Token guardado correctamente");
+        Log.d("SessionManager", "✅ Token guardado correctamente: " + token);
     }
 
     public String getToken() {
-        return prefs.getString(KEY_TOKEN, null);
+        String token = prefs.getString(KEY_TOKEN, null);
+        Log.d("SessionManager", "🔑 Token recuperado: " + token);
+        return token;
     }
 
     public String obtenerToken() {
@@ -63,7 +64,9 @@ public class SessionManager {
     // 🧠 Verificar sesión activa
     public boolean isLogged() {
         String token = getToken();
-        return token != null && !token.trim().isEmpty();
+        boolean isLoggedIn = token != null && !token.trim().isEmpty();
+        Log.d("SessionManager", "¿Está logueado? " + isLoggedIn);
+        return isLoggedIn;
     }
 
     // 🚪 Cerrar sesión
