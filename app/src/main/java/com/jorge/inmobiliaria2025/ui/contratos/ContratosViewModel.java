@@ -11,12 +11,14 @@ import androidx.lifecycle.MutableLiveData;
 import com.jorge.inmobiliaria2025.localdata.SessionManager;
 import com.jorge.inmobiliaria2025.model.Contrato;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class ContratosViewModel extends AndroidViewModel {
 
     // ✅ LiveData de contratos y navegación
-    private final LiveData<List<Contrato>> contratos;
+    private final MutableLiveData<List<Contrato>> contratos = new MutableLiveData<>(new ArrayList<>());
     private final MutableLiveData<Bundle> accionNavegarADetalle = new MutableLiveData<>();
 
     // ✅ Repositorio y sesión
@@ -25,10 +27,16 @@ public class ContratosViewModel extends AndroidViewModel {
 
     public ContratosViewModel(@NonNull Application app) {
         super(app);
-        // ✅ Usar getApplication() para no pasar context de la vista
         sessionManager = new SessionManager(getApplication());
         repo = new ContratoRepository(getApplication());
-        contratos = repo.getContratosLiveData();
+
+        // 🔹 Sincronizar con el LiveData del repo
+        repo.getContratosLiveData().observeForever(lista -> {
+            if (lista == null)
+                contratos.postValue(Collections.emptyList());
+            else
+                contratos.postValue(lista);
+        });
     }
 
     public LiveData<List<Contrato>> getContratos() {
@@ -43,12 +51,17 @@ public class ContratosViewModel extends AndroidViewModel {
     // 🔹 Lógica de carga desde el repo
     // ================================
     public void cargarContratos() {
-        // 🔹 Toda la lógica de validación de token queda en el ViewModel
         String token = sessionManager.obtenerToken();
         if (token != null && !token.isEmpty()) {
             repo.cargarContratosVigentes(token);
+        } else {
+            contratos.postValue(Collections.emptyList());
         }
     }
+
+    // ================================
+    // 🔹 Manejo de selección de contrato
+    // ================================
     public void onContratoSeleccionado(Contrato contrato) {
         if (contrato == null) return;
 
@@ -56,9 +69,7 @@ public class ContratosViewModel extends AndroidViewModel {
         bundle.putSerializable("contratoSeleccionado", contrato);
         accionNavegarADetalle.setValue(bundle);
 
-        // 🧹 Limpieza automática tras emitir el evento
+        // 🧹 Limpieza automática del evento
         accionNavegarADetalle.postValue(null);
     }
-
 }
-

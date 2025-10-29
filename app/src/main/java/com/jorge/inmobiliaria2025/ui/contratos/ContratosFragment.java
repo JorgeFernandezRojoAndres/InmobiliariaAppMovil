@@ -46,13 +46,10 @@ public class ContratosFragment extends Fragment {
 
         // 🧠 Observa lista de contratos
         vm.getContratos().observe(getViewLifecycleOwner(), contratos -> {
-            if (contratos != null) {
-                Log.d(TAG, "📡 Lista de contratos actualizada: " + contratos.size());
-                adapter.updateData(contratos);
-            } else {
-                Log.w(TAG, "⚠️ Lista de contratos recibida es null");
-            }
+            Log.d(TAG, "📡 Lista de contratos recibida desde ViewModel (" + (contratos != null ? contratos.size() : 0) + ")");
+            adapter.updateData(contratos);
         });
+
 
         // ✅ Observa evento de navegación al detalle
         vm.getAccionNavegarADetalle().observe(getViewLifecycleOwner(), args -> {
