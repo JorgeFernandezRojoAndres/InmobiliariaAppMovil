@@ -53,5 +53,11 @@
     <string name="msg_inmobiliaria_marker">Inmobiliaria Alone</string>
     <string name="msg_permiso_denegado">Permiso de ubicación denegado</string>
     <string name="msg_gps_desactivado">GPS desactivado. Actívelo para continuar.</string>
+    <string name="rango_fechas">%1$s → %2$s</string>
+    <string name="detalle_monto">Monto: $%1$.2f</string>
+    <string name="detalle_estado">Estado: %1$s</string>
+
+
+
 
 </resources>
