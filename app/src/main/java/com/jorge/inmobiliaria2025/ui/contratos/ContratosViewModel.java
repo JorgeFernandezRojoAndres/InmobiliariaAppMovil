@@ -2,6 +2,7 @@ package com.jorge.inmobiliaria2025.ui.contratos;
 
 import android.app.Application;
 import android.os.Bundle;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
@@ -17,11 +18,9 @@ import java.util.List;
 
 public class ContratosViewModel extends AndroidViewModel {
 
-    // ✅ LiveData de contratos y navegación
+    private static final String TAG = "CONTRATOS_VM";
     private final MutableLiveData<List<Contrato>> contratos = new MutableLiveData<>(new ArrayList<>());
     private final MutableLiveData<Bundle> accionNavegarADetalle = new MutableLiveData<>();
-
-    // ✅ Repositorio y sesión
     private final ContratoRepository repo;
     private final SessionManager sessionManager;
 
@@ -30,7 +29,6 @@ public class ContratosViewModel extends AndroidViewModel {
         sessionManager = new SessionManager(getApplication());
         repo = new ContratoRepository(getApplication());
 
-        // 🔹 Sincronizar con el LiveData del repo
         repo.getContratosLiveData().observeForever(lista -> {
             if (lista == null)
                 contratos.postValue(Collections.emptyList());
@@ -47,9 +45,6 @@ public class ContratosViewModel extends AndroidViewModel {
         return accionNavegarADetalle;
     }
 
-    // ================================
-    // 🔹 Lógica de carga desde el repo
-    // ================================
     public void cargarContratos() {
         String token = sessionManager.obtenerToken();
         if (token != null && !token.isEmpty()) {
@@ -59,17 +54,19 @@ public class ContratosViewModel extends AndroidViewModel {
         }
     }
 
-    // ================================
-    // 🔹 Manejo de selección de contrato
-    // ================================
     public void onContratoSeleccionado(Contrato contrato) {
         if (contrato == null) return;
 
         Bundle bundle = new Bundle();
         bundle.putSerializable("contratoSeleccionado", contrato);
-        accionNavegarADetalle.setValue(bundle);
+        navegarADetalle(bundle);
+    }
 
-        // 🧹 Limpieza automática del evento
-        accionNavegarADetalle.postValue(null);
+    public void navegarADetalle(Bundle args) {
+        if (args == null) {
+            Log.w(TAG, "⚠️ Navegación ignorada: args == null");
+            return;
+        }
+        accionNavegarADetalle.postValue(args);
     }
 }
