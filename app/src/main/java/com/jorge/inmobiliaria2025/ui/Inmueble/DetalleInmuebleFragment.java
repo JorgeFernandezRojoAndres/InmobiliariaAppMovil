@@ -37,9 +37,10 @@ public class DetalleInmuebleFragment extends Fragment {
     private ArrayAdapter<String> tipoAdapter;
     private final List<TipoInmueble> listaTipos = new ArrayList<>();
 
+    // ✅ Limpio: sin pasar ImageView al ViewModel
     private final ActivityResultLauncher<Intent> seleccionarImagenLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
-                    result -> vm.procesarSeleccionImagen(result, binding.imgInmueble));
+                    result -> vm.procesarSeleccionImagen(result));
 
     @Nullable
     @Override
@@ -47,6 +48,7 @@ public class DetalleInmuebleFragment extends Fragment {
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         binding = FragmentDetalleInmuebleBinding.inflate(inflater, container, false);
+
         return binding.getRoot();
     }
 
@@ -57,12 +59,19 @@ public class DetalleInmuebleFragment extends Fragment {
         vm = new ViewModelProvider(this).get(DetalleInmuebleViewModel.class);
         vm.cargarInmueble((Inmueble) requireArguments().getSerializable("inmueble"));
 
-        // 🔹 Observadores
+        // 🖼️ Nuevo observador para imagen seleccionada (reemplaza setImageURI)
         vm.getImagenSeleccionada().observe(getViewLifecycleOwner(), uri -> {
             imagenSeleccionadaUri = uri;
-            if (uri != null) binding.imgInmueble.setImageURI(uri);
+            if (uri != null) {
+                Glide.with(this)
+                        .load(uri)
+                        .placeholder(android.R.drawable.ic_menu_gallery)
+                        .error(android.R.drawable.ic_delete)
+                        .into(binding.imgInmueble);
+            }
         });
 
+        // 🔹 Observadores
         vm.getMensajeToast().observe(getViewLifecycleOwner(),
                 msg -> Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show());
 
@@ -86,7 +95,7 @@ public class DetalleInmuebleFragment extends Fragment {
         vm.getTipoSeleccionado().observe(getViewLifecycleOwner(),
                 tipo -> binding.spTipoInmuebleDetalle.setSelection(listaTipos.indexOf(tipo)));
 
-        // 🖼️ Imagen
+        // 🖼️ Imagen desde la URL del inmueble (servidor)
         vm.getImagenUrl().observe(getViewLifecycleOwner(), url ->
                 Glide.with(requireContext())
                         .load(Objects.requireNonNullElse(url, R.drawable.ic_image_placeholder))
@@ -107,17 +116,21 @@ public class DetalleInmuebleFragment extends Fragment {
         // 🎛️ Botón Editar
         binding.btnEditar.setOnClickListener(v -> vm.habilitarEdicion());
 
-        // 🎛️ Botón Guardar
-        binding.btnGuardar.setOnClickListener(v -> vm.guardarCambios(
-                binding.etDireccionDetalle.getText().toString(),
-                binding.etMetrosDetalle.getText().toString(),
-                binding.etPrecioDetalle.getText().toString(),
-                binding.swActivoDetalle.isChecked(),
-                binding.spTipoInmuebleDetalle.getSelectedItemPosition(),
-                listaTipos,
-                imagenSeleccionadaUri,
-                new ViewModelProvider(requireActivity()).get(InmuebleViewModel.class)
-        ));
+        binding.btnGuardar.setOnClickListener(v -> {
+            // Actualiza los LiveData antes de guardar
+            vm.setDireccion(binding.etDireccionDetalle.getText().toString());
+            vm.setMetros(binding.etMetrosDetalle.getText().toString());
+            vm.setPrecio(binding.etPrecioDetalle.getText().toString());
+            vm.setActivo(binding.swActivoDetalle.isChecked());
+            vm.setImagenSeleccionada(imagenSeleccionadaUri);
+
+
+            TipoInmueble tipo = (TipoInmueble) binding.spTipoInmuebleDetalle.getSelectedItem();
+            if (tipo != null) vm.setTipoSeleccionado(tipo);
+
+            vm.guardarCambios(new ViewModelProvider(requireActivity()).get(InmuebleViewModel.class));
+        });
+
 
         // 🎛️ Botón Cambiar Imagen
         binding.btnCambiarImg.setOnClickListener(v -> abrirGaleria());
@@ -140,8 +153,6 @@ public class DetalleInmuebleFragment extends Fragment {
         vm.getVisibilidadCambiarImg().observe(getViewLifecycleOwner(), binding.btnCambiarImg::setVisibility);
     }
 
-
-
     private void habilitarEdicion(boolean habilitar) {
         binding.etDireccionDetalle.setEnabled(habilitar);
         binding.etPrecioDetalle.setEnabled(habilitar);
@@ -149,12 +160,10 @@ public class DetalleInmuebleFragment extends Fragment {
         binding.spTipoInmuebleDetalle.setEnabled(habilitar);
         binding.etMetrosDetalle.setEnabled(false); // siempre deshabilitado
 
-        // Visibilidad botones
         binding.btnGuardar.setVisibility(habilitar ? View.VISIBLE : View.GONE);
         binding.btnCambiarImg.setVisibility(habilitar ? View.VISIBLE : View.GONE);
         binding.btnEditar.setVisibility(habilitar ? View.GONE : View.VISIBLE);
     }
-
 
     private void abrirGaleria() {
         Intent intent = new Intent(Intent.ACTION_PICK);

@@ -9,8 +9,8 @@ public class Contrato implements Serializable {
     private String fechaInicio;
     private String fechaFin;
     private double montoMensual;
-    private String estado;          // ✅ nuevo campo
-    private Inmueble inmueble;      // ✅ referencia completa (para mostrar dirección, etc.)
+    private String estado;
+    private Inmueble inmueble;
 
     public Contrato() {}
 

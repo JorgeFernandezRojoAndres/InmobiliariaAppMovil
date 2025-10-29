@@ -113,6 +113,7 @@ public class PerfilFragment extends Fragment {
         vm.cargarPerfilDesdeApi();
         binding.etCodigo.setVisibility(View.GONE);
 
+
         return binding.getRoot();
     }
 

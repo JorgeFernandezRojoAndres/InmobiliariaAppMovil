@@ -23,7 +23,7 @@ public class SessionManager {
     private final Gson gson = new Gson();
 
     // 🌐 IP base (modificable según red actual)
-    private static final String BASE_URL = "http://192.168.1.34:5027/";
+    private static final String BASE_URL = "http://192.168.1.37:5027/";
 
     public SessionManager(Context context) {
         prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);

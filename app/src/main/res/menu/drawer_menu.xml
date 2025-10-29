@@ -21,17 +21,6 @@
             android:title="Contratos"
             android:icon="@drawable/ic_baseline_description_24" />
 
-        <!-- 💰 Pagos -->
-        <item
-            android:id="@+id/nav_pagos"
-            android:title="Pagos"
-            android:icon="@drawable/ic_baseline_attach_money_24" />
-
-        <!-- ⚙️ Configuración -->
-        <item
-            android:id="@+id/settingsFragment"
-            android:title="Configuración"
-            android:icon="@drawable/ic_baseline_settings_24" />
 
         <!-- 🚪 Cerrar sesión -->
         <item

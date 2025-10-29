@@ -42,12 +42,23 @@ public class PagosAdapter extends RecyclerView.Adapter<PagosAdapter.ViewHolder> 
 
         // 🔹 Número de pago
         holder.tvNumero.setText(String.format(Locale.getDefault(), "Pago N° %d", p.getNumeroPago()));
+        String fechaOriginal = p.getFechaPago(); // si tu modelo usa String
+        String fechaFormateada = "Sin fecha";
 
-        // 🔹 Fecha formateada (si hay valor)
-        String fechaFormateada = (p.getFechaPago() != null)
-                ? formatoFecha.format(p.getFechaPago())
-                : "Sin fecha";
+        try {
+            if (fechaOriginal != null && !fechaOriginal.isEmpty()) {
+                // Parsear ISO-8601 (ej: 2025-10-22T00:00:00)
+                String soloFecha = fechaOriginal.split("T")[0];
+                String[] partes = soloFecha.split("-");
+                // Formato a dd/MM/yyyy
+                fechaFormateada = partes[2] + "/" + partes[1] + "/" + partes[0];
+            }
+        } catch (Exception e) {
+            fechaFormateada = "Fecha inválida";
+        }
+
         holder.tvFecha.setText("Fecha: " + fechaFormateada);
+
 
         // 🔹 Importe con formato local
         holder.tvImporte.setText("Importe: " + formatoMoneda.format(p.getImporte()));

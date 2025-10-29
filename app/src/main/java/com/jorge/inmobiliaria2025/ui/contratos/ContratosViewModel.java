@@ -49,13 +49,16 @@ public class ContratosViewModel extends AndroidViewModel {
             repo.cargarContratosVigentes(token);
         }
     }
-    // ================================
-    // 🔹 Lógica de navegación
-    // ================================
     public void onContratoSeleccionado(Contrato contrato) {
         if (contrato == null) return;
+
         Bundle bundle = new Bundle();
         bundle.putSerializable("contratoSeleccionado", contrato);
-        accionNavegarADetalle.postValue(bundle);
+        accionNavegarADetalle.setValue(bundle);
+
+        // 🧹 Limpieza automática tras emitir el evento
+        accionNavegarADetalle.postValue(null);
     }
+
 }
+

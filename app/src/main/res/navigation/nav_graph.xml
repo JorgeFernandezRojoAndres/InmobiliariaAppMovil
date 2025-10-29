@@ -26,12 +26,10 @@
         android:label="Inmuebles"
         tools:layout="@layout/fragment_inmuebles">
 
-        <!-- ➡️ Acción: ir al detalle del inmueble -->
         <action
             android:id="@+id/action_inmueblesFragment_to_detalleInmuebleFragment"
             app:destination="@id/detalleInmuebleFragment" />
 
-        <!-- ➕ Acción: ir al formulario de nuevo inmueble -->
         <action
             android:id="@+id/action_inmueblesFragment_to_nuevoInmuebleFragment"
             app:destination="@id/nuevoInmuebleFragment" />
@@ -58,11 +56,32 @@
         android:label="Contratos"
         tools:layout="@layout/fragment_contratos">
 
-        <!-- ➡️ Acción: ir al detalle del contrato -->
+        <!-- ✅ Mantiene la lista en el stack -->
         <action
             android:id="@+id/action_contratosFragment_to_detalleContratoFragment"
-            app:destination="@id/detalleContratoFragment" />
+            app:destination="@id/detalleContratoFragment"
+            app:launchSingleTop="true"
+            app:popUpTo="@id/nav_contratos"
+            app:popUpToInclusive="false" />
+
+        <!-- 🧭 Nueva acción para volver al inicio -->
+        <action
+            android:id="@+id/action_contratosFragment_to_nav_ubicacion"
+            app:destination="@id/nav_ubicacion"
+            app:popUpTo="@id/nav_graph"
+            app:popUpToInclusive="true"
+            app:launchSingleTop="true"
+            app:enterAnim="@anim/slide_in_left"
+            app:exitAnim="@anim/slide_out_right" />
     </fragment>
+
+    <!-- 🌍 Acción global para limpiar el stack al ir a Contratos -->
+    <action
+        android:id="@+id/action_global_nav_contratos"
+        app:destination="@id/nav_contratos"
+        app:launchSingleTop="true"
+        app:popUpTo="@id/nav_graph"
+        app:popUpToInclusive="true" />
 
     <!-- 📜 Detalle de contrato -->
     <fragment
@@ -71,24 +90,25 @@
         android:label="Detalle del Contrato"
         tools:layout="@layout/fragment_detalle_contrato">
 
-        <!-- 💰 Acción: ir al listado de pagos -->
+        <!-- ✅ Mantiene Detalle en pila, evita recreaciones y conserva argumentos -->
         <action
             android:id="@+id/action_detalleContratoFragment_to_pagosFragment"
-            app:destination="@id/nav_pagos" />
+            app:destination="@id/pagosFragment"
+            app:launchSingleTop="true"
+            app:popUpTo="@id/pagosFragment"
+            app:popUpToInclusive="false"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
     </fragment>
 
     <!-- 💰 Pagos -->
     <fragment
-        android:id="@+id/nav_pagos"
+        android:id="@+id/pagosFragment"
         android:name="com.jorge.inmobiliaria2025.ui.pagos.PagosFragment"
         android:label="Pagos"
-        tools:layout="@layout/fragment_pagos">
-
-        <!-- 🔙 Acción opcional: volver al detalle del contrato -->
-        <action
-            android:id="@+id/action_pagosFragment_to_detalleContratoFragment"
-            app:destination="@id/detalleContratoFragment" />
-    </fragment>
+        tools:layout="@layout/fragment_pagos" />
 
     <!-- 🚪 Cerrar sesión -->
     <fragment

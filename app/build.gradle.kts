@@ -2,7 +2,7 @@ plugins {
     // 🔹 Plugins declarados en libs.versions.toml
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.kapt) // ✅ Usa el alias definido en libs.versions.toml
+    alias(libs.plugins.kotlin.kapt)
 }
 
 android {
@@ -46,11 +46,15 @@ android {
 }
 
 dependencies {
-    // 🧱 Dependencias básicas de Android
+
     implementation(libs.appcompat)
     implementation(libs.material)
-    implementation(libs.activity)
     implementation(libs.constraintlayout)
+
+
+    implementation(libs.activity)
+
+    implementation(libs.fragment)
 
     // 🖼️ Glide (carga de imágenes)
     implementation(libs.glide)

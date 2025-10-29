@@ -27,7 +27,7 @@ public class RetrofitClient {
 
     // ⚠️ Verifica que esta IP sea la de tu PC (ipconfig en consola)
     //    No uses localhost ni 10.0.2.2 en teléfono real
-    public static final String BASE_URL = "http://192.168.1.34:5027/";
+    public static final String BASE_URL = "http://192.168.1.37:5027/";
 
     public static Retrofit getInstance(Context context) {
         if (retrofit == null) {

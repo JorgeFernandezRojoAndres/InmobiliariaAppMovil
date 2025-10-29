@@ -52,6 +52,14 @@ public class DetalleInmuebleViewModel extends AndroidViewModel {
     public LiveData<Integer> getVisibilidadCambiarImg() { return visibilidadCambiarImg; }
     public LiveData<Boolean> getActivo() { return activo; }
     public LiveData<TipoInmueble> getTipoSeleccionado() { return _tipoSeleccionadoMediator; }
+    // 🔹 Setters públicos para actualizar LiveData desde la vista
+    public void setDireccion(String value) { direccion.setValue(value); }
+    public void setMetros(String value) { metros.setValue(value); }
+    public void setPrecio(String value) { precio.setValue(value); }
+    public void setActivo(boolean value) { activo.setValue(value); }
+    public void setTipoSeleccionado(TipoInmueble tipo) { _tipoSeleccionadoMediator.setValue(tipo); }
+    public void setImagenSeleccionada(Uri uri) { imagenSeleccionada.setValue(uri); }
+
     public DetalleInmuebleViewModel(@NonNull Application app) {
         super(app);
         repo = new InmuebleRepository(app);
@@ -136,16 +144,17 @@ public class DetalleInmuebleViewModel extends AndroidViewModel {
     }
 
     // 🔹 Procesar selección de imagen (desde ActivityResult)
-    public void procesarSeleccionImagen(ActivityResult result, ImageView destino) {
-        if (result.getData() != null && result.getData().getData() != null) {
+
+    public void procesarSeleccionImagen(ActivityResult result) {
+        if (result != null && result.getData() != null && result.getData().getData() != null) {
             Uri uri = result.getData().getData();
-            destino.setImageURI(uri);
-            imagenSeleccionada.postValue(uri);
+            imagenSeleccionada.postValue(uri); // ✅ Publica la URI seleccionada
             Log.d("DetalleVM", "🖼️ Imagen seleccionada: " + uri);
         } else {
             mensajeToast.postValue("⚠️ No se seleccionó ninguna imagen");
         }
     }
+
 
     // 🔹 Formatea el valor de los metros cuadrados y lo envía a la vista
     public void formatearMetros(String valor) {
@@ -157,86 +166,73 @@ public class DetalleInmuebleViewModel extends AndroidViewModel {
         metrosFormateados.setValue(textoFormateado);
     }
 
-    public void guardarCambios(String direccion, String metros, String precio,
-                               boolean activo, int indiceTipo, List<TipoInmueble> tipos, Uri imagenUri,
-                               InmuebleViewModel globalVM) {
-
+    // 🔹 Versión simplificada y desacoplada de la vista
+    public void guardarCambios(InmuebleViewModel globalVM) {
         Inmueble actual = inmueble.getValue();
         if (actual == null) {
             mensajeToast.postValue("⚠️ No se pudo cargar el inmueble actual");
             return;
         }
 
-        String dir = (direccion != null && !direccion.trim().isEmpty())
-                ? direccion.trim()
-                : actual.getDireccion();
+        // 🔸 Usar los LiveData internos
+        String dir = direccion.getValue();
+        String prec = precio.getValue();
+        String met = metros.getValue();
+        Boolean act = activo.getValue();
+        TipoInmueble tipo = _tipoSeleccionadoMediator.getValue();
+        Uri uriSeleccionada = imagenSeleccionada.getValue();
 
-        String prec = (precio != null && !precio.trim().isEmpty())
-                ? precio.replace(",", ".").trim()
-                : new java.text.DecimalFormat("0.##").format(actual.getPrecio());
-
-        String met = (metros != null && !metros.trim().isEmpty())
-                ? metros.replaceAll("[^0-9.]", "").trim()
-                : String.valueOf(actual.getMetrosCuadrados());
+        // 🔸 Validaciones básicas
+        if (dir == null || dir.trim().isEmpty() ||
+                prec == null || prec.trim().isEmpty() ||
+                met == null || met.trim().isEmpty()) {
+            mensajeToast.postValue("⚠️ Campos incompletos");
+            return;
+        }
 
         double precioDouble;
         int metrosInt;
-
         try {
-            precioDouble = Double.parseDouble(prec);
-            metrosInt = (int) Double.parseDouble(met);
+            precioDouble = Double.parseDouble(prec.replace(",", "."));
+            metrosInt = Integer.parseInt(met.replaceAll("[^0-9]", ""));
         } catch (NumberFormatException e) {
             mensajeToast.postValue("❌ Datos numéricos inválidos");
             return;
         }
 
-        // 🧱 Crear inmueble actualizado con los datos nuevos
+        // 🧱 Crear el inmueble actualizado
         Inmueble actualizado = new Inmueble(
                 actual.getId(),
-                dir,
+                dir.trim(),
                 precioDouble,
-                activo
+                act != null && act
         );
         actualizado.setMetrosCuadrados(metrosInt);
 
-        // 🔹 Determinar tipo seleccionado correctamente
-        TipoInmueble tipo = (tipos != null && indiceTipo >= 0 && indiceTipo < tipos.size())
-                ? tipos.get(indiceTipo)
-                : Optional.ofNullable(tiposInmueble.getValue())
-                .flatMap(lista -> lista.stream()
-                        .filter(t -> t.getId() == actual.getTipoId())  // Usar tipoId del inmueble original
-                        .findFirst())
-                .orElse(null);
-
+        // 🔸 Asignar tipo seleccionado
         if (tipo != null) {
             actualizado.setTipoId(tipo.getId());
             actualizado.setTipoNombre(tipo.getNombre());
         } else {
-            // Si no se seleccionó tipo, mantener el tipo original
             actualizado.setTipoId(actual.getTipoId());
             actualizado.setTipoNombre(actual.getTipoNombre());
         }
 
-        Log.d("DetalleVM", "💾 Guardando inmueble id=" + actualizado.getId() +
-                ", tipoId=" + actualizado.getTipoId() +
-                ", tipoNombre=" + actualizado.getTipoNombre());
-
-        // ✅ Mantener o usar imagen existente
-        Uri uriFinal = imagenUri != null
-                ? imagenUri
+        // 🔸 Resolver imagen final
+        Uri uriFinal = uriSeleccionada != null
+                ? uriSeleccionada
                 : (imagenUrl.getValue() != null ? Uri.parse(imagenUrl.getValue()) : null);
-
-        if (uriFinal == null || uriFinal.toString().isEmpty()) {
-            uriFinal = actual.getImagenUrl() != null ? Uri.parse(actual.getImagenUrl()) : null;
-        }
 
         if (uriFinal == null) {
             mensajeToast.postValue("⚠️ No se seleccionó ninguna imagen");
             return;
         }
 
-        // 🔹 Guardar mediante repo
-        final TipoInmueble tipoFinal = tipo;
+        Log.d("DetalleVM", "💾 Guardando inmueble id=" + actualizado.getId() +
+                ", tipoId=" + actualizado.getTipoId() +
+                ", tipoNombre=" + actualizado.getTipoNombre());
+
+        // 🔹 Guardar mediante el repositorio
         repo.actualizarInmuebleConImagenForm(actualizado, uriFinal)
                 .observeForever(ok -> {
                     mensajeToast.postValue(Boolean.TRUE.equals(ok)
@@ -244,12 +240,9 @@ public class DetalleInmuebleViewModel extends AndroidViewModel {
                             : "⚠️ Error al guardar los cambios");
 
                     if (Boolean.TRUE.equals(ok)) {
-                        // 🧩 Actualiza LiveData locales
                         inmueble.postValue(actualizado);
-                        tipoSeleccionado.postValue(tipoFinal);
                         setEnEdicion(false);
 
-                        // 🧭 Sincroniza lista global si existe
                         if (globalVM != null && actualizado.getId() != 0) {
                             globalVM.actualizarInmuebleEnLista(actualizado);
                         }
