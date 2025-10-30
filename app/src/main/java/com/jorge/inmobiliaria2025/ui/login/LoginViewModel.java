@@ -32,7 +32,8 @@ public class LoginViewModel extends AndroidViewModel {
     public LoginViewModel(@NonNull Application app) {
         super(app);
         apiService = RetrofitClient.getInstance(app).create(ApiService.class);
-        sessionManager = new SessionManager(app);
+        sessionManager = SessionManager.getInstance(app);
+
 
         if (sessionManager.isLogged()) {
             Log.d("LOGIN", "🔁 Sesión existente detectada, saltando LoginActivity");

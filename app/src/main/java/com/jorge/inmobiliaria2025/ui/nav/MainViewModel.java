@@ -32,7 +32,8 @@ public class MainViewModel extends AndroidViewModel {
 
     /** 🔹 Comprueba si hay sesión activa y actualiza los LiveData */
     private void verificarSesion() {
-        SessionManager sm = new SessionManager(getApplication());
+        SessionManager sm = SessionManager.getInstance(getApplication());
+
         Propietario p = sm.obtenerPropietarioActual();
 
         if (p == null) {
@@ -78,7 +79,8 @@ public class MainViewModel extends AndroidViewModel {
     /** 🔹 Carga del avatar (sin lógica en la Activity) */
     public void cargarAvatarEn(ImageView imageView, Propietario propietario) {
         try {
-            SessionManager sm = new SessionManager(getApplication());
+            SessionManager sm = SessionManager.getInstance(getApplication());
+
             String url = sm.getAvatarFullUrl(propietario.getAvatarUrl());
 
             Glide.with(getApplication())

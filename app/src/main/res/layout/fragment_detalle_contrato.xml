@@ -56,6 +56,18 @@
             android:text="Ver Pagos"
             style="@style/Widget.MaterialComponents.Button"
             app:cornerRadius="12dp"
+            android:textAllCaps="false"
+            android:layout_marginBottom="12dp" />
+
+        <!-- ✅ BOTÓN NUEVO: Volver a contratos -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnVolverContratos"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Volver a contratos"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            app:cornerRadius="12dp"
             android:textAllCaps="false" />
+
     </LinearLayout>
 </ScrollView>

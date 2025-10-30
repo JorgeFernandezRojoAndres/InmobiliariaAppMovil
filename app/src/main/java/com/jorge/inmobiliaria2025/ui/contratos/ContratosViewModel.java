@@ -26,7 +26,8 @@ public class ContratosViewModel extends AndroidViewModel {
 
     public ContratosViewModel(@NonNull Application app) {
         super(app);
-        sessionManager = new SessionManager(getApplication());
+        sessionManager = SessionManager.getInstance(getApplication());
+
         repo = new ContratoRepository(getApplication());
 
         repo.getContratosLiveData().observeForever(lista -> {

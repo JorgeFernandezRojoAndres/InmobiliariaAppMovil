@@ -49,7 +49,9 @@ public class PerfilViewModel extends AndroidViewModel {
 
     public PerfilViewModel(@NonNull Application app) {
         super(app);
-        sessionManager = new SessionManager(app);
+        sessionManager = SessionManager.getInstance(app.getApplicationContext());
+
+
         cargarEmail();
         cargarPerfilDesdeApi();
     }

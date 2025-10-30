@@ -34,7 +34,8 @@ public class RetrofitClient {
             synchronized (RetrofitClient.class) {
                 if (retrofit == null) {
 
-                    SessionManager session = new SessionManager(context);
+                    SessionManager session = SessionManager.getInstance(context);
+
 
                     // 🛰️ Interceptor de logs HTTP (solo desarrollo)
                     HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor(message -> {

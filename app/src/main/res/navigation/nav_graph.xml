@@ -5,21 +5,39 @@
     android:id="@+id/nav_graph"
     app:startDestination="@id/nav_ubicacion">
 
-    <!-- 🗺️ Pantalla inicial: mapa de ubicación -->
+    <!-- Inicio -->
     <fragment
         android:id="@+id/nav_ubicacion"
         android:name="com.jorge.inmobiliaria2025.ui.Inicio.UbicacionFragment"
         android:label="Ubicación"
         tools:layout="@layout/fragment_ubicacion" />
 
-    <!-- 👤 Perfil -->
+    <!-- Perfil -->
     <fragment
         android:id="@+id/nav_perfil"
         android:name="com.jorge.inmobiliaria2025.ui.perfil.PerfilFragment"
         android:label="Perfil"
         tools:layout="@layout/fragment_perfil" />
 
-    <!-- 🏠 Inmuebles -->
+    <!-- ✅ Inquilinos -->
+    <fragment
+        android:id="@+id/nav_inquilinos"
+        android:name="com.jorge.inmobiliaria2025.ui.inquilinos.InquilinosFragment"
+        android:label="Inquilinos"
+        tools:layout="@layout/fragment_inquilinos">
+
+        <action
+            android:id="@+id/action_nav_inquilinos_to_detalleInquilinoFragment"
+            app:destination="@id/detalleInquilinoFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/detalleInquilinoFragment"
+        android:name="com.jorge.inmobiliaria2025.ui.inquilinos.DetalleInquilinoFragment"
+        android:label="Detalle Inquilino"
+        tools:layout="@layout/fragment_detalle_inquilino" />
+
+    <!-- Inmuebles -->
     <fragment
         android:id="@+id/nav_inmuebles"
         android:name="com.jorge.inmobiliaria2025.ui.Inmueble.InmueblesFragment"
@@ -35,36 +53,34 @@
             app:destination="@id/nuevoInmuebleFragment" />
     </fragment>
 
-    <!-- 🏠 Detalle de inmueble -->
     <fragment
         android:id="@+id/detalleInmuebleFragment"
         android:name="com.jorge.inmobiliaria2025.ui.Inmueble.DetalleInmuebleFragment"
         android:label="Detalle del Inmueble"
         tools:layout="@layout/fragment_detalle_inmueble" />
 
-    <!-- 🏡 Nuevo inmueble -->
     <fragment
         android:id="@+id/nuevoInmuebleFragment"
         android:name="com.jorge.inmobiliaria2025.ui.Inmueble.NuevoInmuebleFragment"
         android:label="Nuevo Inmueble"
         tools:layout="@layout/fragment_nuevo_inmueble" />
 
-    <!-- 📄 Contratos -->
+    <!-- Contratos -->
     <fragment
         android:id="@+id/nav_contratos"
         android:name="com.jorge.inmobiliaria2025.ui.contratos.ContratosFragment"
         android:label="Contratos"
         tools:layout="@layout/fragment_contratos">
 
-        <!-- ✅ Mantiene la lista en el stack -->
         <action
             android:id="@+id/action_contratosFragment_to_detalleContratoFragment"
             app:destination="@id/detalleContratoFragment"
-            app:launchSingleTop="true"
-            app:popUpTo="@id/nav_contratos"
-            app:popUpToInclusive="false" />
+            app:launchSingleTop="false"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
 
-        <!-- 🧭 Nueva acción para volver al inicio -->
         <action
             android:id="@+id/action_contratosFragment_to_nav_ubicacion"
             app:destination="@id/nav_ubicacion"
@@ -75,7 +91,7 @@
             app:exitAnim="@anim/slide_out_right" />
     </fragment>
 
-    <!-- 🌍 Acción global para limpiar el stack al ir a Contratos -->
+    <!-- Global -->
     <action
         android:id="@+id/action_global_nav_contratos"
         app:destination="@id/nav_contratos"
@@ -83,34 +99,42 @@
         app:popUpTo="@id/nav_graph"
         app:popUpToInclusive="true" />
 
-    <!-- 📜 Detalle de contrato -->
+    <!-- Detalle contrato -->
     <fragment
         android:id="@+id/detalleContratoFragment"
         android:name="com.jorge.inmobiliaria2025.ui.contratos.DetalleContratoFragment"
         android:label="Detalle del Contrato"
         tools:layout="@layout/fragment_detalle_contrato">
 
-        <!-- ✅ Mantiene Detalle en pila, evita recreaciones y conserva argumentos -->
         <action
             android:id="@+id/action_detalleContratoFragment_to_pagosFragment"
             app:destination="@id/pagosFragment"
-            app:launchSingleTop="true"
-            app:popUpTo="@id/pagosFragment"
+            app:launchSingleTop="false"
+            app:popUpTo="@id/detalleContratoFragment"
             app:popUpToInclusive="false"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@anim/slide_in_left"
             app:popExitAnim="@anim/slide_out_right" />
+
+        <action
+            android:id="@+id/action_detalleContratoFragment_to_nav_contratos"
+            app:destination="@id/nav_contratos"
+            app:launchSingleTop="true"
+            app:popUpTo="@id/nav_contratos"
+            app:popUpToInclusive="false"
+            app:enterAnim="@anim/slide_in_left"
+            app:exitAnim="@anim/slide_out_right" />
     </fragment>
 
-    <!-- 💰 Pagos -->
+    <!-- Pagos -->
     <fragment
         android:id="@+id/pagosFragment"
         android:name="com.jorge.inmobiliaria2025.ui.pagos.PagosFragment"
         android:label="Pagos"
         tools:layout="@layout/fragment_pagos" />
 
-    <!-- 🚪 Cerrar sesión -->
+    <!-- Logout -->
     <fragment
         android:id="@+id/nav_logout"
         android:name="com.jorge.inmobiliaria2025.ui.logout.LogoutFragment"

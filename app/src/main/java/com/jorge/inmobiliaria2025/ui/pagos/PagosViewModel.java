@@ -117,7 +117,8 @@ public class PagosViewModel extends AndroidViewModel {
     // 🔹 Llamada a la API
     // ===============================
     private void cargarPagos(Context context, int idContrato) {
-        SessionManager session = new SessionManager(context);
+        SessionManager session = SessionManager.getInstance(context);
+
         String token = session.obtenerToken();
 
         if (token == null || token.isEmpty()) {

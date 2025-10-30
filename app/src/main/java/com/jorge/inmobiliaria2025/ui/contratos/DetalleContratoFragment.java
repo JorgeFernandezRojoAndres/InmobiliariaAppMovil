@@ -1,7 +1,6 @@
 package com.jorge.inmobiliaria2025.ui.contratos;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,16 +9,19 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.jorge.inmobiliaria2025.R;
 import com.jorge.inmobiliaria2025.databinding.FragmentDetalleContratoBinding;
+import com.jorge.inmobiliaria2025.utils.DebugNavTracker; // ✅ agregado
 
 public class DetalleContratoFragment extends Fragment {
 
     private static final String TAG = "DETALLE_CONTRATO";
     private DetalleContratoViewModel vm;
     private FragmentDetalleContratoBinding binding;
+    private NavController navController;
 
     @Nullable
     @Override
@@ -28,9 +30,25 @@ public class DetalleContratoFragment extends Fragment {
                              @Nullable Bundle savedInstanceState) {
 
         binding = FragmentDetalleContratoBinding.inflate(inflater, container, false);
-        vm = new ViewModelProvider(this).get(DetalleContratoViewModel.class);
 
-        // Observa los datos del contrato
+        // ✅ Obtener navController 1 sola vez
+        NavHostFragment navHostFragment = (NavHostFragment)
+                requireActivity().getSupportFragmentManager()
+                        .findFragmentById(R.id.nav_host_fragment);
+
+        navController = navHostFragment.getNavController();
+
+        // ✅ ViewModel scoped al nav_graph
+        vm = new ViewModelProvider(
+                navController.getViewModelStoreOwner(R.id.nav_graph)
+        ).get(DetalleContratoViewModel.class);
+
+        // ✅ Logs diagnóstico
+        DebugNavTracker.logFragment(this, "Detalle_onCreateView");
+        DebugNavTracker.logNavController(navController, "Detalle_onCreateView");
+        DebugNavTracker.logViewModel(vm, "Detalle_onCreateView");
+
+        // ✅ Observa contrato
         vm.getContrato().observe(getViewLifecycleOwner(), contrato -> {
             binding.tvIdContrato.setText(String.valueOf(contrato.getId()));
             binding.tvFechasDetalle.setText(
@@ -44,24 +62,32 @@ public class DetalleContratoFragment extends Fragment {
             );
         });
 
-        // Botón para ver pagos
-        binding.btnVerPagos.setOnClickListener(new View.OnClickListener() {
+        // ✅ Botón ver pagos
+        binding.btnVerPagos.setOnClickListener(v -> vm.onVerPagosClick());
+
+        // ✅ Botón volver directo a contratos (atajo correcto)
+        binding.btnVolverContratos.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                vm.onVerPagosClick();
+                navController.navigate(R.id.action_detalleContratoFragment_to_nav_contratos);
             }
         });
 
-        // Observa evento de navegación (único if permitido)
+        // ✅ Navegación a Pagos
         vm.getNavegarAPagos().observe(getViewLifecycleOwner(), args -> {
             if (args != null) {
-                NavHostFragment.findNavController(this)
-                        .navigate(R.id.action_detalleContratoFragment_to_pagosFragment, args);
+
+                // 📌 Logs antes de navegar
+                DebugNavTracker.logFragment(this, "Detalle_beforeNavigateToPagos");
+                DebugNavTracker.logNavController(navController, "Detalle_beforeNavigateToPagos");
+                DebugNavTracker.logViewModel(vm, "Detalle_beforeNavigateToPagos");
+
+                navController.navigate(R.id.action_detalleContratoFragment_to_pagosFragment, args);
                 vm.limpiarAccionNavegar();
             }
         });
 
-        // Inicializa el ViewModel (la validación de argumentos se hace adentro)
+        // ✅ Inicializa args
         vm.inicializarDesdeArgs(getArguments());
 
         return binding.getRoot();
@@ -69,6 +95,7 @@ public class DetalleContratoFragment extends Fragment {
 
     @Override
     public void onDestroyView() {
+        DebugNavTracker.logFragment(this, "Detalle_onDestroyView");
         super.onDestroyView();
         binding = null;
     }

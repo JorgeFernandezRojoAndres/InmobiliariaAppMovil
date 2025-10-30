@@ -38,7 +38,8 @@ public class InmuebleRepository {
     public InmuebleRepository(Application app) {
         this.app = app;
         this.apiService = RetrofitClient.getInstance(app).create(ApiService.class);
-        this.sessionManager = new SessionManager(app);
+        this.sessionManager = SessionManager.getInstance(app);
+
     }
 
     public LiveData<List<Inmueble>> obtenerMisInmuebles() {

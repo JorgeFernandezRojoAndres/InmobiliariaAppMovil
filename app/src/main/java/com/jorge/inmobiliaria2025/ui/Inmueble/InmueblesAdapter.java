@@ -1,6 +1,5 @@
 package com.jorge.inmobiliaria2025.ui.Inmueble;
 
-import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,8 +9,6 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.SwitchCompat;
-import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -28,12 +25,10 @@ public class InmueblesAdapter extends RecyclerView.Adapter<InmueblesAdapter.View
     private final OnItemClickListener listener;
     private final OnDisponibilidadChangeListener disponibilidadListener;
 
-    // 🔹 Interfaz para clics
     public interface OnItemClickListener {
         void onItemClick(Inmueble inmueble);
     }
 
-    // 🔹 Interfaz para cambios de disponibilidad
     public interface OnDisponibilidadChangeListener {
         void onDisponibilidadChanged(Inmueble inmueble);
     }
@@ -69,58 +64,55 @@ public class InmueblesAdapter extends RecyclerView.Adapter<InmueblesAdapter.View
                 holder.itemView.getContext().getString(R.string.precio_formato, i.getPrecio())
         );
 
-        // 🖼️ Imagen real o fondo por defecto
-        String imgUrl = i.getImagenUrl();
+        // ✅ Manejo seguro de URL (si viene relativa le agregamos base)
+        String url = i.getImagenUrl();
+        if (url != null && !url.isEmpty() && !url.startsWith("http")) {
+            url = "http://10.0.2.2:5000" + url;
+        }
+
         Glide.with(holder.itemView.getContext())
-                .load(imgUrl != null && !imgUrl.isEmpty() ? imgUrl : R.drawable.image_background)
+                .load(url != null ? url : R.drawable.image_background)
                 .centerCrop()
                 .placeholder(R.drawable.ic_launcher_foreground)
+                .error(R.drawable.image_background)
                 .into(holder.ivInmueble);
 
-        // 🔄 Evita loops por reciclado del switch
         holder.swDisponible.setOnCheckedChangeListener(null);
-
-        boolean disponible = i.isDisponible();
-        holder.swDisponible.setChecked(disponible);
+        holder.swDisponible.setChecked(i.isDisponible());
 
         holder.swDisponible.setOnCheckedChangeListener((CompoundButton buttonView, boolean isChecked) -> {
-            if (i.isDisponible() != isChecked) { // ✅ Evita repeticiones innecesarias
+            if (i.isDisponible() != isChecked) {
                 i.setDisponible(isChecked);
+
+                // ✅ Notificar solo al VM, sin lógica acá
                 if (disponibilidadListener != null) {
                     disponibilidadListener.onDisponibilidadChanged(i);
                 }
             }
         });
 
-        // 🎯 Click en la tarjeta completa usando solo el listener
+        // ✅ Click delega al Fragment / ViewModel
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onItemClick(i);
             }
-            // Si listener es nulo, no hacer nada → MVVM puro
         });
     }
-
 
     @Override
     public int getItemCount() {
         return lista.size();
     }
 
-    // 🔹 Actualización eficiente con DiffUtil
     public void actualizarLista(List<Inmueble> nuevaLista) {
         if (nuevaLista == null) return;
 
         DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new DiffUtil.Callback() {
             @Override
-            public int getOldListSize() {
-                return lista.size();
-            }
+            public int getOldListSize() { return lista.size(); }
 
             @Override
-            public int getNewListSize() {
-                return nuevaLista.size();
-            }
+            public int getNewListSize() { return nuevaLista.size(); }
 
             @Override
             public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
@@ -144,7 +136,6 @@ public class InmueblesAdapter extends RecyclerView.Adapter<InmueblesAdapter.View
         diffResult.dispatchUpdatesTo(this);
     }
 
-    // ✅ ViewHolder
     public static class ViewHolder extends RecyclerView.ViewHolder {
         ImageView ivInmueble;
         TextView tvDireccion, tvPrecio;

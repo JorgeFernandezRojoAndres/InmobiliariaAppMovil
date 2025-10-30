@@ -1,7 +1,6 @@
 package com.jorge.inmobiliaria2025.Retrofit;
 
 import com.jorge.inmobiliaria2025.model.Inmueble;
-import com.jorge.inmobiliaria2025.model.Inquilino;
 import com.jorge.inmobiliaria2025.model.Contrato;
 import com.jorge.inmobiliaria2025.model.Pago;
 import com.jorge.inmobiliaria2025.model.LoginRequest;
@@ -9,6 +8,8 @@ import com.jorge.inmobiliaria2025.model.TokenResponse;
 import com.jorge.inmobiliaria2025.model.Propietario;
 import com.jorge.inmobiliaria2025.model.CambioClaveDto;
 import com.jorge.inmobiliaria2025.model.TipoInmueble;
+import com.jorge.inmobiliaria2025.model.InquilinoConInmueble;
+
 
 import java.util.List;
 
@@ -99,12 +100,8 @@ public interface ApiService {
     @GET("api/TiposInmuebleApi")
     Call<List<TipoInmueble>> getTiposInmueble(@Header("Authorization") String token);
 
-    // -------------------- 👥 INQUILINOS --------------------
-    @GET("api/Inquilinos/{idInmueble}")
-    Call<Inquilino> getInquilinoPorInmueble(
-            @Header("Authorization") String token,
-            @Path("idInmueble") int idInmueble
-    );
+
+
 
     // -------------------- 📄 CONTRATOS --------------------
     // ✅ Corregido: tu backend usa ContratosApiController → /api/ContratosApi/vigentes
@@ -132,4 +129,18 @@ public interface ApiService {
             @Header("Authorization") String token,
             @Body Inmueble nuevo
     );
+// -------------------- 👥 INQUILINOS --------------------
+
+    @GET("api/InquilinosApi/con-inmueble")
+    Call<List<InquilinoConInmueble>> getInquilinosConInmueble(  //Lista de inquilinos
+            @Header("Authorization") String token
+    );
+
+    // ✅ Detalle de un inquilino por ID
+    @GET("api/InquilinosApi/{idInquilino}")
+    Call<InquilinoConInmueble> getInquilinoById(
+            @Header("Authorization") String token,
+            @Path("idInquilino") int idInquilino
+    );
+
 }

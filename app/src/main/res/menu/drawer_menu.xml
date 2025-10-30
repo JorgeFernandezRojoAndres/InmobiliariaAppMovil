@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-
     <group android:checkableBehavior="single">
 
         <!-- 👤 Perfil -->
@@ -15,12 +14,17 @@
             android:title="Inmuebles"
             android:icon="@drawable/ic_baseline_home_24" />
 
+        <!-- 🧑‍🤝‍🧑 Inquilinos (Nuevo ítem agregado) -->
+        <item
+            android:id="@+id/nav_inquilinos"
+            android:title="Inquilinos"
+            android:icon="@drawable/ic_person" /> <!-- Cambia el ícono si es necesario -->
+
         <!-- 📄 Contratos -->
         <item
             android:id="@+id/nav_contratos"
             android:title="Contratos"
             android:icon="@drawable/ic_baseline_description_24" />
-
 
         <!-- 🚪 Cerrar sesión -->
         <item

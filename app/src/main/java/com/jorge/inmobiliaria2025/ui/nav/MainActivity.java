@@ -12,7 +12,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.NavDestination;
 import androidx.navigation.NavOptions;
-import androidx.navigation.Navigation;
+
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
@@ -114,25 +114,20 @@ public class MainActivity extends AppCompatActivity {
                     return;
                 }
 
-                // Si Navigation puede retroceder → hacerlo
-                if (!navController.popBackStack()) {
-                    // 💬 Stack vacío → mostrar Snackbar y volver a contratos
-                    Log.w("NAV_BACK", "⚠️ Stack vacío, redirigiendo a lista de contratos");
+                // ✅ Comportamiento nativo del Navigation Component
+                if (!navController.navigateUp()) {
+                    Log.w("NAV_BACK", "⚠️ Sin más destinos en back stack, cerrando actividad");
 
                     Snackbar.make(binding.getRoot(),
-                                    "Volviendo a la lista de contratos...",
+                                    "Finalizando navegación...",
                                     Snackbar.LENGTH_SHORT)
-                            .setAnchorView(binding.toolbar) // 🧩 opcional: aparece sobre toolbar
+                            .setAnchorView(binding.toolbar)
                             .show();
 
-                    // 🔁 Redirigir manualmente
-                    try {
-                        navController.navigate(R.id.nav_contratos);
-                    } catch (Exception e) {
-                        Log.e("NAV_BACK", "💥 Error al navegar a nav_contratos: " + e.getMessage(), e);
-                        finish(); // fallback seguro
-                    }
+                    finish(); // ✅ sale sin romper el stack
                 }
+
+
             }
         });
     }

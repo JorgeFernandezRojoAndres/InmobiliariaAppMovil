@@ -23,7 +23,8 @@ public class LogoutFragment extends Fragment {
                              @Nullable Bundle savedInstanceState) {
 
         // ✅ Cerrar sesión del SessionManager
-        new SessionManager(requireContext()).logout();
+        SessionManager.getInstance(requireContext()).logout();
+
 
         // ✅ Cerrar sesión global de la app
         InmobiliariaApp.getInstance().cerrarSesion();

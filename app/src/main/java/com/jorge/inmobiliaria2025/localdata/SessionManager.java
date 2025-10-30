@@ -25,8 +25,20 @@ public class SessionManager {
     // 🌐 IP base (modificable según red actual)
     private static final String BASE_URL = "http://192.168.1.37:5027/";
 
-    public SessionManager(Context context) {
+    // Instancia estática
+    private static SessionManager instance;
+
+    // Constructor privado
+    private SessionManager(Context context) {
         prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+    }
+
+    // Método estático para obtener la instancia
+    public static synchronized SessionManager getInstance(Context context) {
+        if (instance == null) {
+            instance = new SessionManager(context.getApplicationContext());
+        }
+        return instance;
     }
 
     public void saveToken(String token) {
