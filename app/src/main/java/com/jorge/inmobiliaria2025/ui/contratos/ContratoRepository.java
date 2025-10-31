@@ -77,6 +77,48 @@ public class ContratoRepository {
                 Log.e(TAG, "❌ Error al conectar con el servidor: " + t.getMessage(), t);
                 contratosLiveData.postValue(Collections.emptyList());
             }
+
         });
     }
+    // -------------------- ⚖️ RESCISIÓN DE CONTRATO --------------------
+    public void rescindirContrato(String token, int idContrato, MutableLiveData<String> resultado) {
+        Log.i(TAG, "📡 Enviando solicitud de rescisión para contrato ID=" + idContrato);
+
+        api.rescindirContrato("Bearer " + token, idContrato).enqueue(new Callback<okhttp3.ResponseBody>() {
+            @Override
+            public void onResponse(Call<okhttp3.ResponseBody> call, Response<okhttp3.ResponseBody> response) {
+                int code = response.code();
+                Log.i(TAG, "📨 Respuesta HTTP: " + code);
+
+                if (response.isSuccessful()) {
+                    try {
+                        String msg = response.body() != null ? response.body().string() : "✅ Contrato rescindido correctamente.";
+                        Log.i(TAG, "✅ Contrato rescindido correctamente (ID=" + idContrato + ") → " + msg);
+                        resultado.postValue(msg);
+                    } catch (IOException e) {
+                        Log.e(TAG, "⚠️ Error al leer cuerpo de respuesta: " + e.getMessage());
+                        resultado.postValue("Error leyendo respuesta del servidor.");
+                    }
+                } else {
+                    try {
+                        String errorMsg = response.errorBody() != null
+                                ? response.errorBody().string()
+                                : "(sin cuerpo)";
+                        Log.e(TAG, "🔴 Error HTTP " + code + ": " + errorMsg);
+                        resultado.postValue("Error " + code + ": " + errorMsg);
+                    } catch (IOException e) {
+                        Log.e(TAG, "⚠️ Error leyendo errorBody: " + e.getMessage());
+                        resultado.postValue("Error HTTP " + code + " (sin cuerpo legible)");
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<okhttp3.ResponseBody> call, Throwable t) {
+                Log.e(TAG, "❌ Falló la conexión al intentar rescindir contrato: " + t.getMessage(), t);
+                resultado.postValue("Error de conexión: " + t.getMessage());
+            }
+        });
+    }
+
 }

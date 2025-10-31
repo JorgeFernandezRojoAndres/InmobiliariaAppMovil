@@ -60,18 +60,11 @@ public class PagosFragment extends Fragment {
             Log.w("PAGOS", "⚠️ No se recibieron argumentos en PagosFragment");
         }
 
-        // 🧠 Observa el estado de la UI
+        // 🧠 Observa el estado de la UI (sin lógica adicional)
         vm.getUiState().observe(getViewLifecycleOwner(), state -> {
             tvMensaje.setText(state.getMensaje());
-
-            @SuppressWarnings("WrongConstant")
-            int visMsg = state.getVisibilidadMensaje();
             tvMensaje.setVisibility(View.VISIBLE);
-
-            @SuppressWarnings("WrongConstant")
-            int visLista = state.getVisibilidadLista();
             recyclerView.setVisibility(View.VISIBLE);
-
             recyclerView.setAdapter(state.getAdapter());
         });
 
@@ -79,6 +72,5 @@ public class PagosFragment extends Fragment {
         Bundle args = new Bundle();
         args.putInt("contratoId", contratoId);
         vm.inicializar(requireContext(), args);
-
     }
 }

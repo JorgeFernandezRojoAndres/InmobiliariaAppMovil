@@ -49,6 +49,7 @@
             android:textColor="@color/gray"
             android:layout_marginBottom="24dp" />
 
+        <!-- ✅ Botón Ver Pagos -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnVerPagos"
             android:layout_width="match_parent"
@@ -59,7 +60,20 @@
             android:textAllCaps="false"
             android:layout_marginBottom="12dp" />
 
-        <!-- ✅ BOTÓN NUEVO: Volver a contratos -->
+        <!-- ✅ Botón Rescindir Contrato -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnRescindirContrato"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Rescindir Contrato"
+            style="@style/Widget.MaterialComponents.Button"
+            app:cornerRadius="12dp"
+            android:textAllCaps="false"
+            android:backgroundTint="@color/red"
+            android:textColor="@android:color/white"
+            android:layout_marginBottom="12dp" />
+
+        <!-- ✅ Botón Volver a contratos -->
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnVolverContratos"
             android:layout_width="match_parent"

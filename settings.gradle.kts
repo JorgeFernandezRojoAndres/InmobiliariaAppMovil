@@ -3,7 +3,7 @@ pluginManagement {
         // ⚡ Gradle Plugin Portal (para org.jetbrains.kotlin.android y otros plugins)
         gradlePluginPortal()
 
-        // 🔹 Repositorio principal de Google (Android SDK, Jetpack, Maps, Room, etc.)
+        // 🔹 Repositorio principal de Google (Android SDK, Jetpack, Maps, Room, Firebase, etc.)
         google {
             content {
                 includeGroupByRegex("com\\.android.*")
@@ -15,22 +15,25 @@ pluginManagement {
         // 🔹 Maven Central (Retrofit, OkHttp, Gson, Glide, etc.)
         mavenCentral()
 
-        // ✅ Extra: soporte para bibliotecas alojadas en GitHub (por ejemplo, Glide Snapshot, Lottie, etc.)
+        // ✅ Extra: soporte para bibliotecas alojadas en GitHub
         maven { url = uri("https://jitpack.io") }
+    }
+
+    // 🆕 Permite el plugin de Google Services para Firebase
+    plugins {
+        id("com.google.gms.google-services") version "4.4.2"
     }
 }
 
 dependencyResolutionManagement {
     // 🔒 Evita repositorios locales no controlados
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
 
     repositories {
         // Repositorios principales (orden recomendado)
-        google()           // Android SDK y librerías de Jetpack
+        google()           // Android SDK, Jetpack, Firebase
         mavenCentral()     // Retrofit, OkHttp, Gson, Glide, etc.
-
-        // ✅ Repositorio adicional opcional para proyectos alojados en GitHub
-        maven { url = uri("https://jitpack.io") }
+        maven { url = uri("https://jitpack.io") } // GitHub libs
     }
 }
 

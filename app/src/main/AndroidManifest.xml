@@ -9,6 +9,9 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- 🔔 Permiso requerido desde Android 13+ para mostrar notificaciones -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <application
         android:name=".InmobiliariaApp"
         android:allowBackup="true"
@@ -20,7 +23,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Inmobiliaria_2025"
         android:networkSecurityConfig="@xml/network_security_config"
-        android:enableOnBackInvokedCallback="true"      
+        android:enableOnBackInvokedCallback="true"
         tools:targetApi="31">
 
         <!-- 🌐 Permitir tráfico HTTP solo según configuración XML -->
@@ -47,6 +50,23 @@
         <activity
             android:name=".ui.nav.MainActivity"
             android:exported="true" />
+
+        <!-- 🆕 🔔 Servicio para recibir notificaciones push (FCM) -->
+        <service
+            android:name=".services.MyFirebaseMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <!-- 🆕 🔑 Integración del plugin de Google Services -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="pagos_channel" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@mipmap/ic_launcher" />
 
     </application>
 

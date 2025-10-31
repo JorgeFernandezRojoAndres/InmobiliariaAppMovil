@@ -3,6 +3,9 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.kapt)
+
+    // 🆕 Plugin de Google Services para Firebase
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -28,18 +31,18 @@ android {
         }
     }
 
-    // ✅ Fuerza compilación con Java 17 (de la JBR incluida en Android Studio)
+    // ✅ Fuerza compilación con Java 17
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    // ✅ Sincroniza Kotlin con la misma JVM (evita errores de kapt)
+    // ✅ Sincroniza Kotlin con la misma JVM
     kotlin {
         jvmToolchain(17)
     }
 
-    // 🧠 Habilitar ViewBinding (esto genera FragmentInmueblesBinding automáticamente)
+    // 🧠 Habilitar ViewBinding
     buildFeatures {
         viewBinding = true
     }
@@ -51,16 +54,14 @@ dependencies {
     implementation(libs.material)
     implementation(libs.constraintlayout)
 
-
     implementation(libs.activity)
-
     implementation(libs.fragment)
 
     // 🖼️ Glide (carga de imágenes)
     implementation(libs.glide)
     kapt(libs.glide.compiler)
 
-    // 🧭 Navigation Component (manejo de fragments y drawer)
+    // 🧭 Navigation Component
     implementation(libs.navigation.fragment)
     implementation(libs.navigation.ui)
 
@@ -73,10 +74,10 @@ dependencies {
     implementation(libs.play.services.maps)
     implementation(libs.play.services.location)
 
-    // 🔹 JSON serializer (para SessionManager)
+    // 🔹 JSON serializer
     implementation(libs.gson)
 
-    // 🌐 Retrofit + OkHttp (conexión con backend .NET)
+    // 🌐 Retrofit + OkHttp
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
     implementation(libs.okhttp)
@@ -86,4 +87,8 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+
+    // 🆕 Firebase Cloud Messaging (para notificaciones push)
+    implementation(platform("com.google.firebase:firebase-bom:33.3.0"))
+    implementation("com.google.firebase:firebase-messaging")
 }

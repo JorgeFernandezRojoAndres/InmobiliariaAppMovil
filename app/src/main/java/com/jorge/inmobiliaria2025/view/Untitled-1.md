@@ -21,7 +21,7 @@
 │   │   │   │               │   └── ☕ InmueblesAdapter.java
 │   │   │   │               ├── 📁 data
 │   │   │   │               │   ├── 📁 network
-│   │   │   │               │   │   ├── ☕ ApiService.java
+│   │   │   │               │   │   ├── ☕ Api.java
 │   │   │   │               │   │   └── ☕ RetrofitClient.java
 │   │   │   │               │   ├── ☕ InmobiliariaDatabase.java
 │   │   │   │               │   ├── ☕ InmuebleDao.java

@@ -13,32 +13,37 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.jorge.inmobiliaria2025.model.Contrato;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public class DetalleContratoViewModel extends AndroidViewModel {
 
     private static final String TAG = "DetalleContratoVM";
 
-    // 🔹 LiveData principales
+    // -------------------- 🔹 LiveData principales --------------------
     private final MutableLiveData<Contrato> contrato = new MutableLiveData<>();
     private final MutableLiveData<Integer> contratoId = new MutableLiveData<>();
     private final MutableLiveData<Bundle> accionNavegarAPagos = new MutableLiveData<>();
     private final MutableLiveData<Boolean> navegandoAPagos = new MutableLiveData<>(false);
+    private String ultimoMensaje; // guarda el último JSON del backend
 
-    // 🔹 Constructor
+
+    public String getUltimoMensaje() {
+        return ultimoMensaje;
+    }
+    // -------------------- 🔹 Constructor --------------------
     public DetalleContratoViewModel(@NonNull Application app) {
         super(app);
         Log.d(TAG, "🧩 ViewModel creado");
     }
 
-    // =============================
-    // 🔹 Getters públicos observables
-    // =============================
     public LiveData<Contrato> getContrato() { return contrato; }
     public LiveData<Bundle> getNavegarAPagos() { return accionNavegarAPagos; }
     public LiveData<Integer> getContratoId() { return contratoId; }
 
-    // =============================
+    // ================================
     // 🔹 Inicialización desde argumentos
-    // =============================
+    // ================================
     public void inicializarDesdeArgs(Bundle args) {
         if (args == null || args.isEmpty()) {
             Log.w(TAG, "⚠️ inicializarDesdeArgs(): args nulos o vacíos");
@@ -54,7 +59,6 @@ public class DetalleContratoViewModel extends AndroidViewModel {
                 Log.d(TAG, "✅ Contrato inicializado con ID=" + recibido.getId());
                 return;
             }
-            Log.w(TAG, "⚠️ 'contratoSeleccionado' no es instancia de Contrato");
         }
 
         if (args.containsKey("contratoId")) {
@@ -63,19 +67,14 @@ public class DetalleContratoViewModel extends AndroidViewModel {
                 contratoId.postValue(id);
                 Log.d(TAG, "📦 contratoId recibido directamente: " + id);
                 cargarContratoPorId(id);
-                return;
             }
-            Log.w(TAG, "⚠️ contratoId inválido (-1)");
         }
-
-        Log.w(TAG, "⚠️ No se encontró ni contratoSeleccionado ni contratoId en args");
     }
 
-    // =============================
-    // 🔹 Acción: navegar a pagos
-    // =============================
+    // ================================
+    // 🔹 Navegación a Pagos
+    // ================================
     public void onVerPagosClick() {
-        // único if permitido: evita doble click rápido
         if (Boolean.TRUE.equals(navegandoAPagos.getValue())) return;
 
         navegandoAPagos.postValue(true);
@@ -87,42 +86,113 @@ public class DetalleContratoViewModel extends AndroidViewModel {
         if (actual != null) {
             bundle.putSerializable("contratoSeleccionado", actual);
             bundle.putInt("contratoId", actual.getId());
-            Log.d(TAG, "📦 Navegando con contrato completo (ID=" + actual.getId() + ")");
         } else if (id != null) {
             bundle.putInt("contratoId", id);
-            Log.d(TAG, "📦 Navegando solo con contratoId=" + id);
-        } else {
-            Log.w(TAG, "⚠️ No hay datos de contrato para navegar a pagos");
         }
 
         accionNavegarAPagos.postValue(bundle);
-
-        // Reset del flag después de 400 ms
         new Handler(Looper.getMainLooper()).postDelayed(
                 () -> navegandoAPagos.postValue(false),
                 400
         );
     }
 
-    // =============================
-    // 🔹 Limpieza del evento de navegación
-    // =============================
     public void limpiarAccionNavegar() {
         accionNavegarAPagos.setValue(null);
     }
 
-    // =============================
-    // 🔹 Carga de contrato (privado - Retrofit)
-    // =============================
     private void cargarContratoPorId(int id) {
         Log.d(TAG, "📡 cargarContratoPorId() llamado con ID=" + id);
-        // TODO: implementar llamada Retrofit y luego:
-        // contrato.postValue(contratoObtenido);
+        // TODO: implementar Retrofit
     }
 
     @Override
     protected void onCleared() {
         super.onCleared();
         Log.d(TAG, "🧩 ViewModel destruido (onCleared)");
+    }
+
+    // ================================
+    // 🔹 RESCISIÓN DE CONTRATO
+    // ================================
+    private final MutableLiveData<UiAccion> uiAccion = new MutableLiveData<>();
+    private final ContratoRepository repo = new ContratoRepository(getApplication());
+
+    public LiveData<UiAccion> getUiAccion() {
+        return uiAccion;
+    }
+
+    public enum UiAccion {
+        MOSTRAR_DIALOGO_CONFIRMACION,
+        MOSTRAR_MENSAJE_EXITO,
+        MOSTRAR_MENSAJE_ERROR,
+        VOLVER_A_CONTRATOS
+    }
+
+    // ✅ Paso 1: el usuario toca el botón
+    public void onRescindirClick() {
+        uiAccion.postValue(UiAccion.MOSTRAR_DIALOGO_CONFIRMACION);
+    }
+
+    // ✅ Paso 2: se confirma desde el diálogo
+    public void confirmarRescision() {
+        Contrato actual = contrato.getValue();
+        if (actual == null) {
+            uiAccion.postValue(UiAccion.MOSTRAR_MENSAJE_ERROR);
+            return;
+        }
+
+        String token = com.jorge.inmobiliaria2025.localdata.SessionManager
+                .getInstance(getApplication())
+                .obtenerToken();
+
+        if (token == null || token.isEmpty()) {
+            uiAccion.postValue(UiAccion.MOSTRAR_MENSAJE_ERROR);
+            return;
+        }
+
+        Log.i(TAG, "📡 Solicitando rescisión de contrato ID=" + actual.getId());
+        repo.rescindirContrato(token, actual.getId(), new MutableLiveData<String>() {
+
+            @Override
+            public void postValue(String mensaje) {
+                super.postValue(mensaje);
+
+                // ✅ Guardar el mensaje para que el Fragment pueda mostrar la multa
+                ultimoMensaje = mensaje;
+
+                Log.e(TAG, "🧩 Mensaje recibido del backend: " + mensaje);
+
+                if (mensaje != null && mensaje.contains("multa")) {
+                    try {
+                        JSONObject json = new JSONObject(mensaje);
+                        String texto = json.optString("mensaje", "Contrato rescindido correctamente.");
+                        String multa = json.optString("multa", null);
+
+                        if (multa != null && !multa.isEmpty()) {
+                            uiAccion.postValue(UiAccion.MOSTRAR_MENSAJE_EXITO);
+                            Log.i(TAG, "💰 Multa recibida: $" + multa);
+                            // Podés pasar la multa al fragment con un LiveData si querés mostrarla
+                        } else {
+                            uiAccion.postValue(UiAccion.MOSTRAR_MENSAJE_EXITO);
+                        }
+
+                        new Handler(Looper.getMainLooper()).postDelayed(() ->
+                                uiAccion.postValue(UiAccion.VOLVER_A_CONTRATOS), 1500);
+
+                    } catch (JSONException e) {
+                        Log.e(TAG, "⚠️ Error al parsear mensaje JSON: " + e.getMessage());
+                        uiAccion.postValue(UiAccion.MOSTRAR_MENSAJE_EXITO);
+                    }
+                } else if (mensaje != null && mensaje.toLowerCase().contains("correctamente")) {
+                    uiAccion.postValue(UiAccion.MOSTRAR_MENSAJE_EXITO);
+                    new Handler(Looper.getMainLooper()).postDelayed(() ->
+                            uiAccion.postValue(UiAccion.VOLVER_A_CONTRATOS), 1500);
+                } else {
+                    uiAccion.postValue(UiAccion.MOSTRAR_MENSAJE_ERROR);
+                }
+            }
+
+        });
     }
 }

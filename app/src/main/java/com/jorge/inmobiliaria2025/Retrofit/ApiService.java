@@ -10,7 +10,6 @@ import com.jorge.inmobiliaria2025.model.CambioClaveDto;
 import com.jorge.inmobiliaria2025.model.TipoInmueble;
 import com.jorge.inmobiliaria2025.model.InquilinoConInmueble;
 
-
 import java.util.List;
 
 import okhttp3.MultipartBody;
@@ -100,20 +99,23 @@ public interface ApiService {
     @GET("api/TiposInmuebleApi")
     Call<List<TipoInmueble>> getTiposInmueble(@Header("Authorization") String token);
 
-
-
-
     // -------------------- 📄 CONTRATOS --------------------
-    // ✅ Corregido: tu backend usa ContratosApiController → /api/ContratosApi/vigentes
+    // ✅ Tu backend usa ContratosApiController → /api/ContratosApi/vigentes
     @GET("api/ContratosApi/vigentes")
     Call<List<Contrato>> getContratosVigentes(@Header("Authorization") String token);
 
     // -------------------- 💰 PAGOS --------------------
-    // ✅ Corregido: tu backend usa ContratosApiController → /api/ContratosApi/{id}/pagos
+    // ✅ Pagos por contrato específico
     @GET("api/ContratosApi/{id}/pagos")
     Call<List<Pago>> getPagosPorContrato(
             @Header("Authorization") String token,
             @Path("id") int idContrato
+    );
+
+    // 🆕 Nuevo endpoint: pagos globales del propietario actual
+    @GET("api/Pagos/propietarioActual")
+    Call<List<Pago>> getPagosGlobales(
+            @Header("Authorization") String token
     );
 
     // -------------------- ✏️ ACTUALIZAR / CREAR INMUEBLE --------------------
@@ -129,11 +131,11 @@ public interface ApiService {
             @Header("Authorization") String token,
             @Body Inmueble nuevo
     );
-// -------------------- 👥 INQUILINOS --------------------
 
+    // -------------------- 👥 INQUILINOS --------------------
     @GET("api/InquilinosApi/con-inmueble")
     Call<List<InquilinoConInmueble>> getInquilinosConInmueble(  //Lista de inquilinos
-            @Header("Authorization") String token
+                                                                @Header("Authorization") String token
     );
 
     // ✅ Detalle de un inquilino por ID
@@ -141,6 +143,13 @@ public interface ApiService {
     Call<InquilinoConInmueble> getInquilinoById(
             @Header("Authorization") String token,
             @Path("idInquilino") int idInquilino
+    );
+    // -------------------- ⚖️ RESCISIÓN DE CONTRATO --------------------
+    // Llama al endpoint del backend que calcula la multa y cambia el estado
+    @POST("api/ContratosApi/rescindir/{id}")
+    Call<ResponseBody> rescindirContrato(
+            @Header("Authorization") String token,
+            @Path("id") int idContrato
     );
 
 }

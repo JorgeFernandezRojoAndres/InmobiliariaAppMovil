@@ -10,8 +10,12 @@
     <color name="gray">#9E9E9E</color>
     <color name="gray_dark">#444444</color>
 
-    <!-- Agrego primarios modernos usados por Material3 -->
+    <!-- 🎨 Colores base de Material -->
     <color name="colorPrimary">#6200EE</color>
     <color name="colorPrimaryVariant">#3700B3</color>
     <color name="colorSecondary">#03DAC5</color>
+
+    <!-- 🔥 Nuevos colores -->
+    <color name="red">#D32F2F</color> <!-- rojo Material Design para acciones destructivas -->
+    <color name="orange_primary">#FF6B00</color> <!-- naranja institucional del proyecto -->
 </resources>

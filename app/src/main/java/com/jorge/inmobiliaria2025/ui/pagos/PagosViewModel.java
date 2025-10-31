@@ -57,9 +57,7 @@ public class PagosViewModel extends AndroidViewModel {
         super(app);
     }
 
-    public LiveData<UiState> getUiState() {
-        return uiState;
-    }
+    public LiveData<UiState> getUiState() { return uiState; }
 
     // ============================================================
     // 🔹 Inicialización flexible: contratoSeleccionado o contratoId
@@ -72,11 +70,9 @@ public class PagosViewModel extends AndroidViewModel {
         }
 
         Log.d(TAG, "🧩 Args recibidos en inicializar(): " + args.keySet());
-
         Integer contratoId = null;
 
         try {
-            // 1️⃣ Caso: viene el objeto completo "contratoSeleccionado"
             if (args.containsKey("contratoSeleccionado")) {
                 Contrato contrato = (Contrato) args.getSerializable("contratoSeleccionado");
                 if (contrato != null && contrato.getId() > 0) {
@@ -87,7 +83,6 @@ public class PagosViewModel extends AndroidViewModel {
                 }
             }
 
-            // 2️⃣ Caso alternativo: solo viene el ID
             if (contratoId == null && args.containsKey("contratoId")) {
                 int idBundle = args.getInt("contratoId", -1);
                 if (idBundle > 0) {
@@ -102,7 +97,6 @@ public class PagosViewModel extends AndroidViewModel {
             Log.e(TAG, "💥 Error al leer argumentos: " + e.getMessage(), e);
         }
 
-        // Validar ID final
         if (contratoId == null || contratoId <= 0) {
             Log.w(TAG, "⚠️ No se encontró un contrato o ID válido.");
             mostrarMensaje("No se recibió ningún contrato o ID válido.");
@@ -114,11 +108,10 @@ public class PagosViewModel extends AndroidViewModel {
     }
 
     // ===============================
-    // 🔹 Llamada a la API
+    // 🔹 Llamada a la API (por contrato)
     // ===============================
     private void cargarPagos(Context context, int idContrato) {
         SessionManager session = SessionManager.getInstance(context);
-
         String token = session.obtenerToken();
 
         if (token == null || token.isEmpty()) {
@@ -142,18 +135,11 @@ public class PagosViewModel extends AndroidViewModel {
 
                             if (!pagos.isEmpty()) {
                                 PagosAdapter adapter = new PagosAdapter(context, pagos);
-                                uiState.postValue(new UiState(
-                                        "",
-                                        View.GONE,
-                                        View.VISIBLE,
-                                        adapter
-                                ));
+                                uiState.postValue(new UiState("", View.GONE, View.VISIBLE, adapter));
                             } else {
-                                Log.w(TAG, "⚠️ El contrato no tiene pagos registrados.");
                                 mostrarMensaje("No se encontraron pagos registrados.");
                             }
                         } else {
-                            Log.e(TAG, "❌ Error en respuesta: " + response.code());
                             mostrarMensaje("Error al obtener pagos del servidor (" + response.code() + ").");
                         }
                     }
@@ -170,11 +156,6 @@ public class PagosViewModel extends AndroidViewModel {
     // 🔹 Mostrar mensaje de estado
     // ===============================
     private void mostrarMensaje(String msg) {
-        uiState.postValue(new UiState(
-                msg,
-                View.VISIBLE,
-                View.GONE,
-                null
-        ));
+        uiState.postValue(new UiState(msg, View.VISIBLE, View.GONE, null));
     }
 }
