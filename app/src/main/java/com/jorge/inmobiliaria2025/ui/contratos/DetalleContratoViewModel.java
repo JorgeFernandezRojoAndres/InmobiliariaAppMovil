@@ -142,26 +142,17 @@ public class DetalleContratoViewModel extends AndroidViewModel {
             return;
         }
 
-        String token = com.jorge.inmobiliaria2025.localdata.SessionManager
-                .getInstance(getApplication())
-                .obtenerToken();
-
-        if (token == null || token.isEmpty()) {
-            uiAccion.postValue(UiAccion.MOSTRAR_MENSAJE_ERROR);
-            return;
-        }
-
         Log.i(TAG, "📡 Solicitando rescisión de contrato ID=" + actual.getId());
-        repo.rescindirContrato(token, actual.getId(), new MutableLiveData<String>() {
+
+        // ✅ Ya no pasamos token, solo el ID y LiveData de respuesta
+        repo.rescindirContrato(actual.getId(), new MutableLiveData<String>() {
 
             @Override
             public void postValue(String mensaje) {
                 super.postValue(mensaje);
 
-                // ✅ Guardar el mensaje para que el Fragment pueda mostrar la multa
                 ultimoMensaje = mensaje;
-
-                Log.e(TAG, "🧩 Mensaje recibido del backend: " + mensaje);
+                Log.e(TAG, "🧩 Mensaje backend: " + mensaje);
 
                 if (mensaje != null && mensaje.contains("multa")) {
                     try {
@@ -171,8 +162,7 @@ public class DetalleContratoViewModel extends AndroidViewModel {
 
                         if (multa != null && !multa.isEmpty()) {
                             uiAccion.postValue(UiAccion.MOSTRAR_MENSAJE_EXITO);
-                            Log.i(TAG, "💰 Multa recibida: $" + multa);
-                            // Podés pasar la multa al fragment con un LiveData si querés mostrarla
+                            Log.i(TAG, "💰 Multa: $" + multa);
                         } else {
                             uiAccion.postValue(UiAccion.MOSTRAR_MENSAJE_EXITO);
                         }
@@ -181,7 +171,7 @@ public class DetalleContratoViewModel extends AndroidViewModel {
                                 uiAccion.postValue(UiAccion.VOLVER_A_CONTRATOS), 1500);
 
                     } catch (JSONException e) {
-                        Log.e(TAG, "⚠️ Error al parsear mensaje JSON: " + e.getMessage());
+                        Log.e(TAG, "⚠️ Error JSON: " + e.getMessage());
                         uiAccion.postValue(UiAccion.MOSTRAR_MENSAJE_EXITO);
                     }
                 } else if (mensaje != null && mensaje.toLowerCase().contains("correctamente")) {
@@ -192,7 +182,7 @@ public class DetalleContratoViewModel extends AndroidViewModel {
                     uiAccion.postValue(UiAccion.MOSTRAR_MENSAJE_ERROR);
                 }
             }
-
         });
     }
+
 }

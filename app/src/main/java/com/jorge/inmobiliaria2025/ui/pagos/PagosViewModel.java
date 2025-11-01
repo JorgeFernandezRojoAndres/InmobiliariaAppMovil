@@ -123,7 +123,8 @@ public class PagosViewModel extends AndroidViewModel {
         ApiService api = RetrofitClient.getInstance(context).create(ApiService.class);
         Log.d(TAG, "🌐 Enviando request a getPagosPorContrato con ID=" + idContrato);
 
-        api.getPagosPorContrato("Bearer " + token, idContrato)
+        // 👇 Se quita "Bearer " + token. Ya no va.
+        api.getPagosPorContrato(idContrato)
                 .enqueue(new Callback<List<Pago>>() {
                     @Override
                     public void onResponse(@NonNull Call<List<Pago>> call, @NonNull Response<List<Pago>> response) {
@@ -151,6 +152,7 @@ public class PagosViewModel extends AndroidViewModel {
                     }
                 });
     }
+
 
     // ===============================
     // 🔹 Mostrar mensaje de estado

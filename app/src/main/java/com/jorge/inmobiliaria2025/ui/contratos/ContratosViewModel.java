@@ -49,7 +49,7 @@ public class ContratosViewModel extends AndroidViewModel {
     public void cargarContratos() {
         String token = sessionManager.obtenerToken();
         if (token != null && !token.isEmpty()) {
-            repo.cargarContratosVigentes(token);
+            repo.cargarContratosVigentes();
         } else {
             contratos.postValue(Collections.emptyList());
         }

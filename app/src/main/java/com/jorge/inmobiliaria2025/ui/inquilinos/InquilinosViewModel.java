@@ -42,12 +42,12 @@ public class InquilinosViewModel extends AndroidViewModel {
 
     public void cargarInquilinosConInmueble() {
         ApiService api = RetrofitClient.getInstance(getApplication()).create(ApiService.class);
+
+        // ✅ Log para verificar token (el interceptor lo usa)
         String token = SessionManager.getInstance(getApplication()).obtenerToken();
+        Log.d("JWT_TOKEN_DEBUG", "Token en SessionManager: " + token);
 
-        // ✅ Log del token
-        Log.d("JWT_TOKEN_DEBUG", "Token enviado: " + token);
-
-        api.getInquilinosConInmueble("Bearer " + token)
+        api.getInquilinosConInmueble()
                 .enqueue(new Callback<List<InquilinoConInmueble>>() {
                     @Override
                     public void onResponse(Call<List<InquilinoConInmueble>> call, Response<List<InquilinoConInmueble>> response) {
@@ -67,4 +67,5 @@ public class InquilinosViewModel extends AndroidViewModel {
                     }
                 });
     }
+
 }

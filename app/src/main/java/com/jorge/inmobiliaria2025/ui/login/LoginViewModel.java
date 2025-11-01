@@ -34,7 +34,6 @@ public class LoginViewModel extends AndroidViewModel {
         apiService = RetrofitClient.getInstance(app).create(ApiService.class);
         sessionManager = SessionManager.getInstance(app);
 
-
         if (sessionManager.isLogged()) {
             Log.d("LOGIN", "🔁 Sesión existente detectada, saltando LoginActivity");
             navegarMain.setValue(true);
@@ -62,7 +61,11 @@ public class LoginViewModel extends AndroidViewModel {
                     Propietario propietario = tokenResponse.getPropietario();
 
                     if (token != null && !token.isEmpty()) {
+
+                        // ✅ Guardar token y reiniciar Retrofit
                         sessionManager.saveToken(token);
+                        RetrofitClient.reset();   // <<< FIX IMPORTANTE
+
                         sessionManager.saveEmail(email);
 
                         if (propietario != null) {

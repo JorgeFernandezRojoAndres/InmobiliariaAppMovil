@@ -4,6 +4,7 @@ import android.content.Context;
 import android.app.Application;
 import android.net.Uri;
 import android.util.Log;
+import com.jorge.inmobiliaria2025.Retrofit.RetrofitClient;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
@@ -12,7 +13,7 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.jorge.inmobiliaria2025.InmobiliariaApp;
 import com.jorge.inmobiliaria2025.Retrofit.ApiService;
-import com.jorge.inmobiliaria2025.Retrofit.RetrofitClient;
+
 import com.jorge.inmobiliaria2025.localdata.SessionManager;
 import com.jorge.inmobiliaria2025.model.CambioClaveDto;
 import com.jorge.inmobiliaria2025.model.Propietario;
@@ -78,30 +79,37 @@ public class PerfilViewModel extends AndroidViewModel {
 
     public void cargarPerfilDesdeApi() {
         ApiService api = RetrofitClient.getInstance(getApplication()).create(ApiService.class);
-        String token = sessionManager.obtenerToken();
 
-        if (token == null || token.isBlank()) {
-            emitirMensaje("⚠️ Sesión expirada. Inicie sesión nuevamente.");
-            cerrarSesionEvento.postValue(true);
-            return;
-        }
-
-        api.obtenerPerfil("Bearer " + token).enqueue(new Callback<Propietario>() {
+        api.obtenerPerfil().enqueue(new Callback<Propietario>() {
             @Override
             public void onResponse(@NonNull Call<Propietario> call, @NonNull Response<Propietario> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    Propietario p = response.body();
-                    propietario.postValue(p);
-                    avatarUrl.postValue(sessionManager.getAvatarFullUrl(p.getAvatarUrl()));
-                    sessionManager.guardarPropietario(p);
-                    email.postValue(p.getEmail());
-                    eventoActualizarHeader.postValue(p);
-                } else if (response.code() == 401) {
-                    emitirMensaje("⚠️ Sesión expirada.");
-                    sessionManager.logout();
-                    cerrarSesionEvento.postValue(true);
-                } else {
-                    emitirMensaje("❌ No se pudo obtener el perfil");
+                try {
+                    if (response.isSuccessful() && response.body() != null) {
+
+                        Propietario p = response.body();
+
+                        // ✅ Guardar y publicar propietario
+                        propietario.postValue(p);
+                        email.postValue(p.getEmail());
+                        sessionManager.guardarPropietario(p);
+
+                        // ✅ Actualizar avatar
+                        avatarUrl.postValue(sessionManager.getAvatarFullUrl(p.getAvatarUrl()));
+                        eventoActualizarHeader.postValue(p);
+
+                        // ❌ NO guardar token aquí
+                        // Este endpoint NO devuelve token, así que no lo buscamos más
+
+                    } else if (response.code() == 401) {
+                        emitirMensaje("⚠️ Sesión expirada.");
+                        sessionManager.logout();
+                        cerrarSesionEvento.postValue(true);
+                    } else {
+                        emitirMensaje("❌ No se pudo obtener el perfil");
+                    }
+
+                } catch (Exception e) {
+                    emitirMensaje("⚠️ Error procesando perfil");
                 }
             }
 
@@ -111,6 +119,7 @@ public class PerfilViewModel extends AndroidViewModel {
             }
         });
     }
+
 
     // ---------- Acciones de usuario ----------
     // ---------- Acciones de usuario ----------
@@ -175,7 +184,7 @@ public class PerfilViewModel extends AndroidViewModel {
             return;
         }
 
-        api.actualizarPerfil("Bearer " + token, p).enqueue(new Callback<ResponseBody>() {
+        api.actualizarPerfil(p).enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
                 if (response.isSuccessful() && response.body() != null) {
@@ -233,7 +242,7 @@ public class PerfilViewModel extends AndroidViewModel {
 
         if (p.getTelefono() == null) p.setTelefono("");
 
-        api.actualizarPerfil("Bearer " + token, p).enqueue(new Callback<ResponseBody>() {
+        api.actualizarPerfil(p).enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
                 try {
@@ -242,12 +251,17 @@ public class PerfilViewModel extends AndroidViewModel {
                         String responseStr = response.body().string();
                         JSONObject json = new JSONObject(responseStr);
 
-                        // 🔑 Si vino un nuevo token (por cambio de email), lo guardamos
                         String nuevoToken = json.optString("token", "");
-                        if (!nuevoToken.isEmpty()) {
+
+                    // ✅ Solo guardar si es realmente un JWT válido
+                        if (nuevoToken != null && nuevoToken.length() > 20) {
                             sessionManager.saveToken(nuevoToken);
+                            RetrofitClient.reset(); // reconstruir cliente con nuevo token
                             Log.d("PerfilViewModel", "🔑 Nuevo token guardado tras cambio de email");
+                        } else {
+                            Log.d("PerfilViewModel", "ℹ️ No se recibió token nuevo (no hubo cambio de email)");
                         }
+
 
                         // 🧩 Extraemos el propietario actualizado
                         JSONObject propJson = json.optJSONObject("propietario");
@@ -321,16 +335,34 @@ public class PerfilViewModel extends AndroidViewModel {
         RequestBody requestFile = RequestBody.create(MediaType.parse("image/*"), bytes);
         MultipartBody.Part body = MultipartBody.Part.createFormData("archivo", "avatar.jpg", requestFile);
 
-        api.subirAvatar("Bearer " + token, body).enqueue(new Callback<ResponseBody>() {
+        api.subirAvatar(body).enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     try {
                         JSONObject json = new JSONObject(response.body().string());
                         String newUrl = json.optString("avatarUrl", "");
+
+                        // ✅ Guardar avatar en SessionManager
                         sessionManager.guardarAvatar(newUrl);
+
+                        // ✅ Reforzar token para no perder sesión
+                        String currentToken = sessionManager.obtenerToken();
+                        if (currentToken != null && !currentToken.isEmpty()) {
+                            sessionManager.saveToken(currentToken);
+                            RetrofitClient.reset(); // reconstruye Retrofit con token nuevo
+                        }
+
+
+                        // ✅ Actualizar LiveData para UI
                         avatarUrl.postValue(sessionManager.getAvatarFullUrl(newUrl));
+                        eventoActualizarHeader.postValue(sessionManager.getPropietario());
+
+                        // ✅ Recargar perfil para refrescar todos los datos
+                        cargarPerfilDesdeApi();
+
                         emitirMensaje("✅ Avatar actualizado correctamente");
+
                     } catch (Exception e) {
                         emitirMensaje("⚠️ Error procesando respuesta del servidor");
                     }
@@ -345,6 +377,7 @@ public class PerfilViewModel extends AndroidViewModel {
             }
         });
     }
+
 
     // ---------- Cambio de contraseña ----------
     public void cambiarClave(String actual, String nueva) {
@@ -362,7 +395,7 @@ public class PerfilViewModel extends AndroidViewModel {
         }
 
         CambioClaveDto dto = new CambioClaveDto(actual, nueva);
-        api.cambiarClave("Bearer " + token, dto).enqueue(new Callback<ResponseBody>() {
+        api.cambiarClave(dto).enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(@NonNull Call<ResponseBody> call, @NonNull Response<ResponseBody> response) {
                 if (response.isSuccessful()) {

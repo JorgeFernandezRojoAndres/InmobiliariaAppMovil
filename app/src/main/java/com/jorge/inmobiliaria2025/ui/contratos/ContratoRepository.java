@@ -31,10 +31,10 @@ public class ContratoRepository {
     }
 
     // 🔹 Carga los contratos vigentes del propietario autenticado
-    public void cargarContratosVigentes(String token) {
+    public void cargarContratosVigentes() {
         Log.i(TAG, "📡 Solicitando contratos vigentes al backend...");
 
-        api.getContratosVigentes("Bearer " + token).enqueue(new Callback<List<Contrato>>() {
+        api.getContratosVigentes().enqueue(new Callback<List<Contrato>>() {
             @Override
             public void onResponse(Call<List<Contrato>> call, Response<List<Contrato>> response) {
                 if (response.isSuccessful() && response.body() != null) {
@@ -80,11 +80,12 @@ public class ContratoRepository {
 
         });
     }
+
     // -------------------- ⚖️ RESCISIÓN DE CONTRATO --------------------
-    public void rescindirContrato(String token, int idContrato, MutableLiveData<String> resultado) {
+    public void rescindirContrato(int idContrato, MutableLiveData<String> resultado) {
         Log.i(TAG, "📡 Enviando solicitud de rescisión para contrato ID=" + idContrato);
 
-        api.rescindirContrato("Bearer " + token, idContrato).enqueue(new Callback<okhttp3.ResponseBody>() {
+        api.rescindirContrato(idContrato).enqueue(new Callback<okhttp3.ResponseBody>() {
             @Override
             public void onResponse(Call<okhttp3.ResponseBody> call, Response<okhttp3.ResponseBody> response) {
                 int code = response.code();
@@ -120,5 +121,6 @@ public class ContratoRepository {
             }
         });
     }
+
 
 }

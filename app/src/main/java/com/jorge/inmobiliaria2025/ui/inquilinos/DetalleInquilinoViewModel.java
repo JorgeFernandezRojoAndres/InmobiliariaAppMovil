@@ -46,7 +46,7 @@ public class DetalleInquilinoViewModel extends AndroidViewModel {
         ApiService api = RetrofitClient.getInstance(getApplication()).create(ApiService.class);
         String token = SessionManager.getInstance(getApplication()).obtenerToken();
 
-        api.getInquilinoById("Bearer " + token, id)
+        api.getInquilinoById(id)
                 .enqueue(new Callback<InquilinoConInmueble>() {
                     @Override
                     public void onResponse(Call<InquilinoConInmueble> call, Response<InquilinoConInmueble> response) {

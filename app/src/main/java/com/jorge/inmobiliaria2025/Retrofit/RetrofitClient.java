@@ -17,16 +17,11 @@ import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-/**
- * ✅ RetrofitClient (versión mejorada)
- * Totalmente compatible con tu API .NET + JWT + Android real device
- */
 public class RetrofitClient {
 
+    // ✅ Debe estar arriba para que reset() la pueda limpiar
     private static volatile Retrofit retrofit = null;
 
-    // ⚠️ Verifica que esta IP sea la de tu PC (ipconfig en consola)
-    //    No uses localhost ni 10.0.2.2 en teléfono real
     public static final String BASE_URL = "http://192.168.1.37:5027/";
 
     public static Retrofit getInstance(Context context) {
@@ -36,8 +31,7 @@ public class RetrofitClient {
 
                     SessionManager session = SessionManager.getInstance(context);
 
-
-                    // 🛰️ Interceptor de logs HTTP (solo desarrollo)
+                    // 🛰 Logs HTTP
                     HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor(message -> {
                         if (message.startsWith("-->") || message.startsWith("<--"))
                             Log.d("Retrofit", "🌐 " + message);
@@ -46,7 +40,7 @@ public class RetrofitClient {
                     });
                     loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 
-                    // 🔐 Interceptor de autenticación JWT
+                    // 🔐 Interceptor JWT
                     Interceptor authInterceptor = chain -> {
                         Request original = chain.request();
                         Request.Builder builder = original.newBuilder();
@@ -55,35 +49,36 @@ public class RetrofitClient {
                         MediaType mediaType = original.body() != null ? original.body().contentType() : null;
                         String contentType = mediaType != null ? mediaType.toString() : "";
 
+                        // ✅ Content-Type
                         if (contentType.contains("multipart")) {
                             builder.removeHeader("Content-Type");
-                        } else if (!contentType.contains("json")) {
+                        } else {
                             builder.header("Content-Type", "application/json");
                         }
 
-                        if (token != null && !token.isEmpty()) {
+                        // ✅ Solo mandar token si es válido
+                        if (token != null && token.trim().length() > 10) {
                             builder.header("Authorization", "Bearer " + token);
-                            Log.d("RetrofitAuth", "🪶 Token enviado en header");
+                            Log.d("RetrofitAuth", "✅ Token enviado: " + token);
                         } else {
-                            Log.w("RetrofitAuth", "⚠️ No hay token almacenado");
+                            Log.w("RetrofitAuth", "⚠️ Token vacío o inválido, NO se envía");
                         }
 
                         Request request = builder.build();
 
                         try {
                             Response response = chain.proceed(request);
-                            if (response.code() == 401)
-                                Log.w("RetrofitAuth", "🚫 Token inválido o expirado (401)");
-                            else if (response.code() >= 400)
-                                Log.e("RetrofitAuth", "⚠️ Error HTTP " + response.code());
+                            if (response.code() == 401) {
+                                Log.w("RetrofitAuth", "🚫 Token inválido/expirado");
+                            }
                             return response;
+
                         } catch (IOException e) {
-                            Log.e("Retrofit", "❌ Error al procesar la petición: " + e.getMessage());
+                            Log.e("RetrofitAuth", "❌ Error petición: " + e.getMessage());
                             throw e;
                         }
                     };
 
-                    // ⚙️ Cliente HTTP con tiempos aumentados y retry
                     OkHttpClient client = new OkHttpClient.Builder()
                             .addInterceptor(authInterceptor)
                             .addInterceptor(loggingInterceptor)
@@ -93,7 +88,6 @@ public class RetrofitClient {
                             .retryOnConnectionFailure(true)
                             .build();
 
-                    // 🚀 Construcción de Retrofit
                     retrofit = new Retrofit.Builder()
                             .baseUrl(BASE_URL)
                             .client(client)
@@ -105,5 +99,11 @@ public class RetrofitClient {
             }
         }
         return retrofit;
+    }
+
+    // ✅ Forzar reconstrucción cuando cambia token
+    public static void reset() {
+        retrofit = null;
+        Log.d("RetrofitClient", "🔄 Retrofit reiniciado para usar nuevo token");
     }
 }

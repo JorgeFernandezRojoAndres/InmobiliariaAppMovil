@@ -207,8 +207,10 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // 🔹 Actualiza nombre y email del header
         mainVM.getPropietarioHeader().observe(this, this::actualizarHeaderUsuario);
 
+        // 🔹 Actualiza imagen del header cuando cambia el avatar guardado en sesión
         mainVM.getAvatarUrl().observe(this, avatar -> {
             View headerView = binding.navView.getHeaderView(0);
             com.jorge.inmobiliaria2025.databinding.NavHeaderBinding headerBinding =
@@ -222,11 +224,39 @@ public class MainActivity extends AppCompatActivity {
                     .into(headerBinding.imageViewProfile);
         });
 
+        // ✅ Escucha cambios de PerfilViewModel (cuando usuario actualiza su perfil o avatar)
+        new ViewModelProvider(this)
+                .get(com.jorge.inmobiliaria2025.ui.perfil.PerfilViewModel.class)
+                .getEventoActualizarHeader()
+                .observe(this, propietario -> {
+                    if (propietario != null) {
+
+                        // ✅ Aplica delay para evitar perder sesión por refresh inmediato
+                        mainVM.actualizarHeaderConDelay(propietario);
+
+                        actualizarHeaderUsuario(propietario);
+
+                        View headerView = binding.navView.getHeaderView(0);
+                        com.jorge.inmobiliaria2025.databinding.NavHeaderBinding headerBinding =
+                                com.jorge.inmobiliaria2025.databinding.NavHeaderBinding.bind(headerView);
+
+                        Glide.with(this)
+                                .load(propietario.getAvatarUrl())
+                                .placeholder(R.drawable.ic_person)
+                                .error(R.drawable.ic_person)
+                                .circleCrop()
+                                .into(headerBinding.imageViewProfile);
+                    }
+                });
+
+        // 🔹 Observa eventos de navegación
         navVM.getAccionNavegarDetalle().observe(this, args -> {
             Log.i("MAIN", "➡️ Navegando al detalle desde NavViewModel");
             navController.navigate(R.id.action_inmueblesFragment_to_detalleInmuebleFragment, args);
         });
     }
+
+
 
     private void actualizarHeaderUsuario(Propietario propietario) {
         View headerView = binding.navView.getHeaderView(0);

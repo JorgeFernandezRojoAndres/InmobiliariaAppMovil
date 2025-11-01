@@ -52,7 +52,7 @@ public class InmuebleRepository {
             return data;
         }
 
-        apiService.getMisInmuebles("Bearer " + token).enqueue(new Callback<List<Inmueble>>() {
+        apiService.getMisInmuebles().enqueue(new Callback<List<Inmueble>>() {
             @Override
             public void onResponse(Call<List<Inmueble>> call, Response<List<Inmueble>> response) {
                 if (response.isSuccessful() && response.body() != null) {
@@ -134,8 +134,9 @@ public class InmuebleRepository {
             return resultado;
         }
 
-        apiService.actualizarDisponibilidad("Bearer " + token, inmueble.getId(), inmueble)
-                .enqueue(new Callback<ResponseBody>() {
+        Call<ResponseBody> call =apiService.actualizarDisponibilidad(inmueble.getId(), inmueble);
+
+        call.enqueue(new Callback<ResponseBody>() {
                     @Override
                     public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                         if (response.isSuccessful()) {
@@ -170,7 +171,7 @@ public class InmuebleRepository {
             return data;
         }
 
-        apiService.getTiposInmueble("Bearer " + token).enqueue(new Callback<List<TipoInmueble>>() {
+        apiService.getTiposInmueble().enqueue(new Callback<List<TipoInmueble>>() {
             @Override
             public void onResponse(Call<List<TipoInmueble>> call, Response<List<TipoInmueble>> response) {
                 if (response.isSuccessful() && response.body() != null) {
@@ -207,8 +208,10 @@ public class InmuebleRepository {
 
         // ✅ Caso 1: sin imagen → JSON normal
         if (imagenUri == null) {
-            apiService.actualizarInmueble("Bearer " + token, inmueble.getId(), inmueble)
-                    .enqueue(new Callback<ResponseBody>() {
+
+            Call<ResponseBody> call = apiService.actualizarInmueble(inmueble.getId(), inmueble);
+
+            call.enqueue(new Callback<ResponseBody>() {
                         @Override
                         public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                             if (response.isSuccessful()) {
@@ -257,9 +260,14 @@ public class InmuebleRepository {
             MultipartBody.Part imagenPart = MultipartBody.Part.createFormData("imagen", file.getName(), requestFile);
 
             apiService.actualizarInmuebleConImagen(
-                    "Bearer " + token,
                     inmueble.getId(),
-                    id, direccion, tipoId, metros, precio, activo, imagenPart
+                    id,
+                    direccion,
+                    tipoId,
+                    metros,
+                    precio,
+                    activo,
+                    imagenPart
             ).enqueue(new Callback<ResponseBody>() {
                 @Override
                 public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
@@ -274,6 +282,7 @@ public class InmuebleRepository {
                             dao.actualizar(inmueble);
                             Log.i("RepoInmueble", "💾 Inmueble sincronizado en Room (form-data)");
                         }).start();
+
                     } else {
                         Log.w("RepoInmueble", "⚠️ Falló actualización inmueble (HTTP " + response.code() + ")");
                         resultado.setValue(false);
@@ -282,10 +291,11 @@ public class InmuebleRepository {
 
                 @Override
                 public void onFailure(Call<ResponseBody> call, Throwable t) {
-                    Log.e("RepoInmueble", "❌ Error al actualizar inmueble (form-data): " + t.getMessage());
+                    Log.e("RepoInmueble", "❌ Error al actualizar inmueble: " + t.getMessage());
                     resultado.setValue(false);
                 }
             });
+
 
         } catch (Exception e) {
             Log.e("RepoInmueble", "❌ Excepción al preparar imagen: " + e.getMessage());
@@ -329,7 +339,7 @@ public class InmuebleRepository {
             MultipartBody.Part imagenPart = MultipartBody.Part.createFormData("imagen", file.getName(), requestFile);
 
             // 🔹 Llamada a la API
-            apiService.subirImagenInmueble("Bearer " + token, idBody, imagenPart)
+            apiService.subirImagenInmueble(idBody, imagenPart)
                     .enqueue(new Callback<ResponseBody>() {
                         @Override
                         public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
@@ -348,6 +358,7 @@ public class InmuebleRepository {
                             resultado.setValue(false);
                         }
                     });
+
 
         } catch (Exception e) {
             Log.e("RepoInmueble", "❌ Excepción al subir imagen: " + e.getMessage());
@@ -391,11 +402,16 @@ public class InmuebleRepository {
         RequestBody precio = RequestBody.create(MediaType.parse("text/plain"), String.valueOf(inmueble.getPrecio()));
         RequestBody activo = RequestBody.create(MediaType.parse("text/plain"), String.valueOf(inmueble.isActivo()));
 
-        // 🔹 Llamada al endpoint multipart
+        // 🔹 Llamada al endpoint multipart (CORREGIDA)
         apiService.actualizarInmuebleConImagen(
-                "Bearer " + token,
-                inmueble.getId(),
-                idBody, direccion, tipoId, metros, precio, activo, imagenPart
+                inmueble.getId(),   // ✅ ya no se pasa el token acá
+                idBody,
+                direccion,
+                tipoId,
+                metros,
+                precio,
+                activo,
+                imagenPart
         ).enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
@@ -428,6 +444,7 @@ public class InmuebleRepository {
             }
         });
 
+
         return resultado;
     }
 
@@ -444,7 +461,7 @@ public class InmuebleRepository {
             return data;
         }
 
-        apiService.crearInmueble("Bearer " + token, nuevo).enqueue(new Callback<Inmueble>() {
+        apiService.crearInmueble(nuevo).enqueue(new Callback<Inmueble>() {
             @Override
             public void onResponse(Call<Inmueble> call, Response<Inmueble> response) {
                 if (response.isSuccessful() && response.body() != null) {
@@ -481,6 +498,7 @@ public class InmuebleRepository {
                 data.setValue(null);
             }
         });
+
 
         return data;
     }

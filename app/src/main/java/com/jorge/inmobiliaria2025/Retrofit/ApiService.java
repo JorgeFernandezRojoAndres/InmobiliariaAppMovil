@@ -18,7 +18,6 @@ import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
-import retrofit2.http.Header;
 import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
@@ -26,9 +25,9 @@ import retrofit2.http.Part;
 import retrofit2.http.Path;
 
 /**
- * ✅ ApiService (versión actualizada)
+ * ✅ ApiService (versión simplificada)
+ * Usa el interceptor de RetrofitClient para agregar el token JWT automáticamente.
  * Define todos los endpoints REST utilizados por la app móvil.
- * Incluye autenticación, perfil, inmuebles, tipos, contratos, inquilinos y pagos.
  */
 public interface ApiService {
 
@@ -40,35 +39,27 @@ public interface ApiService {
     @Multipart
     @POST("api/Propietarios/subirAvatar")
     Call<ResponseBody> subirAvatar(
-            @Header("Authorization") String token,
             @Part MultipartBody.Part archivo
     );
 
     @GET("api/Propietarios/perfil")
-    Call<Propietario> obtenerPerfil(@Header("Authorization") String token);
+    Call<Propietario> obtenerPerfil();
 
     @PUT("api/Propietarios/perfil")
-    Call<ResponseBody> actualizarPerfil(
-            @Header("Authorization") String token,
-            @Body Propietario propietario
-    );
+    Call<ResponseBody> actualizarPerfil(@Body Propietario propietario);
 
     @PUT("api/Propietarios/cambiar-clave")
-    Call<ResponseBody> cambiarClave(
-            @Header("Authorization") String token,
-            @Body CambioClaveDto dto
-    );
+    Call<ResponseBody> cambiarClave(@Body CambioClaveDto dto);
 
     // -------------------- 🏠 INMUEBLES --------------------
     @GET("api/Inmuebles/misInmuebles")
-    Call<List<Inmueble>> getMisInmuebles(@Header("Authorization") String token);
+    Call<List<Inmueble>> getMisInmuebles();
 
     @GET("api/Inmuebles/alquilados")
-    Call<List<Inmueble>> getInmueblesAlquilados(@Header("Authorization") String token);
+    Call<List<Inmueble>> getInmueblesAlquilados();
 
     @PUT("api/Inmuebles/{id}/disponibilidad")
     Call<ResponseBody> actualizarDisponibilidad(
-            @Header("Authorization") String token,
             @Path("id") int idInmueble,
             @Body Inmueble inmueble
     );
@@ -76,7 +67,6 @@ public interface ApiService {
     @Multipart
     @PUT("api/Inmuebles/{id}/form")
     Call<ResponseBody> actualizarInmuebleConImagen(
-            @Header("Authorization") String token,
             @Path("id") int idInmueble,
             @Part("Id") RequestBody id,
             @Part("Direccion") RequestBody direccion,
@@ -90,66 +80,43 @@ public interface ApiService {
     @Multipart
     @POST("api/Inmuebles/upload")
     Call<ResponseBody> subirImagenInmueble(
-            @Header("Authorization") String token,
             @Part("idInmueble") RequestBody idInmueble,
             @Part MultipartBody.Part imagen
     );
 
     // -------------------- 🏗️ TIPOS DE INMUEBLE --------------------
     @GET("api/TiposInmuebleApi")
-    Call<List<TipoInmueble>> getTiposInmueble(@Header("Authorization") String token);
+    Call<List<TipoInmueble>> getTiposInmueble();
 
     // -------------------- 📄 CONTRATOS --------------------
-    // ✅ Tu backend usa ContratosApiController → /api/ContratosApi/vigentes
     @GET("api/ContratosApi/vigentes")
-    Call<List<Contrato>> getContratosVigentes(@Header("Authorization") String token);
+    Call<List<Contrato>> getContratosVigentes();
 
     // -------------------- 💰 PAGOS --------------------
-    // ✅ Pagos por contrato específico
     @GET("api/ContratosApi/{id}/pagos")
-    Call<List<Pago>> getPagosPorContrato(
-            @Header("Authorization") String token,
-            @Path("id") int idContrato
-    );
+    Call<List<Pago>> getPagosPorContrato(@Path("id") int idContrato);
 
-    // 🆕 Nuevo endpoint: pagos globales del propietario actual
     @GET("api/Pagos/propietarioActual")
-    Call<List<Pago>> getPagosGlobales(
-            @Header("Authorization") String token
-    );
+    Call<List<Pago>> getPagosGlobales();
 
     // -------------------- ✏️ ACTUALIZAR / CREAR INMUEBLE --------------------
     @PUT("api/Inmuebles/{id}")
     Call<ResponseBody> actualizarInmueble(
-            @Header("Authorization") String token,
             @Path("id") int idInmueble,
             @Body Inmueble inmueble
     );
 
     @POST("api/Inmuebles")
-    Call<Inmueble> crearInmueble(
-            @Header("Authorization") String token,
-            @Body Inmueble nuevo
-    );
+    Call<Inmueble> crearInmueble(@Body Inmueble nuevo);
 
     // -------------------- 👥 INQUILINOS --------------------
     @GET("api/InquilinosApi/con-inmueble")
-    Call<List<InquilinoConInmueble>> getInquilinosConInmueble(  //Lista de inquilinos
-                                                                @Header("Authorization") String token
-    );
+    Call<List<InquilinoConInmueble>> getInquilinosConInmueble();
 
-    // ✅ Detalle de un inquilino por ID
     @GET("api/InquilinosApi/{idInquilino}")
-    Call<InquilinoConInmueble> getInquilinoById(
-            @Header("Authorization") String token,
-            @Path("idInquilino") int idInquilino
-    );
-    // -------------------- ⚖️ RESCISIÓN DE CONTRATO --------------------
-    // Llama al endpoint del backend que calcula la multa y cambia el estado
-    @POST("api/ContratosApi/rescindir/{id}")
-    Call<ResponseBody> rescindirContrato(
-            @Header("Authorization") String token,
-            @Path("id") int idContrato
-    );
+    Call<InquilinoConInmueble> getInquilinoById(@Path("idInquilino") int idInquilino);
 
+    // -------------------- ⚖️ RESCISIÓN DE CONTRATO --------------------
+    @POST("api/ContratosApi/rescindir/{id}")
+    Call<ResponseBody> rescindirContrato(@Path("id") int idContrato);
 }

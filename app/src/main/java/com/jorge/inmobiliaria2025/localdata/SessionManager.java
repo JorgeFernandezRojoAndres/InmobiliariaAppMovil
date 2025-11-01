@@ -43,8 +43,10 @@ public class SessionManager {
 
     public void saveToken(String token) {
         prefs.edit().putString(KEY_TOKEN, token).apply();
-        Log.d("SessionManager", "✅ Token guardado correctamente: " + token);
+        Log.d("SessionManager", "✅ Token guardado: " + token);
+        com.jorge.inmobiliaria2025.Retrofit.RetrofitClient.reset(); // fuerza nuevo retrofit con token
     }
+
 
     public String getToken() {
         String token = prefs.getString(KEY_TOKEN, null);
@@ -97,17 +99,33 @@ public class SessionManager {
     // 👤 Propietario
     public void guardarPropietario(Propietario propietario) {
         if (propietario == null) return;
+
         try {
+            // ✅ Mantener el avatar anterior si el backend manda null
+            String avatarActual = prefs.getString(KEY_AVATAR, null);
+            String avatarNuevo = propietario.getAvatarUrl();
+
+            // Si el backend NO manda avatar, usamos el que ya tenemos guardado
+            if ((avatarNuevo == null || avatarNuevo.trim().isEmpty()) && avatarActual != null) {
+                propietario.setAvatarUrl(avatarActual);
+            }
+
+            // Guardar siempre el propietario (posiblemente con avatar restaurado)
             String json = gson.toJson(propietario);
             prefs.edit().putString(KEY_PROPIETARIO, json).apply();
-            if (propietario.getAvatarUrl() != null) {
-                prefs.edit().putString(KEY_AVATAR, propietario.getAvatarUrl()).apply();
+
+            // ✅ Guardar avatar solo si viene uno nuevo
+            if (avatarNuevo != null && !avatarNuevo.trim().isEmpty()) {
+                prefs.edit().putString(KEY_AVATAR, avatarNuevo).apply();
             }
+
             Log.d("SessionManager", "👤 Propietario guardado: " + propietario.getNombreCompleto());
+
         } catch (Exception e) {
             Log.e("SessionManager", "⚠️ Error al guardar propietario: " + e.getMessage());
         }
     }
+
 
     public Propietario obtenerPropietarioActual() {
         String json = prefs.getString(KEY_PROPIETARIO, null);
@@ -152,23 +170,7 @@ public class SessionManager {
         return avatar;
     }
 
-    // 💾 Guardar sesión completa
-    public void guardarSesionCompleta(String token, Propietario propietario) {
-        if (token != null && !token.trim().isEmpty()) saveToken(token);
-        if (propietario != null) {
-            guardarPropietario(propietario);
-            saveEmail(propietario.getEmail());
-        }
-        Log.i("SessionManager", "✅ Sesión completa guardada correctamente");
-    }
 
-    // 🌐 URL completa del avatar
-    public String getAvatarFullUrl() {
-        String avatar = obtenerAvatar();
-        if (avatar == null || avatar.isEmpty()) return null;
-        if (avatar.startsWith("http")) return avatar;
-        return BASE_URL + (avatar.startsWith("/") ? avatar : "/" + avatar);
-    }
 
     public String getAvatarFullUrl(String relativeUrl) {
         if (relativeUrl == null || relativeUrl.isEmpty()) return "";
@@ -180,7 +182,5 @@ public class SessionManager {
         return obtenerPropietarioActual();
     }
 
-    public void savePropietario(Propietario propietario) {
-        guardarPropietario(propietario);
-    }
+
 }
