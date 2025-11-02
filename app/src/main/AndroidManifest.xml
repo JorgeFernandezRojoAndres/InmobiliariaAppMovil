@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?> 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="com.jorge.inmobiliaria2025">
@@ -11,6 +11,9 @@
 
     <!-- 🔔 Permiso requerido desde Android 13+ para mostrar notificaciones -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- ✅ Permiso para llamadas telefónicas (shake en Login) -->
+    <uses-permission android:name="android.permission.CALL_PHONE" />
 
     <application
         android:name=".InmobiliariaApp"

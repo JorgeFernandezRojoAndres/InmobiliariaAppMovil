@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="180dp"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:gravity="bottom"
+    android:background="@color/teal_700">
+
+    <!-- 🏠 Logo o ícono del usuario -->
+    <ImageView
+        android:id="@+id/imageViewProfile"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:src="@drawable/ic_person"
+        android:contentDescription="Foto de perfil"
+        android:background="@drawable/circle_background"
+        android:padding="8dp"
+        android:layout_marginBottom="8dp" />
+
+    <!-- 👤 Nombre del propietario logueado -->
+    <TextView
+        android:id="@+id/header_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Propietario"
+        android:textColor="@android:color/white"
+        android:textStyle="bold"
+        android:textSize="18sp"
+        android:ellipsize="end"
+        android:maxLines="1" />
+
+    <!-- ✉️ Email del propietario logueado -->
+    <TextView
+        android:id="@+id/header_subtitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="email@ejemplo.com"
+        android:textColor="@android:color/white"
+        android:textSize="14sp"
+        android:ellipsize="end"
+        android:maxLines="1" />
+
+</LinearLayout>

@@ -5,6 +5,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
@@ -20,12 +21,15 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.jorge.inmobiliaria2025.R;
 import com.jorge.inmobiliaria2025.databinding.FragmentContratosBinding;
 
+import java.util.ArrayList;
+
 public class ContratosFragment extends Fragment {
 
     private static final String TAG = "CONTRATOS";
     private ContratosViewModel vm;
     private ContratoAdapter adapter;
     private RecyclerView rv;
+    private FragmentContratosBinding binding;
 
     @Nullable
     @Override
@@ -34,21 +38,24 @@ public class ContratosFragment extends Fragment {
                              @Nullable Bundle savedInstanceState) {
 
         Log.d(TAG, "🧩 onCreateView() iniciado");
-        FragmentContratosBinding binding = FragmentContratosBinding.inflate(inflater, container, false);
+        binding = FragmentContratosBinding.inflate(inflater, container, false);
         vm = new ViewModelProvider(this).get(ContratosViewModel.class);
         Log.d(TAG, "✅ ViewModel de Contratos creado correctamente");
 
+        // RecyclerView
         rv = binding.rvContratos;
         rv.setLayoutManager(new LinearLayoutManager(requireContext()));
-        adapter = new ContratoAdapter(null, vm::onContratoSeleccionado);
+        adapter = new ContratoAdapter(new ArrayList<>(), vm::onContratoSeleccionado);
         rv.setAdapter(adapter);
 
+        // Lista de contratos
         vm.getContratos().observe(getViewLifecycleOwner(), contratos -> {
-            Log.d(TAG, "📡 Lista de contratos recibida desde ViewModel (" + (contratos != null ? contratos.size() : 0) + ")");
             adapter.updateData(contratos);
         });
 
+        // Navegación a detalle
         vm.getAccionNavegarADetalle().observe(getViewLifecycleOwner(), args -> {
+            if (args == null) return;
             NavController navController = NavHostFragment.findNavController(this);
             NavOptions options = new NavOptions.Builder()
                     .setLaunchSingleTop(true)
@@ -60,15 +67,16 @@ public class ContratosFragment extends Fragment {
             navController.navigate(R.id.action_contratosFragment_to_detalleContratoFragment, args, options);
         });
 
-        Log.d(TAG, "🚀 Solicitando carga de contratos...");
+        // ✅ Siempre cargar todos
         vm.cargarContratos();
 
+        // Botón atrás vuelve al mapa
         requireActivity().getOnBackPressedDispatcher().addCallback(
                 getViewLifecycleOwner(),
                 new OnBackPressedCallback(true) {
                     @Override
                     public void handleOnBackPressed() {
-                        Log.d(TAG, "🔙 Botón Atrás presionado en ContratosFragment → Volviendo al mapa");
+                        Log.d(TAG, "🔙 Botón Atrás presionado -> Volviendo al mapa");
                         NavController navController = NavHostFragment.findNavController(ContratosFragment.this);
                         try {
                             NavOptions options = new NavOptions.Builder()
@@ -77,7 +85,6 @@ public class ContratosFragment extends Fragment {
                                     .setExitAnim(R.anim.slide_out_right)
                                     .build();
                             navController.navigate(R.id.nav_ubicacion, null, options);
-                            Log.d(TAG, "✅ Navegación hacia nav_ubicacion ejecutada correctamente");
                         } catch (Exception e) {
                             Log.e(TAG, "💥 Error al volver al mapa: " + e.getMessage(), e);
                         }

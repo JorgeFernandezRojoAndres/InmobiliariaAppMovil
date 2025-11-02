@@ -56,6 +56,12 @@
     <string name="rango_fechas">%1$s → %2$s</string>
     <string name="detalle_monto">Monto: $%1$.2f</string>
     <string name="detalle_estado">Estado: %1$s</string>
+    <!-- ✅ Filtros de contratos -->
+    <string-array name="filtros_contratos">
+        <item>Vigentes</item>
+        <item>Finalizados</item>
+        <item>Todos</item>
+    </string-array>
 
 
 

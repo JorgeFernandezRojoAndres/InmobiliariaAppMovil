@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    android:background="?android:attr/windowBackground">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="6dp"
+            app:strokeColor="@color/teal_700"
+            app:strokeWidth="1dp"
+            android:padding="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center_horizontal">
+
+                <!-- 📸 Imagen del inmueble -->
+                <FrameLayout
+                    android:layout_width="220dp"
+                    android:layout_height="220dp"
+                    android:layout_marginBottom="16dp">
+
+                    <ImageView
+                        android:id="@+id/imgInmueble"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/image_background"
+                        android:scaleType="centerCrop"
+                        android:contentDescription="@string/app_name"
+                        android:adjustViewBounds="true"
+                        android:clipToOutline="true"
+                        android:outlineProvider="background" />
+
+                    <!-- 🕓 Placeholder opcional durante carga -->
+                    <ProgressBar
+                        android:id="@+id/progressImg"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:layout_gravity="center"
+                        android:visibility="gone" />
+                </FrameLayout>
+
+                <Button
+                    android:id="@+id/btnCambiarImg"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Cambiar imagen"
+                    android:drawableStart="@drawable/ic_baseline_add_24"
+                    android:layout_marginBottom="16dp"
+                    android:visibility="gone" />
+
+                <!-- 🏠 Dirección -->
+                <EditText
+                    android:id="@+id/etDireccionDetalle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Dirección"
+                    android:textSize="18sp"
+                    android:enabled="false"
+                    android:inputType="textCapWords"
+                    android:layout_marginBottom="12dp"
+                    android:textAlignment="center"
+                    android:imeOptions="actionNext" />
+
+                <!-- 🏗️ Tipo de inmueble -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginBottom="12dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Tipo de inmueble"
+                        android:textSize="16sp"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:gravity="center"
+                        android:layout_marginBottom="4dp" />
+
+                    <Spinner
+                        android:id="@+id/spTipoInmuebleDetalle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:enabled="false"
+                        android:spinnerMode="dropdown"
+                        android:backgroundTint="@color/teal_700" />
+                </LinearLayout>
+
+                <!-- 📏 Metros cuadrados -->
+                <EditText
+                    android:id="@+id/etMetrosDetalle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Metros cuadrados"
+                    android:textSize="18sp"
+                    android:inputType="number"
+                    android:enabled="false"
+                    android:layout_marginBottom="12dp"
+                    android:textAlignment="center"
+                    android:imeOptions="actionNext" />
+
+                <!-- 💰 Precio -->
+                <EditText
+                    android:id="@+id/etPrecioDetalle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Precio"
+                    android:textSize="18sp"
+                    android:textColor="@color/teal_200"
+                    android:inputType="numberDecimal"
+                    android:enabled="false"
+                    android:layout_marginBottom="12dp"
+                    android:textAlignment="center" />
+
+                <!-- 👤 Propietario -->
+                <TextView
+                    android:id="@+id/tvPropietarioDetalle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Propietario"
+                    android:textSize="16sp"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:gravity="center"
+                    android:layout_marginBottom="16dp" />
+
+                <!-- 🟢 Disponibilidad -->
+                <Switch
+                    android:id="@+id/swActivoDetalle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Disponible"
+                    android:textSize="16sp"
+                    android:checked="true"
+                    android:enabled="false"
+                    android:layout_marginBottom="16dp" />
+
+                <!-- ⚙️ Botones -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center">
+
+                    <Button
+                        android:id="@+id/btnEditar"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Editar"
+                        android:drawableStart="@drawable/ic_baseline_edit_24"
+                        android:layout_marginEnd="12dp" />
+
+                    <Button
+                        android:id="@+id/btnGuardar"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Guardar"
+                        android:drawableStart="@drawable/ic_baseline_save_24"
+                        android:visibility="gone" />
+                </LinearLayout>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+    </LinearLayout>
+</ScrollView>

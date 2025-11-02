@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:padding="24dp"
+    tools:context=".ui.perfil.PerfilFragment">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal">
+
+        <!-- 🔹 Avatar del usuario -->
+        <ImageView
+            android:id="@+id/ivAvatar"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_marginBottom="20dp"
+            android:src="@drawable/ic_person"
+            android:contentDescription="Avatar del usuario"
+            android:scaleType="centerCrop"
+            android:background="@drawable/avatar_border"
+            android:padding="4dp" />
+
+        <!-- 🔹 Título -->
+        <TextView
+            android:id="@+id/tvTituloPerfil"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Mi Perfil"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            android:layout_marginBottom="24dp" />
+
+        <!-- 🔹 Email visible (sesión actual) -->
+        <TextView
+            android:id="@+id/tvEmail"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/loading"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/teal_200"
+            android:layout_marginBottom="24dp" />
+
+        <!-- 🔹 Código -->
+        <EditText
+            android:id="@+id/etCodigo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Código"
+            android:enabled="false"
+            android:inputType="number"
+            android:textColor="@color/black"
+            android:layout_marginBottom="12dp" />
+
+        <!-- 🔹 Documento (renombrado para binding correcto) -->
+        <EditText
+            android:id="@+id/etDocumento"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Documento / DNI"
+            android:enabled="false"
+            android:inputType="number"
+            android:textColor="@color/black"
+            android:layout_marginBottom="12dp" />
+
+        <!-- 🔹 Nombre -->
+        <EditText
+            android:id="@+id/etNombre"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Nombre"
+            android:enabled="false"
+            android:inputType="textPersonName"
+            android:textColor="@color/black"
+            android:layout_marginBottom="12dp" />
+
+        <!-- 🔹 Apellido -->
+        <EditText
+            android:id="@+id/etApellido"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Apellido"
+            android:enabled="false"
+            android:inputType="textPersonName"
+            android:textColor="@color/black"
+            android:layout_marginBottom="12dp" />
+
+        <!-- 🔹 Email editable -->
+        <EditText
+            android:id="@+id/etEmail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="E-mail"
+            android:enabled="false"
+            android:inputType="textEmailAddress"
+            android:textColor="@color/black"
+            android:layout_marginBottom="12dp" />
+
+        <!-- 🔹 Teléfono -->
+        <EditText
+            android:id="@+id/etTelefono"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Teléfono"
+            android:enabled="false"
+            android:inputType="phone"
+            android:textColor="@color/black"
+            android:layout_marginBottom="24dp" />
+
+        <!-- 🔹 Botón Editar/Guardar -->
+        <Button
+            android:id="@+id/btnEditarPerfil"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="EDITAR"
+            android:backgroundTint="@color/purple_700"
+            android:textColor="@android:color/white"
+            android:layout_marginBottom="16dp" />
+
+        <!-- 🔹 Botón Cambiar contraseña -->
+        <Button
+            android:id="@+id/btnCambiarClave"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Cambiar contraseña"
+            android:backgroundTint="@color/teal_700"
+            android:textColor="@android:color/white"
+            android:layout_marginBottom="16dp" />
+
+        <!-- 🔹 Botón Cerrar sesión -->
+        <Button
+            android:id="@+id/btnCerrarSesion"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/logout"
+            android:backgroundTint="@color/colorPrimaryVariant"
+            android:textColor="@android:color/white" />
+
+    </LinearLayout>
+</ScrollView>

@@ -23,8 +23,16 @@ public class DetalleContratoViewModel extends AndroidViewModel {
     // -------------------- 🔹 LiveData principales --------------------
     private final MutableLiveData<Contrato> contrato = new MutableLiveData<>();
     private final MutableLiveData<Integer> contratoId = new MutableLiveData<>();
+    private final MutableLiveData<UiAccion> uiAccion = new MutableLiveData<>();
+    private final ContratoRepository repo = new ContratoRepository(getApplication());
+
     private final MutableLiveData<Bundle> accionNavegarAPagos = new MutableLiveData<>();
     private final MutableLiveData<Boolean> navegandoAPagos = new MutableLiveData<>(false);
+    private final MutableLiveData<String> mensajeRenovacion = new MutableLiveData<>();
+    public LiveData<String> getMensajeRenovacion() {
+        return mensajeRenovacion;
+    }
+
     private String ultimoMensaje; // guarda el último JSON del backend
 
 
@@ -111,12 +119,70 @@ public class DetalleContratoViewModel extends AndroidViewModel {
         super.onCleared();
         Log.d(TAG, "🧩 ViewModel destruido (onCleared)");
     }
+    // ================================
+// ✅ RENOVACIÓN DE CONTRATO
+// ================================
+    private final MutableLiveData<Boolean> mostrarDialogoRenovar = new MutableLiveData<>();
+    public LiveData<Boolean> getMostrarDialogoRenovar() { return mostrarDialogoRenovar; }
+
+    public void onRenovarClick() {
+        Contrato actual = contrato.getValue();
+
+        if (actual == null) return;
+
+        // Nueva lógica
+        if ("Vigente".equalsIgnoreCase(actual.getEstado())) {
+            ultimoMensaje = "El contrato todavía está vigente. Solo se puede renovar cuando finaliza.";
+            uiAccion.postValue(UiAccion.MOSTRAR_MENSAJE_ERROR_RENOVAR);
+            return;
+        }
+
+        // Si está finalizado -> mostrar diálogo de renovación
+        mostrarDialogoRenovar.postValue(true);
+    }
+
+    public void limpiarDialogoRenovar() {
+        mostrarDialogoRenovar.postValue(false);
+    }
+
+    public void onConfirmarRenovacion(String fechaInicio, String fechaFin, String monto) {
+        Contrato actual = contrato.getValue();
+        if (actual == null) {
+            uiAccion.postValue(UiAccion.MOSTRAR_MENSAJE_ERROR_RENOVAR);
+            return;
+        }
+
+        repo.renovarContrato(
+                actual.getId(),
+                fechaInicio,
+                fechaFin,
+                monto,
+                new ContratoRepository.CallbackRenovar() {
+
+                    @Override
+                    public void onSuccess(String mensaje) {
+                        mensajeRenovacion.postValue(mensaje);
+
+                        // ✅ Primero avisamos éxito
+                        uiAccion.postValue(UiAccion.MOSTRAR_MENSAJE_EXITO_RENOVAR);
+
+                        // ✅ Luego pedir volver a lista de contratos
+                        uiAccion.postValue(UiAccion.VOLVER_A_CONTRATOS);
+                    }
+
+                    @Override
+                    public void onError(String mensaje) {
+                        mensajeRenovacion.postValue(mensaje);
+                        uiAccion.postValue(UiAccion.MOSTRAR_MENSAJE_ERROR_RENOVAR);
+                    }
+                }
+        );
+    }
 
     // ================================
     // 🔹 RESCISIÓN DE CONTRATO
     // ================================
-    private final MutableLiveData<UiAccion> uiAccion = new MutableLiveData<>();
-    private final ContratoRepository repo = new ContratoRepository(getApplication());
+
 
     public LiveData<UiAccion> getUiAccion() {
         return uiAccion;
@@ -126,7 +192,10 @@ public class DetalleContratoViewModel extends AndroidViewModel {
         MOSTRAR_DIALOGO_CONFIRMACION,
         MOSTRAR_MENSAJE_EXITO,
         MOSTRAR_MENSAJE_ERROR,
-        VOLVER_A_CONTRATOS
+        VOLVER_A_CONTRATOS,
+
+        MOSTRAR_MENSAJE_EXITO_RENOVAR,
+        MOSTRAR_MENSAJE_ERROR_RENOVAR
     }
 
     // ✅ Paso 1: el usuario toca el botón

@@ -9,6 +9,9 @@ import com.jorge.inmobiliaria2025.model.Propietario;
 import com.jorge.inmobiliaria2025.model.CambioClaveDto;
 import com.jorge.inmobiliaria2025.model.TipoInmueble;
 import com.jorge.inmobiliaria2025.model.InquilinoConInmueble;
+import retrofit2.http.POST;
+import retrofit2.http.Path;
+import retrofit2.http.Query;
 
 import java.util.List;
 
@@ -119,4 +122,22 @@ public interface ApiService {
     // -------------------- ⚖️ RESCISIÓN DE CONTRATO --------------------
     @POST("api/ContratosApi/rescindir/{id}")
     Call<ResponseBody> rescindirContrato(@Path("id") int idContrato);
+
+    // ✅ Renovar contrato
+    @POST("api/ContratosApi/renovar/{id}")
+    Call<okhttp3.ResponseBody> renovarContrato(
+            @Path("id") int id,
+            @Query("fechaInicio") String fechaInicio,
+            @Query("fechaFin") String fechaFin,
+            @Query("monto") String monto
+    );
+
+    // -------------------- 📄 CONTRATOS - FILTROS NUEVOS --------------------
+    @GET("api/ContratosApi/finalizados")
+    Call<List<Contrato>> getContratosFinalizados();
+
+    @GET("api/ContratosApi/todos")
+    Call<List<Contrato>> getContratosTodos();
+
+
 }

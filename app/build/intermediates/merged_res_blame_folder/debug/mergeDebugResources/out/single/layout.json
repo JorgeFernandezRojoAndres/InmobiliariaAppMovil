@@ -1,0 +1,94 @@
+[
+    {
+        "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-mergeDebugResources-56:\\layout\\fragment_nuevo_inmueble.xml",
+        "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\layout\\fragment_nuevo_inmueble.xml"
+    },
+    {
+        "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-mergeDebugResources-56:\\layout\\fragment_pagos.xml",
+        "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\layout\\fragment_pagos.xml"
+    },
+    {
+        "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-mergeDebugResources-56:\\layout\\fragment_detalle_inmueble.xml",
+        "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\layout\\fragment_detalle_inmueble.xml"
+    },
+    {
+        "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-mergeDebugResources-56:\\layout\\item_inquilino.xml",
+        "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\layout\\item_inquilino.xml"
+    },
+    {
+        "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-mergeDebugResources-56:\\layout\\fragment_settings.xml",
+        "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\layout\\fragment_settings.xml"
+    },
+    {
+        "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-mergeDebugResources-56:\\layout\\activity_main.xml",
+        "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\layout\\activity_main.xml"
+    },
+    {
+        "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-mergeDebugResources-56:\\layout\\nav_header.xml",
+        "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\layout\\nav_header.xml"
+    },
+    {
+        "merged": "com.jorge.inmobiliaria2025.app-mergeDebugResources-56:/layout/fragment_contratos.xml",
+        "source": "com.jorge.inmobiliaria2025.app-main-59:/layout/fragment_contratos.xml"
+    },
+    {
+        "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-mergeDebugResources-56:\\layout\\fragment_logout.xml",
+        "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\layout\\fragment_logout.xml"
+    },
+    {
+        "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-mergeDebugResources-56:\\layout\\fragment_inquilinos.xml",
+        "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\layout\\fragment_inquilinos.xml"
+    },
+    {
+        "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-mergeDebugResources-56:\\layout\\item_contrato.xml",
+        "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\layout\\item_contrato.xml"
+    },
+    {
+        "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-mergeDebugResources-56:\\layout\\item_inmueble.xml",
+        "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\layout\\item_inmueble.xml"
+    },
+    {
+        "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-mergeDebugResources-56:\\layout\\dialog_renovar_contrato.xml",
+        "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\layout\\dialog_renovar_contrato.xml"
+    },
+    {
+        "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-mergeDebugResources-56:\\layout\\fragment_placeholder.xml",
+        "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\layout\\fragment_placeholder.xml"
+    },
+    {
+        "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-mergeDebugResources-56:\\layout\\dialog_cambiar_clave.xml",
+        "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\layout\\dialog_cambiar_clave.xml"
+    },
+    {
+        "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-mergeDebugResources-56:\\layout\\fragment_ubicacion.xml",
+        "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\layout\\fragment_ubicacion.xml"
+    },
+    {
+        "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-mergeDebugResources-56:\\layout\\fragment_inmuebles.xml",
+        "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\layout\\fragment_inmuebles.xml"
+    },
+    {
+        "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-mergeDebugResources-56:\\layout\\fragment_perfil.xml",
+        "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\layout\\fragment_perfil.xml"
+    },
+    {
+        "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-mergeDebugResources-56:\\layout\\fragment_contratos.xml",
+        "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\layout\\fragment_contratos.xml"
+    },
+    {
+        "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-mergeDebugResources-56:\\layout\\activity_login.xml",
+        "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\layout\\activity_login.xml"
+    },
+    {
+        "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-mergeDebugResources-56:\\layout\\item_pago.xml",
+        "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\layout\\item_pago.xml"
+    },
+    {
+        "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-mergeDebugResources-56:\\layout\\fragment_detalle_inquilino.xml",
+        "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\layout\\fragment_detalle_inquilino.xml"
+    },
+    {
+        "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-mergeDebugResources-56:\\layout\\fragment_detalle_contrato.xml",
+        "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\layout\\fragment_detalle_contrato.xml"
+    }
+]

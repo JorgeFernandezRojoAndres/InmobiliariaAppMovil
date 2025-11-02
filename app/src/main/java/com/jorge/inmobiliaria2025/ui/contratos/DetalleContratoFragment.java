@@ -13,8 +13,10 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.jorge.inmobiliaria2025.R;
 import com.jorge.inmobiliaria2025.databinding.FragmentDetalleContratoBinding;
+import com.jorge.inmobiliaria2025.databinding.DialogRenovarContratoBinding;
 import com.jorge.inmobiliaria2025.utils.DebugNavTracker;
 
 public class DetalleContratoFragment extends Fragment {
@@ -32,23 +34,18 @@ public class DetalleContratoFragment extends Fragment {
 
         binding = FragmentDetalleContratoBinding.inflate(inflater, container, false);
 
-        // ✅ Obtener NavController una sola vez
         NavHostFragment navHostFragment = (NavHostFragment)
                 requireActivity().getSupportFragmentManager()
                         .findFragmentById(R.id.nav_host_fragment);
         navController = navHostFragment.getNavController();
 
-        // ✅ ViewModel scoped al nav_graph
         vm = new ViewModelProvider(
                 navController.getViewModelStoreOwner(R.id.nav_graph)
         ).get(DetalleContratoViewModel.class);
 
-        // ✅ Logs diagnósticos
         DebugNavTracker.logFragment(this, "Detalle_onCreateView");
-        DebugNavTracker.logNavController(navController, "Detalle_onCreateView");
-        DebugNavTracker.logViewModel(vm, "Detalle_onCreateView");
 
-        // ✅ Observa contrato (UI reactiva)
+        // ======== Observers ya existentes ========
         vm.getContrato().observe(getViewLifecycleOwner(), contrato -> {
             binding.tvIdContrato.setText(String.valueOf(contrato.getId()));
             binding.tvFechasDetalle.setText(
@@ -62,38 +59,29 @@ public class DetalleContratoFragment extends Fragment {
             );
         });
 
-        // ✅ Observa acción de navegación a Pagos
         vm.getNavegarAPagos().observe(getViewLifecycleOwner(), args -> {
             if (args != null) {
-                DebugNavTracker.logFragment(this, "Detalle_beforeNavigateToPagos");
-                DebugNavTracker.logNavController(navController, "Detalle_beforeNavigateToPagos");
-                DebugNavTracker.logViewModel(vm, "Detalle_beforeNavigateToPagos");
-
                 navController.navigate(R.id.action_detalleContratoFragment_to_pagosFragment, args);
                 vm.limpiarAccionNavegar();
             }
         });
 
-
-        // ✅ Observa acciones de UI desde el ViewModel
         vm.getUiAccion().observe(getViewLifecycleOwner(), accion -> {
             if (accion == null) return;
 
             switch (accion) {
 
                 case MOSTRAR_DIALOGO_CONFIRMACION:
-                    new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+                    new MaterialAlertDialogBuilder(requireContext())
                             .setTitle("Confirmar acción")
-                            .setMessage("¿Seguro que querés rescindir este contrato? Esta acción no se puede deshacer.")
-                            .setPositiveButton("Rescindir", (dialog, which) -> vm.confirmarRescision())
-                            .setNegativeButton("Cancelar", (dialog, which) -> dialog.dismiss())
+                            .setMessage("¿Seguro que querés rescindir este contrato?")
+                            .setPositiveButton("Rescindir", (d, w) -> vm.confirmarRescision())
+                            .setNegativeButton("Cancelar", (d, w) -> d.dismiss())
                             .show();
                     break;
 
-
                 case MOSTRAR_MENSAJE_EXITO:
-                    // ✅ Mostrar multa si está en el último mensaje del backend
-                    String ultimaRespuesta = vm.getUltimoMensaje(); // añadimos getter abajo
+                    String ultimaRespuesta = vm.getUltimoMensaje();
                     String multa = null;
                     try {
                         if (ultimaRespuesta != null && ultimaRespuesta.contains("multa")) {
@@ -103,10 +91,9 @@ public class DetalleContratoFragment extends Fragment {
                     } catch (Exception ignored) {}
 
                     String mensaje = (multa != null)
-                            ? "Contrato rescindido correctamente.\nMulta: $" + multa
-                            : "Contrato rescindido correctamente.";
-
-                    new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                            ? "Contrato rescindido.\nMulta: $" + multa
+                            : "Contrato rescindido.";
+                    new MaterialAlertDialogBuilder(requireContext())
                             .setTitle("Éxito")
                             .setMessage(mensaje)
                             .setPositiveButton("OK", null)
@@ -114,7 +101,7 @@ public class DetalleContratoFragment extends Fragment {
                     break;
 
                 case MOSTRAR_MENSAJE_ERROR:
-                    new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                    new MaterialAlertDialogBuilder(requireContext())
                             .setTitle("Error")
                             .setMessage("No se pudo rescindir el contrato.")
                             .setPositiveButton("OK", null)
@@ -124,19 +111,70 @@ public class DetalleContratoFragment extends Fragment {
                 case VOLVER_A_CONTRATOS:
                     navController.navigate(R.id.action_detalleContratoFragment_to_nav_contratos);
                     break;
+
+                case MOSTRAR_MENSAJE_EXITO_RENOVAR:
+                    new MaterialAlertDialogBuilder(requireContext())
+                            .setTitle("Contrato renovado")
+                            .setMessage("La renovación se realizó correctamente.")
+                            .setPositiveButton("OK", null)
+                            .show();
+                    break;
+
+                case MOSTRAR_MENSAJE_ERROR_RENOVAR:
+                    String detalle = vm.getMensajeRenovacion().getValue();
+
+                    String msgError;
+                    if (detalle != null && detalle.toLowerCase().contains("ya tiene un contrato vigente")) {
+                        msgError = "Este inmueble ya tiene un contrato activo.\nNo se puede renovar el contrato anterior.";
+                    } else {
+                        msgError = "No se pudo renovar el contrato.";
+                    }
+
+                    new MaterialAlertDialogBuilder(requireContext())
+                            .setTitle("Error al renovar")
+                            .setMessage(msgError)
+                            .setPositiveButton("OK", null)
+                            .show();
+                    break;
+
             }
         });
 
 
-        // ✅ Acciones de botones
+        // ===== ✅ NUEVO: Observer para abrir diálogo de renovación =====
+        vm.getMostrarDialogoRenovar().observe(getViewLifecycleOwner(), show -> {
+            if (show == null || !show) return;
+
+            DialogRenovarContratoBinding dialogBinding =
+                    DialogRenovarContratoBinding.inflate(getLayoutInflater());
+
+            new MaterialAlertDialogBuilder(requireContext())
+                    .setTitle("Renovar Contrato")
+                    .setView(dialogBinding.getRoot())
+                    .setPositiveButton("Renovar", (dialog, which) -> {
+
+                        String nuevaFechaInicio = dialogBinding.etNuevaFechaInicio.getText().toString();
+                        String nuevaFechaFin = dialogBinding.etNuevaFechaFin.getText().toString();
+                        String nuevoMonto = dialogBinding.etNuevoMonto.getText().toString();
+
+                        vm.onConfirmarRenovacion(nuevaFechaInicio, nuevaFechaFin, nuevoMonto);
+                    })
+                    .setNegativeButton("Cancelar", (d, w) -> d.dismiss())
+                    .show();
+
+            vm.limpiarDialogoRenovar();
+        });
+
+        // ===== Botones =====
         binding.btnVerPagos.setOnClickListener(v -> vm.onVerPagosClick());
         binding.btnVolverContratos.setOnClickListener(v ->
                 navController.navigate(R.id.action_detalleContratoFragment_to_nav_contratos)
         );
         binding.btnRescindirContrato.setOnClickListener(v -> vm.onRescindirClick());
 
+        // ✅ NUEVO: botón renovar
+        binding.btnRenovarContrato.setOnClickListener(v -> vm.onRenovarClick());
 
-        // ✅ Inicializar argumentos
         vm.inicializarDesdeArgs(getArguments());
 
         return binding.getRoot();
@@ -144,8 +182,7 @@ public class DetalleContratoFragment extends Fragment {
 
     @Override
     public void onDestroyView() {
-        DebugNavTracker.logFragment(this, "Detalle_onDestroyView");
-        super.onDestroyView();
         binding = null;
+        super.onDestroyView();
     }
 }

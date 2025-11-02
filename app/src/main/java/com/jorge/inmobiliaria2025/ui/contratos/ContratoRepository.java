@@ -1,21 +1,26 @@
 package com.jorge.inmobiliaria2025.ui.contratos;
 
-
 import android.util.Log;
 import android.app.Application;
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
+
 import com.jorge.inmobiliaria2025.Retrofit.ApiService;
 import com.jorge.inmobiliaria2025.Retrofit.RetrofitClient;
 import com.jorge.inmobiliaria2025.model.Contrato;
+
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+
 public class ContratoRepository {
 
     private static final String TAG = "ContratoRepo";
@@ -30,97 +35,166 @@ public class ContratoRepository {
         return contratosLiveData;
     }
 
-    // 🔹 Carga los contratos vigentes del propietario autenticado
-    public void cargarContratosVigentes() {
-        Log.i(TAG, "📡 Solicitando contratos vigentes al backend...");
+    // -------------------------------------------------------------------
+    // ✅ Procesar respuesta lista
+    // -------------------------------------------------------------------
+    private void procesarRespuestaLista(Response<List<Contrato>> response, String tipo) {
+        if (response.isSuccessful() && response.body() != null) {
+            List<Contrato> contratos = response.body();
+            contratosLiveData.postValue(contratos);
 
-        api.getContratosVigentes().enqueue(new Callback<List<Contrato>>() {
-            @Override
-            public void onResponse(Call<List<Contrato>> call, Response<List<Contrato>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    List<Contrato> contratos = response.body();
-                    contratosLiveData.postValue(contratos);
+            Log.i(TAG, "✅ Contratos (" + tipo + "): " + contratos.size());
+            for (Contrato c : contratos) {
+                Log.v(TAG, "📝 ID=" + c.getId() +
+                        " | Dir=" + (c.getInmueble() != null ? c.getInmueble().getDireccion() : "null") +
+                        " | Estado=" + c.getEstado());
+            }
 
-                    Log.i(TAG, "✅ Contratos recibidos: " + contratos.size());
-                    for (Contrato c : contratos) {
-                        Log.v(TAG, "📝 Contrato ID=" + c.getId() +
-                                " | Direccion=" + (c.getInmueble() != null ? c.getInmueble().getDireccion() : "null") +
-                                " | Estado=" + c.getEstado());
-                    }
-
-                } else {
-                    int code = response.code();
-                    String errorBody = "";
+        } else {
+            int code = response.code();
+            String errorBody = "";
+            try {
+                if (response.errorBody() != null) {
+                    errorBody = response.errorBody().string();
                     try {
-                        if (response.errorBody() != null) {
-                            errorBody = response.errorBody().string();
-                            // 🔍 Intentamos parsear el JSON devuelto por el backend
-                            try {
-                                JSONObject json = new JSONObject(errorBody);
-                                String mensaje = json.optString("mensaje", "");
-                                String detalle = json.optString("detalle", "");
-                                Log.e(TAG, "💥 Error backend (" + code + "): " + mensaje + " | Detalle: " + detalle);
-                            } catch (JSONException je) {
-                                Log.e(TAG, "⚠️ Error backend (" + code + "): cuerpo no JSON -> " + errorBody);
-                            }
-                        }
-                    } catch (IOException e) {
-                        Log.e(TAG, "⚠️ No se pudo leer el cuerpo del error: " + e.getMessage());
+                        JSONObject json = new JSONObject(errorBody);
+                        String mensaje = json.optString("mensaje", "");
+                        String detalle = json.optString("detalle", "");
+                        Log.e(TAG, "💥 Error backend (" + code + "): " + mensaje + " | " + detalle);
+                    } catch (JSONException je) {
+                        Log.e(TAG, "⚠️ Backend (" + code + "): cuerpo no JSON -> " + errorBody);
                     }
-
-                    contratosLiveData.postValue(Collections.emptyList());
                 }
+            } catch (IOException e) {
+                Log.e(TAG, "⚠️ No se pudo leer error: " + e.getMessage());
             }
 
-            @Override
-            public void onFailure(Call<List<Contrato>> call, Throwable t) {
-                Log.e(TAG, "❌ Error al conectar con el servidor: " + t.getMessage(), t);
-                contratosLiveData.postValue(Collections.emptyList());
-            }
+            contratosLiveData.postValue(Collections.emptyList());
+        }
+    }
 
+    private void procesarErrorConexion(Throwable t) {
+        Log.e(TAG, "❌ Error servidor: " + t.getMessage(), t);
+        contratosLiveData.postValue(Collections.emptyList());
+    }
+
+    // -------------------------------------------------------------------
+    // ✅ Cargar listas desde API
+    // -------------------------------------------------------------------
+    public void cargarContratosVigentes() {
+        Log.i(TAG, "📡 Cargar vigentes...");
+        api.getContratosVigentes().enqueue(new Callback<List<Contrato>>() {
+            @Override public void onResponse(Call<List<Contrato>> call, Response<List<Contrato>> r) {
+                procesarRespuestaLista(r, "vigentes");
+            }
+            @Override public void onFailure(Call<List<Contrato>> call, Throwable t) {
+                procesarErrorConexion(t);
+            }
         });
     }
 
-    // -------------------- ⚖️ RESCISIÓN DE CONTRATO --------------------
+    public void cargarContratosFinalizados() {
+        Log.i(TAG, "📡 Cargar finalizados...");
+        api.getContratosFinalizados().enqueue(new Callback<List<Contrato>>() {
+            @Override public void onResponse(Call<List<Contrato>> call, Response<List<Contrato>> r) {
+                procesarRespuestaLista(r, "finalizados");
+            }
+            @Override public void onFailure(Call<List<Contrato>> call, Throwable t) {
+                procesarErrorConexion(t);
+            }
+        });
+    }
+
+    public void cargarContratosTodos() {
+        Log.i(TAG, "📡 Cargar todos...");
+        api.getContratosTodos().enqueue(new Callback<List<Contrato>>() {
+            @Override public void onResponse(Call<List<Contrato>> call, Response<List<Contrato>> r) {
+                procesarRespuestaLista(r, "todos");
+            }
+            @Override public void onFailure(Call<List<Contrato>> call, Throwable t) {
+                procesarErrorConexion(t);
+            }
+        });
+    }
+
+    // -------------------------------------------------------------------
+    // ✅ Rescindir contrato
+    // -------------------------------------------------------------------
     public void rescindirContrato(int idContrato, MutableLiveData<String> resultado) {
-        Log.i(TAG, "📡 Enviando solicitud de rescisión para contrato ID=" + idContrato);
+        Log.i(TAG, "📡 Rescindir contrato ID=" + idContrato);
 
         api.rescindirContrato(idContrato).enqueue(new Callback<okhttp3.ResponseBody>() {
             @Override
-            public void onResponse(Call<okhttp3.ResponseBody> call, Response<okhttp3.ResponseBody> response) {
-                int code = response.code();
-                Log.i(TAG, "📨 Respuesta HTTP: " + code);
-
-                if (response.isSuccessful()) {
+            public void onResponse(Call<okhttp3.ResponseBody> call, Response<okhttp3.ResponseBody> r) {
+                if (r.isSuccessful()) {
                     try {
-                        String msg = response.body() != null ? response.body().string() : "✅ Contrato rescindido correctamente.";
-                        Log.i(TAG, "✅ Contrato rescindido correctamente (ID=" + idContrato + ") → " + msg);
+                        String msg = r.body() != null ? r.body().string() : "✅ Rescindido";
+                        Log.i(TAG, msg);
                         resultado.postValue(msg);
                     } catch (IOException e) {
-                        Log.e(TAG, "⚠️ Error al leer cuerpo de respuesta: " + e.getMessage());
-                        resultado.postValue("Error leyendo respuesta del servidor.");
+                        Log.e(TAG, "⚠️ Error leyendo respuesta", e);
+                        resultado.postValue("Error leyendo respuesta");
                     }
                 } else {
                     try {
-                        String errorMsg = response.errorBody() != null
-                                ? response.errorBody().string()
-                                : "(sin cuerpo)";
-                        Log.e(TAG, "🔴 Error HTTP " + code + ": " + errorMsg);
-                        resultado.postValue("Error " + code + ": " + errorMsg);
+                        String errorMsg = r.errorBody() != null ? r.errorBody().string() : "Error desconocido";
+                        Log.e(TAG, "❌ Rescindir: " + errorMsg);
+                        resultado.postValue(errorMsg);
                     } catch (IOException e) {
-                        Log.e(TAG, "⚠️ Error leyendo errorBody: " + e.getMessage());
-                        resultado.postValue("Error HTTP " + code + " (sin cuerpo legible)");
+                        resultado.postValue("Error HTTP sin cuerpo legible");
                     }
                 }
             }
 
-            @Override
-            public void onFailure(Call<okhttp3.ResponseBody> call, Throwable t) {
-                Log.e(TAG, "❌ Falló la conexión al intentar rescindir contrato: " + t.getMessage(), t);
+            @Override public void onFailure(Call<okhttp3.ResponseBody> call, Throwable t) {
+                Log.e(TAG, "❌ Conexión rescindir", t);
                 resultado.postValue("Error de conexión: " + t.getMessage());
             }
         });
     }
 
+    // -------------------------------------------------------------------
+    // ✅ Callback para renovación
+    // -------------------------------------------------------------------
+    public interface CallbackRenovar {
+        void onSuccess(String mensaje);
+        void onError(String mensaje);
+    }
 
+    // -------------------------------------------------------------------
+    // ✅ Renovar contrato
+    // -------------------------------------------------------------------
+    public void renovarContrato(int idContrato, String inicio, String fin, String monto,
+                                CallbackRenovar callback) {
+
+        Log.i(TAG, "📡 Renovar contrato ID=" + idContrato);
+
+        api.renovarContrato(idContrato, inicio, fin, monto)
+                .enqueue(new Callback<okhttp3.ResponseBody>() {
+                    @Override public void onResponse(Call<okhttp3.ResponseBody> call, Response<okhttp3.ResponseBody> r) {
+                        if (r.isSuccessful()) {
+                            try {
+                                String msg = r.body() != null ? r.body().string() : "OK";
+                                Log.i(TAG, "✅ Renovado: " + msg);
+                                callback.onSuccess(msg);
+                            } catch (IOException e) {
+                                callback.onError("Error leyendo respuesta");
+                            }
+                        } else {
+                            try {
+                                String errorMsg = r.errorBody() != null ? r.errorBody().string() : "Error desconocido";
+                                Log.e(TAG, "❌ Renovar: " + errorMsg);
+                                callback.onError(errorMsg);
+                            } catch (IOException e) {
+                                callback.onError("Error procesando error");
+                            }
+                        }
+                    }
+
+                    @Override public void onFailure(Call<okhttp3.ResponseBody> call, Throwable t) {
+                        Log.e(TAG, "❌ Conexión renovando", t);
+                        callback.onError("Error de conexión: " + t.getMessage());
+                    }
+                });
+    }
 }

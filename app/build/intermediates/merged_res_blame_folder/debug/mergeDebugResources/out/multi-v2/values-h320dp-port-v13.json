@@ -1,0 +1,19 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.jorge.inmobiliaria2025.app-mergeDebugResources-55:/values-h320dp-port-v13/values-h320dp-port-v13.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\jf_wo\\.gradle\\caches\\8.13\\transforms\\08f5ddf06e57f44a87f25d5d42f1e85e\\transformed\\material-1.13.0\\res\\values-h320dp-port-v13\\values-h320dp-port-v13.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "63",
+                        "endOffsets": "114"
+                    }
+                }
+            ]
+        }
+    ]
+}
