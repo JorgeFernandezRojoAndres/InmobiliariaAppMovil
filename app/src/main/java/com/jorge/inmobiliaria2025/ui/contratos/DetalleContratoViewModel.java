@@ -29,6 +29,9 @@ public class DetalleContratoViewModel extends AndroidViewModel {
     private final MutableLiveData<Bundle> accionNavegarAPagos = new MutableLiveData<>();
     private final MutableLiveData<Boolean> navegandoAPagos = new MutableLiveData<>(false);
     private final MutableLiveData<String> mensajeRenovacion = new MutableLiveData<>();
+    private final MutableLiveData<DialogoUI> uiEvento = new MutableLiveData<>();
+    public LiveData<DialogoUI> getUiEvento() { return uiEvento; }
+
     public LiveData<String> getMensajeRenovacion() {
         return mensajeRenovacion;
     }
@@ -200,58 +203,157 @@ public class DetalleContratoViewModel extends AndroidViewModel {
 
     // ✅ Paso 1: el usuario toca el botón
     public void onRescindirClick() {
-        uiAccion.postValue(UiAccion.MOSTRAR_DIALOGO_CONFIRMACION);
+        Contrato actual = contrato.getValue();
+
+        // Si no hay contrato cargado, informar error directamente
+        if (actual == null) {
+            uiEvento.postValue(new DialogoUI(
+                    DialogoUI.Tipo.ERROR,
+                    "Error",
+                    "No se encontró el contrato para rescindir.",
+                    "OK",
+                    null,
+                    null
+            ));
+            return;
+        }
+
+
+        // ✅ Enviar al Fragment el diálogo de confirmación ya listo
+        uiEvento.postValue(new DialogoUI(
+                DialogoUI.Tipo.CONFIRMACION,
+                "Confirmar acción",
+                "¿Seguro que querés rescindir este contrato?",
+                "Rescindir",
+                "Cancelar",
+                "CONFIRMAR_RESCISION"
+        ));
+        Log.d(TAG, "📤 Emitido uiEvento CONFIRMACION");
+    }
+
+    // ✅ Ejecuta la acción asociada cuando se confirma un diálogo
+    public void onConfirmacionDialogo() {
+        // Si el diálogo que se confirmó corresponde a la rescisión:
+        uiEvento.getValue(); // Podrías usar esto si necesitás saber el último evento
+        // En este caso, la acción confirmada siempre es CONFIRMAR_RESCISION
+        confirmarRescision();
     }
 
     // ✅ Paso 2: se confirma desde el diálogo
     public void confirmarRescision() {
         Contrato actual = contrato.getValue();
         if (actual == null) {
-            uiAccion.postValue(UiAccion.MOSTRAR_MENSAJE_ERROR);
+            String texto = "No se pudo rescindir el contrato."; // 🧩 definila acá
+            uiEvento.postValue(new DialogoUI(
+                    DialogoUI.Tipo.ERROR,
+                    "Error",
+                    texto,
+                    "OK",
+                    null,
+                    null
+            ));
+            Log.d(TAG, "📤 Emitido uiEvento ERROR -> " + texto);
             return;
         }
 
+
         Log.i(TAG, "📡 Solicitando rescisión de contrato ID=" + actual.getId());
 
-        // ✅ Ya no pasamos token, solo el ID y LiveData de respuesta
         repo.rescindirContrato(actual.getId(), new MutableLiveData<String>() {
-
             @Override
             public void postValue(String mensaje) {
                 super.postValue(mensaje);
-
                 ultimoMensaje = mensaje;
-                Log.e(TAG, "🧩 Mensaje backend: " + mensaje);
+                Log.d(TAG, "🧩 Mensaje backend: " + mensaje);
+
+                String titulo;
+                String texto;
 
                 if (mensaje != null && mensaje.contains("multa")) {
                     try {
                         JSONObject json = new JSONObject(mensaje);
-                        String texto = json.optString("mensaje", "Contrato rescindido correctamente.");
                         String multa = json.optString("multa", null);
-
-                        if (multa != null && !multa.isEmpty()) {
-                            uiAccion.postValue(UiAccion.MOSTRAR_MENSAJE_EXITO);
-                            Log.i(TAG, "💰 Multa: $" + multa);
-                        } else {
-                            uiAccion.postValue(UiAccion.MOSTRAR_MENSAJE_EXITO);
-                        }
-
-                        new Handler(Looper.getMainLooper()).postDelayed(() ->
-                                uiAccion.postValue(UiAccion.VOLVER_A_CONTRATOS), 1500);
-
+                        texto = (multa != null && !multa.isEmpty())
+                                ? "Contrato rescindido.\nMulta: $" + multa
+                                : "Contrato rescindido correctamente.";
+                        titulo = "Éxito";
                     } catch (JSONException e) {
-                        Log.e(TAG, "⚠️ Error JSON: " + e.getMessage());
-                        uiAccion.postValue(UiAccion.MOSTRAR_MENSAJE_EXITO);
+                        Log.e(TAG, "⚠️ Error parseando JSON: " + e.getMessage());
+                        titulo = "Éxito";
+                        texto = "Contrato rescindido correctamente.";
                     }
+
+                    uiEvento.postValue(new DialogoUI(
+                            DialogoUI.Tipo.INFORMACION,
+                            titulo,
+                            texto,
+                            "OK",
+                            null,
+                            null
+                    ));
+
+                    // ⏳ volver luego de 1.5s
+                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                        uiEvento.postValue(new DialogoUI(
+                                DialogoUI.Tipo.INFORMACION,
+                                null,
+                                null,
+                                null,
+                                null,
+                                "NAVEGAR_CONTRATOS"
+                        ));
+                    }, 1500);
+
                 } else if (mensaje != null && mensaje.toLowerCase().contains("correctamente")) {
-                    uiAccion.postValue(UiAccion.MOSTRAR_MENSAJE_EXITO);
-                    new Handler(Looper.getMainLooper()).postDelayed(() ->
-                            uiAccion.postValue(UiAccion.VOLVER_A_CONTRATOS), 1500);
+                    uiEvento.postValue(new DialogoUI(
+                            DialogoUI.Tipo.INFORMACION,
+                            "Éxito",
+                            "Contrato rescindido correctamente.",
+                            "OK",
+                            null,
+                            null
+                    ));
+                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                        uiEvento.postValue(new DialogoUI(
+                                DialogoUI.Tipo.INFORMACION,
+                                null,
+                                null,
+                                null,
+                                null,
+                                "NAVEGAR_CONTRATOS"
+                        ));
+                    }, 1500);
+
                 } else {
-                    uiAccion.postValue(UiAccion.MOSTRAR_MENSAJE_ERROR);
+                    uiEvento.postValue(new DialogoUI(
+                            DialogoUI.Tipo.ERROR,
+                            "Error",
+                            "No se pudo rescindir el contrato.",
+                            "OK",
+                            null,
+                            null
+                    ));
                 }
             }
         });
     }
+    // 🔙 Volver manualmente al listado de contratos
+    public void onVolverClick() {
+        uiEvento.postValue(new DialogoUI(
+                DialogoUI.Tipo.INFORMACION,
+                null,
+                null,
+                null,
+                null,
+                "NAVEGAR_CONTRATOS"
+        ));
+    }
+
+    // 🧹 Limpia el último evento UI para evitar repeticiones o bucles al recrear el Fragment
+    public void limpiarUiEvento() {
+        Log.d(TAG, "🧹 uiEvento limpiado para evitar repeticiones");
+        uiEvento.setValue(null);
+    }
+
 
 }

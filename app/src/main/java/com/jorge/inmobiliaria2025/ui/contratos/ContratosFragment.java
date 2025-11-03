@@ -70,30 +70,35 @@ public class ContratosFragment extends Fragment {
         // ✅ Siempre cargar todos
         vm.cargarContratos();
 
-        // Botón atrás vuelve al mapa
+        // 🔙 Botón atrás controlado por el ViewModel
         requireActivity().getOnBackPressedDispatcher().addCallback(
                 getViewLifecycleOwner(),
                 new OnBackPressedCallback(true) {
                     @Override
                     public void handleOnBackPressed() {
-                        Log.d(TAG, "🔙 Botón Atrás presionado -> Volviendo al mapa");
-                        NavController navController = NavHostFragment.findNavController(ContratosFragment.this);
-                        try {
-                            NavOptions options = new NavOptions.Builder()
-                                    .setPopUpTo(R.id.nav_graph, true)
-                                    .setEnterAnim(R.anim.slide_in_left)
-                                    .setExitAnim(R.anim.slide_out_right)
-                                    .build();
-                            navController.navigate(R.id.nav_ubicacion, null, options);
-                        } catch (Exception e) {
-                            Log.e(TAG, "💥 Error al volver al mapa: " + e.getMessage(), e);
-                        }
+                        Log.d(TAG, "🔙 Botón Atrás presionado -> evento enviado al ViewModel");
+                        vm.onVolverAlMapa(); // 👉 Notifica al ViewModel
                     }
                 }
         );
 
+        // 🧭 Observa el evento de navegación al mapa
+        vm.getVolverAlMapaEvent().observe(getViewLifecycleOwner(), volver -> {
+            if (Boolean.TRUE.equals(volver)) {
+                Log.d(TAG, "🗺️ Navegando al mapa desde el observer");
+                NavController navController = NavHostFragment.findNavController(ContratosFragment.this);
+                NavOptions options = new NavOptions.Builder()
+                        .setPopUpTo(R.id.nav_graph, true)
+                        .setEnterAnim(R.anim.slide_in_left)
+                        .setExitAnim(R.anim.slide_out_right)
+                        .build();
+                navController.navigate(R.id.nav_ubicacion, null, options);
+            }
+        });
+
         return binding.getRoot();
     }
+
 
     @Override
     public void onResume() {

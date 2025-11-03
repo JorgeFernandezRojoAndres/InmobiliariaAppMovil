@@ -33,6 +33,11 @@ public class ContratosViewModel extends AndroidViewModel {
 
     private final ContratoRepository repo;
     private final SessionManager sessionManager;
+    private final MutableLiveData<Boolean> volverAlMapaEvent = new MutableLiveData<>();
+    public LiveData<Boolean> getVolverAlMapaEvent() { return volverAlMapaEvent; }
+    public void onVolverAlMapa() {
+        volverAlMapaEvent.setValue(true);
+    }
 
     public ContratosViewModel(@NonNull Application app) {
         super(app);

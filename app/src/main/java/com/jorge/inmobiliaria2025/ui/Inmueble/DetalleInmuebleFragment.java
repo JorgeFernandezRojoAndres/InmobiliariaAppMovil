@@ -124,12 +124,32 @@ public class DetalleInmuebleFragment extends Fragment {
             vm.setActivo(binding.swActivoDetalle.isChecked());
             vm.setImagenSeleccionada(imagenSeleccionadaUri);
 
+            // ✅ Obtener item del spinner sin crashear por cast
+            Object item = binding.spTipoInmuebleDetalle.getSelectedItem();
 
-            TipoInmueble tipo = (TipoInmueble) binding.spTipoInmuebleDetalle.getSelectedItem();
-            if (tipo != null) vm.setTipoSeleccionado(tipo);
+            TipoInmueble tipo = null;
+            if (item instanceof TipoInmueble) {
+                tipo = (TipoInmueble) item;
+            } else if (item != null) {
+                List<TipoInmueble> lista = vm.getTiposInmueble().getValue();
+                if (lista != null) {
+                    for (TipoInmueble t : lista) {
+                        if (t.getNombre().equals(item.toString())) {
+                            tipo = t;
+                            break;
+                        }
+                    }
+                }
+            }
 
+            if (tipo != null) {
+                vm.setTipoSeleccionado(tipo);
+            }
+
+            // Guardar cambios
             vm.guardarCambios(new ViewModelProvider(requireActivity()).get(InmuebleViewModel.class));
         });
+
 
 
         // 🎛️ Botón Cambiar Imagen

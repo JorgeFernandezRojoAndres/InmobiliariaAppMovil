@@ -381,17 +381,32 @@ public class InmuebleRepository {
             return resultado;
         }
 
+        Log.d("RepoInmueble", ">>> actualizarConImagen -> uri: " + imagenUri);
+
         MultipartBody.Part imagenPart = null;
         try {
-            if (imagenUri != null) {
-                File file = new File(FileUtils.getPathFromUri(app, imagenUri));
-                if (file.exists()) {
-                    RequestBody requestFile = RequestBody.create(MediaType.parse("image/*"), file);
-                    imagenPart = MultipartBody.Part.createFormData("imagen", file.getName(), requestFile);
+            if (imagenUri == null) {
+                Log.w("RepoInmueble", "⚠️ imagenUri es null, actualizando sin imagen");
+            } else {
+                String path = FileUtils.getPathFromUri(app, imagenUri);
+                Log.d("RepoInmueble", "Ruta obtenida del uri: " + path);
+
+                if (path == null) {
+                    Log.w("RepoInmueble", "⚠️ FileUtils devolvió null, no se enviará archivo");
+                } else {
+                    File file = new File(path);
+                    Log.d("RepoInmueble", "File exists? " + file.exists() + " | size=" + file.length());
+
+                    if (file.exists()) {
+                        RequestBody requestFile = RequestBody.create(MediaType.parse("image/*"), file);
+                        imagenPart = MultipartBody.Part.createFormData("imagen", file.getName(), requestFile);
+                    } else {
+                        Log.w("RepoInmueble", "⚠️ El archivo no existe en el path. Se omitirá imagen.");
+                    }
                 }
             }
         } catch (Exception e) {
-            Log.e("RepoInmueble", "⚠️ Error al procesar imagen: " + e.getMessage());
+            Log.e("RepoInmueble", "❌ Error al procesar imagen: " + e.getMessage());
         }
 
         // 🔹 Campos del formulario

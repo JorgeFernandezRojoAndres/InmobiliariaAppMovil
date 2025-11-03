@@ -26,7 +26,7 @@ public class DetalleContratoFragment extends Fragment {
     private FragmentDetalleContratoBinding binding;
     private NavController navController;
 
-    @Nullable
+
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
@@ -45,8 +45,9 @@ public class DetalleContratoFragment extends Fragment {
 
         DebugNavTracker.logFragment(this, "Detalle_onCreateView");
 
-        // ======== Observers ya existentes ========
+        // === Observers principales ===
         vm.getContrato().observe(getViewLifecycleOwner(), contrato -> {
+            if (contrato == null) return;
             binding.tvIdContrato.setText(String.valueOf(contrato.getId()));
             binding.tvFechasDetalle.setText(
                     getString(R.string.rango_fechas, contrato.getFechaInicio(), contrato.getFechaFin())
@@ -66,119 +67,101 @@ public class DetalleContratoFragment extends Fragment {
             }
         });
 
-        vm.getUiAccion().observe(getViewLifecycleOwner(), accion -> {
-            if (accion == null) return;
+        // ✅ Unificado: el ViewModel envía los eventos de UI listos para mostrar
+        vm.getUiEvento().observe(getViewLifecycleOwner(), evento -> {
+            if (evento == null) return;
 
-            switch (accion) {
+            Log.d(TAG, "📬 uiEvento recibido -> tipo=" + evento.getTipo() +
+                    ", titulo=" + evento.getTitulo() +
+                    ", accion=" + evento.getAccionAsociada());
 
-                case MOSTRAR_DIALOGO_CONFIRMACION:
+            switch (evento.getTipo()) {
+
+                case CONFIRMACION:
+                    Log.d(TAG, "🟢 Mostrando diálogo de CONFIRMACION");
                     new MaterialAlertDialogBuilder(requireContext())
-                            .setTitle("Confirmar acción")
-                            .setMessage("¿Seguro que querés rescindir este contrato?")
-                            .setPositiveButton("Rescindir", (d, w) -> vm.confirmarRescision())
-                            .setNegativeButton("Cancelar", (d, w) -> d.dismiss())
+                            .setTitle(evento.getTitulo())
+                            .setMessage(evento.getMensaje())
+                            .setPositiveButton(evento.getTextoPositivo(),
+                                    (d, w) -> vm.confirmarRescision())
+                            .setNegativeButton(evento.getTextoNegativo(),
+                                    (d, w) -> d.dismiss())
                             .show();
                     break;
 
-                case MOSTRAR_MENSAJE_EXITO:
-                    String ultimaRespuesta = vm.getUltimoMensaje();
-                    String multa = null;
-                    try {
-                        if (ultimaRespuesta != null && ultimaRespuesta.contains("multa")) {
-                            org.json.JSONObject json = new org.json.JSONObject(ultimaRespuesta);
-                            multa = json.optString("multa", null);
-                        }
-                    } catch (Exception ignored) {}
-
-                    String mensaje = (multa != null)
-                            ? "Contrato rescindido.\nMulta: $" + multa
-                            : "Contrato rescindido.";
-                    new MaterialAlertDialogBuilder(requireContext())
-                            .setTitle("Éxito")
-                            .setMessage(mensaje)
-                            .setPositiveButton("OK", null)
-                            .show();
-                    break;
-
-                case MOSTRAR_MENSAJE_ERROR:
-                    new MaterialAlertDialogBuilder(requireContext())
-                            .setTitle("Error")
-                            .setMessage("No se pudo rescindir el contrato.")
-                            .setPositiveButton("OK", null)
-                            .show();
-                    break;
-
-                case VOLVER_A_CONTRATOS:
-                    navController.navigate(R.id.action_detalleContratoFragment_to_nav_contratos);
-                    break;
-
-                case MOSTRAR_MENSAJE_EXITO_RENOVAR:
-                    new MaterialAlertDialogBuilder(requireContext())
-                            .setTitle("Contrato renovado")
-                            .setMessage("La renovación se realizó correctamente.")
-                            .setPositiveButton("OK", null)
-                            .show();
-                    break;
-
-                case MOSTRAR_MENSAJE_ERROR_RENOVAR:
-                    String detalle = vm.getMensajeRenovacion().getValue();
-
-                    String msgError;
-                    if (detalle != null && detalle.toLowerCase().contains("ya tiene un contrato vigente")) {
-                        msgError = "Este inmueble ya tiene un contrato activo.\nNo se puede renovar el contrato anterior.";
-                    } else {
-                        msgError = "No se pudo renovar el contrato.";
+                case INFORMACION:
+                    // 🧠 Evitar mostrar diálogos vacíos (solo navegación)
+                    if ((evento.getTitulo() == null || evento.getTitulo().trim().isEmpty()) &&
+                            (evento.getMensaje() == null || evento.getMensaje().trim().isEmpty())) {
+                        Log.d(TAG, "⚠️ Evento de navegación sin diálogo: se omite mostrar cartel");
+                        break;
                     }
 
+                    Log.d(TAG, "🟢 Mostrando diálogo de INFORMACION");
                     new MaterialAlertDialogBuilder(requireContext())
-                            .setTitle("Error al renovar")
-                            .setMessage(msgError)
+                            .setTitle(evento.getTitulo() != null ? evento.getTitulo() : "Información")
+                            .setMessage(evento.getMensaje() != null ? evento.getMensaje() : "")
                             .setPositiveButton("OK", null)
                             .show();
                     break;
 
+                case ERROR:
+                    Log.d(TAG, "🟠 Mostrando diálogo de ERROR");
+                    new MaterialAlertDialogBuilder(requireContext())
+                            .setTitle(evento.getTitulo() != null ? evento.getTitulo() : "Error")
+                            .setMessage(evento.getMensaje() != null ? evento.getMensaje() : "Ocurrió un error.")
+                            .setPositiveButton("OK", null)
+                            .show();
+                    break;
+            }
+
+            // 🔁 Acción asociada opcional (por ejemplo, volver a contratos)
+            if ("NAVEGAR_CONTRATOS".equals(evento.getAccionAsociada())) {
+                Log.d(TAG, "🔁 Ejecutando navegación a Contratos...");
+                navController.navigate(R.id.action_detalleContratoFragment_to_nav_contratos);
+
+                // 🧹 Limpia el evento después de navegar para evitar repeticiones o bucles
+                vm.limpiarUiEvento();
+                Log.d(TAG, "🧹 uiEvento limpiado después de navegar");
+            }
+
+        });
+
+
+        // === Diálogo de renovación ===
+        vm.getMostrarDialogoRenovar().observe(getViewLifecycleOwner(), show -> {
+            if (Boolean.TRUE.equals(show)) {
+                DialogRenovarContratoBinding dialogBinding =
+                        DialogRenovarContratoBinding.inflate(getLayoutInflater());
+
+                new MaterialAlertDialogBuilder(requireContext())
+                        .setTitle("Renovar Contrato")
+                        .setView(dialogBinding.getRoot())
+                        .setPositiveButton("Renovar", (dialog, which) -> {
+                            vm.onConfirmarRenovacion(
+                                    dialogBinding.etNuevaFechaInicio.getText().toString(),
+                                    dialogBinding.etNuevaFechaFin.getText().toString(),
+                                    dialogBinding.etNuevoMonto.getText().toString()
+                            );
+                        })
+                        .setNegativeButton("Cancelar", (d, w) -> d.dismiss())
+                        .show();
+
+                vm.limpiarDialogoRenovar();
             }
         });
 
-
-        // ===== ✅ NUEVO: Observer para abrir diálogo de renovación =====
-        vm.getMostrarDialogoRenovar().observe(getViewLifecycleOwner(), show -> {
-            if (show == null || !show) return;
-
-            DialogRenovarContratoBinding dialogBinding =
-                    DialogRenovarContratoBinding.inflate(getLayoutInflater());
-
-            new MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("Renovar Contrato")
-                    .setView(dialogBinding.getRoot())
-                    .setPositiveButton("Renovar", (dialog, which) -> {
-
-                        String nuevaFechaInicio = dialogBinding.etNuevaFechaInicio.getText().toString();
-                        String nuevaFechaFin = dialogBinding.etNuevaFechaFin.getText().toString();
-                        String nuevoMonto = dialogBinding.etNuevoMonto.getText().toString();
-
-                        vm.onConfirmarRenovacion(nuevaFechaInicio, nuevaFechaFin, nuevoMonto);
-                    })
-                    .setNegativeButton("Cancelar", (d, w) -> d.dismiss())
-                    .show();
-
-            vm.limpiarDialogoRenovar();
-        });
-
-        // ===== Botones =====
+        // === Botones ===
         binding.btnVerPagos.setOnClickListener(v -> vm.onVerPagosClick());
-        binding.btnVolverContratos.setOnClickListener(v ->
-                navController.navigate(R.id.action_detalleContratoFragment_to_nav_contratos)
-        );
+        binding.btnVolverContratos.setOnClickListener(v -> vm.onVolverClick());
         binding.btnRescindirContrato.setOnClickListener(v -> vm.onRescindirClick());
-
-        // ✅ NUEVO: botón renovar
         binding.btnRenovarContrato.setOnClickListener(v -> vm.onRenovarClick());
 
         vm.inicializarDesdeArgs(getArguments());
 
         return binding.getRoot();
     }
+
 
     @Override
     public void onDestroyView() {
