@@ -5,7 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -18,7 +18,7 @@ import java.lang.String;
 
 public final class NavHeaderBinding implements ViewBinding {
   @NonNull
-  private final LinearLayout rootView;
+  private final RelativeLayout rootView;
 
   @NonNull
   public final TextView headerSubtitle;
@@ -29,17 +29,22 @@ public final class NavHeaderBinding implements ViewBinding {
   @NonNull
   public final ImageView imageViewProfile;
 
-  private NavHeaderBinding(@NonNull LinearLayout rootView, @NonNull TextView headerSubtitle,
-      @NonNull TextView headerTitle, @NonNull ImageView imageViewProfile) {
+  @NonNull
+  public final ImageView inmoLogoHeaderBg;
+
+  private NavHeaderBinding(@NonNull RelativeLayout rootView, @NonNull TextView headerSubtitle,
+      @NonNull TextView headerTitle, @NonNull ImageView imageViewProfile,
+      @NonNull ImageView inmoLogoHeaderBg) {
     this.rootView = rootView;
     this.headerSubtitle = headerSubtitle;
     this.headerTitle = headerTitle;
     this.imageViewProfile = imageViewProfile;
+    this.inmoLogoHeaderBg = inmoLogoHeaderBg;
   }
 
   @Override
   @NonNull
-  public LinearLayout getRoot() {
+  public RelativeLayout getRoot() {
     return rootView;
   }
 
@@ -82,8 +87,14 @@ public final class NavHeaderBinding implements ViewBinding {
         break missingId;
       }
 
-      return new NavHeaderBinding((LinearLayout) rootView, headerSubtitle, headerTitle,
-          imageViewProfile);
+      id = R.id.inmoLogoHeaderBg;
+      ImageView inmoLogoHeaderBg = ViewBindings.findChildViewById(rootView, id);
+      if (inmoLogoHeaderBg == null) {
+        break missingId;
+      }
+
+      return new NavHeaderBinding((RelativeLayout) rootView, headerSubtitle, headerTitle,
+          imageViewProfile, inmoLogoHeaderBg);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

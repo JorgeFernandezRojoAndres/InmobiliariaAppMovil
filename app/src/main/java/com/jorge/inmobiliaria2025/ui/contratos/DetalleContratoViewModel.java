@@ -1,6 +1,7 @@
 package com.jorge.inmobiliaria2025.ui.contratos;
 
 import android.app.Application;
+import android.icu.text.SimpleDateFormat;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -15,6 +16,10 @@ import com.jorge.inmobiliaria2025.model.Contrato;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.text.ParseException;
+import java.util.Date;
+import java.util.Locale;
 
 public class DetalleContratoViewModel extends AndroidViewModel {
 
@@ -65,12 +70,17 @@ public class DetalleContratoViewModel extends AndroidViewModel {
             Object obj = args.getSerializable("contratoSeleccionado");
             if (obj instanceof Contrato) {
                 Contrato recibido = (Contrato) obj;
+
+                // ✅ Formatear fechas antes de pasar a la UI
+                actualizarContrato(recibido);
+
                 contrato.postValue(recibido);
                 contratoId.postValue(recibido.getId());
                 Log.d(TAG, "✅ Contrato inicializado con ID=" + recibido.getId());
                 return;
             }
         }
+
 
         if (args.containsKey("contratoId")) {
             int id = args.getInt("contratoId", -1);
@@ -140,9 +150,79 @@ public class DetalleContratoViewModel extends AndroidViewModel {
             return;
         }
 
-        // Si está finalizado -> mostrar diálogo de renovación
+        // Convertir las fechas de String a Date, si es necesario
+        String fechaInicioString = actual.getFechaInicio(); // Suponiendo que esta es una cadena de texto en formato 'yyyy-MM-dd'
+        String fechaFinString = actual.getFechaFin(); // Suponiendo que esta es una cadena de texto en formato 'yyyy-MM-dd'
+
+        // Convertir String a Date
+        SimpleDateFormat sdfEntrada = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        Date fechaInicio = null;
+        Date fechaFin = null;
+        try {
+            fechaInicio = sdfEntrada.parse(fechaInicioString);
+            fechaFin = sdfEntrada.parse(fechaFinString);
+        } catch (ParseException e) {
+            Log.e(TAG, "Error al convertir las fechas", e);
+            uiAccion.postValue(UiAccion.MOSTRAR_MENSAJE_ERROR_RENOVAR);
+            return;
+        }
+
+        // Formatear las fechas al formato DD/MM/YYYY
+        String fechaInicioFormateada = formatearFechaParaMostrar(fechaInicio);
+        String fechaFinFormateada = formatearFechaParaMostrar(fechaFin);
+
+        // Aquí puedes usar las fechas formateadas para mostrarlas en el diálogo, si es necesario
+        Log.d(TAG, "Fechas para renovar: Inicio: " + fechaInicioFormateada + ", Fin: " + fechaFinFormateada);
+
+        // Mostrar el diálogo de renovación
         mostrarDialogoRenovar.postValue(true);
     }
+
+
+
+    // Método para convertir la fecha en formato DD/MM/YYYY
+    public String formatearFechaParaMostrar(Date fecha) {
+        SimpleDateFormat sdfSalida = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+        return sdfSalida.format(fecha); // Formatear la fecha y devolverla como String
+    }
+    public void actualizarContrato(Contrato contrato) {
+        if (contrato != null) {
+            // Log para verificar las fechas
+            Log.d(TAG, "Fecha inicio recibida: " + contrato.getFechaInicio());
+            Log.d(TAG, "Fecha fin recibida: " + contrato.getFechaFin());
+
+            // Convertir las fechas de String a Date
+            SimpleDateFormat sdfEntrada = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()); // Cambiado para coincidir con el formato recibido
+            Date fechaInicio = null;
+            Date fechaFin = null;
+
+            try {
+                // Verificar que las fechas no sean nulas ni vacías antes de parsearlas
+                if (contrato.getFechaInicio() != null && !contrato.getFechaInicio().isEmpty()) {
+                    fechaInicio = sdfEntrada.parse(contrato.getFechaInicio()); // Parsear la fecha de inicio
+                }
+                if (contrato.getFechaFin() != null && !contrato.getFechaFin().isEmpty()) {
+                    fechaFin = sdfEntrada.parse(contrato.getFechaFin()); // Parsear la fecha de fin
+                }
+            } catch (ParseException e) {
+                e.printStackTrace(); // Maneja el error de parseo si ocurre
+            }
+
+            // Verificar si las fechas son nulas, y asignar un valor predeterminado si es necesario
+            String fechaInicioFormateada = (fechaInicio != null) ? formatearFechaParaMostrar(fechaInicio) : "N/A";
+            String fechaFinFormateada = (fechaFin != null) ? formatearFechaParaMostrar(fechaFin) : "N/A";
+
+            // Actualizar las fechas formateadas en el contrato
+            contrato.setFechaInicio(fechaInicioFormateada);
+            contrato.setFechaFin(fechaFinFormateada);
+
+            // Log para verificar las fechas formateadas
+            Log.d(TAG, "Fecha inicio formateada: " + fechaInicioFormateada);
+            Log.d(TAG, "Fecha fin formateada: " + fechaFinFormateada);
+        }
+    }
+
+
 
     public void limpiarDialogoRenovar() {
         mostrarDialogoRenovar.postValue(false);
@@ -192,9 +272,7 @@ public class DetalleContratoViewModel extends AndroidViewModel {
     }
 
     public enum UiAccion {
-        MOSTRAR_DIALOGO_CONFIRMACION,
-        MOSTRAR_MENSAJE_EXITO,
-        MOSTRAR_MENSAJE_ERROR,
+
         VOLVER_A_CONTRATOS,
 
         MOSTRAR_MENSAJE_EXITO_RENOVAR,

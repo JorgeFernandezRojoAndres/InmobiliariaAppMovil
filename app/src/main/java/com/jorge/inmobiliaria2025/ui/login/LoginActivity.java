@@ -28,6 +28,8 @@ public class LoginActivity extends AppCompatActivity {
     private ActivityLoginBinding binding;
     private LoginViewModel vm;
     private SensorManager sensorManager;
+    private SensorEventListener shakeListener;
+
     private long lastShakeTime = 0;
     private float shakeThreshold = 18f;
 
@@ -35,6 +37,7 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().setNavigationBarColor(android.graphics.Color.parseColor("#6AD4EF"));
         binding = ActivityLoginBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
@@ -75,17 +78,17 @@ public class LoginActivity extends AppCompatActivity {
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         Sensor accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
-        SensorEventListener shakeListener = new SensorEventListener() {
+        shakeListener = new SensorEventListener() {
             @Override
             public void onSensorChanged(SensorEvent event) {
                 float x = event.values[0];
                 float y = event.values[1];
                 float z = event.values[2];
 
-                float acceleration = (float) Math.sqrt(x * x + y * y + z * z);
+                float acceleration = (float) Math.sqrt(x*x + y*y + z*z);
                 long now = System.currentTimeMillis();
 
-                if (acceleration > shakeThreshold && (now - lastShakeTime > 1000)) {
+                if (acceleration > shakeThreshold && (now - lastShakeTime > 1200)) {
                     lastShakeTime = now;
                     llamarInmobiliaria();
                 }
@@ -97,6 +100,23 @@ public class LoginActivity extends AppCompatActivity {
 
         sensorManager.registerListener(shakeListener, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
     }
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (sensorManager != null && shakeListener != null) {
+            sensorManager.unregisterListener(shakeListener);
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (sensorManager != null && shakeListener != null) {
+            Sensor accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+            sensorManager.registerListener(shakeListener, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+        }
+    }
+
 
     private void llamarInmobiliaria() {
         String phone = "tel:2664261172"; // teléfono real

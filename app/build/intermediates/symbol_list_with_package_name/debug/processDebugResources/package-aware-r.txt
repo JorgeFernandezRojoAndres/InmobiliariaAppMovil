@@ -1676,6 +1676,7 @@ color gray_dark
 color gray_light
 color highlighted_text_material_dark
 color highlighted_text_material_light
+color ic_launcher_background
 color m3_appbar_overlay_color
 color m3_assist_chip_icon_tint_color
 color m3_assist_chip_stroke_color
@@ -3648,6 +3649,7 @@ drawable avatar_border
 drawable avd_hide_password
 drawable avd_show_password
 drawable bg_estado_badge
+drawable bg_inmobiliaria
 drawable btn_checkbox_checked_mtrl
 drawable btn_checkbox_checked_to_unchecked_mtrl_animation
 drawable btn_checkbox_unchecked_mtrl
@@ -3682,6 +3684,7 @@ drawable design_ic_visibility_off
 drawable design_password_eye
 drawable design_snackbar_background
 drawable edittext_background
+drawable glass_box
 drawable googleg_disabled_color_18
 drawable googleg_standard_color_18
 drawable ic_arrow_back_black_24
@@ -3720,6 +3723,7 @@ drawable ic_person
 drawable ic_search_black_24
 drawable image_background
 drawable image_border
+drawable logo_inmobiliaria
 drawable m3_avd_hide_password
 drawable m3_avd_show_password
 drawable m3_bottom_sheet_drag_handle
@@ -4092,6 +4096,7 @@ id immediateStop
 id included
 id indeterminate
 id info
+id inmoLogoHeaderBg
 id invisible
 id inward
 id italic
@@ -4669,6 +4674,7 @@ layout select_dialog_singlechoice_material
 layout support_simple_spinner_dropdown_item
 menu drawer_menu
 mipmap ic_launcher
+mipmap ic_launcher_foreground
 mipmap ic_launcher_round
 navigation nav_graph
 plurals mtrl_badge_content_description

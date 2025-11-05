@@ -59,7 +59,7 @@ public class DetalleInmuebleFragment extends Fragment {
         vm = new ViewModelProvider(this).get(DetalleInmuebleViewModel.class);
         vm.cargarInmueble((Inmueble) requireArguments().getSerializable("inmueble"));
 
-        // 🖼️ Nuevo observador para imagen seleccionada (reemplaza setImageURI)
+        //  observador para imagen seleccionada (reemplaza setImageURI)
         vm.getImagenSeleccionada().observe(getViewLifecycleOwner(), uri -> {
             imagenSeleccionadaUri = uri;
             if (uri != null) {
@@ -78,13 +78,22 @@ public class DetalleInmuebleFragment extends Fragment {
         vm.getAccionNavegarAtras().observe(getViewLifecycleOwner(),
                 a -> NavHostFragment.findNavController(this).popBackStack());
 
+        // 🔹 Inicializar el ArrayAdapter y asociarlo al Spinner
+        tipoAdapter = new ArrayAdapter<>(requireContext(),
+                android.R.layout.simple_spinner_item, new ArrayList<>());
+        tipoAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        binding.spTipoInmuebleDetalle.setAdapter(tipoAdapter);
+
+        // Observa los tipos de inmueble de forma reactiva
         vm.getTiposInmueble().observe(getViewLifecycleOwner(), tipos -> {
             listaTipos.clear();
             tipoAdapter.clear();
-            tipos.forEach(t -> {
-                listaTipos.add(t);
-                tipoAdapter.add(t.getNombre());
-            });
+            if (tipos != null) {
+                tipos.forEach(t -> {
+                    listaTipos.add(t);
+                    tipoAdapter.add(t.getNombre());
+                });
+            }
             tipoAdapter.notifyDataSetChanged();
         });
 
@@ -92,8 +101,16 @@ public class DetalleInmuebleFragment extends Fragment {
         vm.getMetros().observe(getViewLifecycleOwner(), binding.etMetrosDetalle::setText);
         vm.getPrecio().observe(getViewLifecycleOwner(), binding.etPrecioDetalle::setText);
         vm.getActivo().observe(getViewLifecycleOwner(), binding.swActivoDetalle::setChecked);
-        vm.getTipoSeleccionado().observe(getViewLifecycleOwner(),
-                tipo -> binding.spTipoInmuebleDetalle.setSelection(listaTipos.indexOf(tipo)));
+
+        // Observa el tipo seleccionado de forma reactiva
+        vm.getTipoSeleccionado().observe(getViewLifecycleOwner(), tipo -> {
+            if (tipo != null) {
+                int position = listaTipos.indexOf(tipo);
+                if (position != -1) {
+                    binding.spTipoInmuebleDetalle.setSelection(position);
+                }
+            }
+        });
 
         // 🖼️ Imagen desde la URL del inmueble (servidor)
         vm.getImagenUrl().observe(getViewLifecycleOwner(), url ->
@@ -104,11 +121,7 @@ public class DetalleInmuebleFragment extends Fragment {
                         .into(binding.imgInmueble)
         );
 
-        // 🔹 Configurar spinner
-        tipoAdapter = new ArrayAdapter<>(requireContext(),
-                android.R.layout.simple_spinner_item, new ArrayList<>());
-        tipoAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        binding.spTipoInmuebleDetalle.setAdapter(tipoAdapter);
+
 
         // 🎛️ Observador del modo edición
         vm.getModoEdicion().observe(getViewLifecycleOwner(), this::habilitarEdicion);
@@ -124,13 +137,11 @@ public class DetalleInmuebleFragment extends Fragment {
             vm.setActivo(binding.swActivoDetalle.isChecked());
             vm.setImagenSeleccionada(imagenSeleccionadaUri);
 
-            // ✅ Obtener item del spinner sin crashear por cast
+            // Obtener item del spinner sin crashear por cast
             Object item = binding.spTipoInmuebleDetalle.getSelectedItem();
 
             TipoInmueble tipo = null;
-            if (item instanceof TipoInmueble) {
-                tipo = (TipoInmueble) item;
-            } else if (item != null) {
+            if (item != null && item instanceof String) {
                 List<TipoInmueble> lista = vm.getTiposInmueble().getValue();
                 if (lista != null) {
                     for (TipoInmueble t : lista) {
@@ -149,8 +160,6 @@ public class DetalleInmuebleFragment extends Fragment {
             // Guardar cambios
             vm.guardarCambios(new ViewModelProvider(requireActivity()).get(InmuebleViewModel.class));
         });
-
-
 
         // 🎛️ Botón Cambiar Imagen
         binding.btnCambiarImg.setOnClickListener(v -> abrirGaleria());
@@ -172,6 +181,7 @@ public class DetalleInmuebleFragment extends Fragment {
         vm.getVisibilidadEditar().observe(getViewLifecycleOwner(), binding.btnEditar::setVisibility);
         vm.getVisibilidadCambiarImg().observe(getViewLifecycleOwner(), binding.btnCambiarImg::setVisibility);
     }
+
 
     private void habilitarEdicion(boolean habilitar) {
         binding.etDireccionDetalle.setEnabled(habilitar);

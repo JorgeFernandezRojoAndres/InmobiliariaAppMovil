@@ -13,12 +13,14 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.model.LatLng;
 
 import java.util.Optional;
 
 public class UbicacionViewModel extends AndroidViewModel {
 
     private final MutableLiveData<Location> mLocation = new MutableLiveData<>();
+    private final MutableLiveData<LatLng> mInmobiliariaLatLng = new MutableLiveData<>(new LatLng(-33.301726, -66.337752));  // Coordenadas de la inmobiliaria
     private final FusedLocationProviderClient fusedClient;
 
     public UbicacionViewModel(@NonNull Application application) {
@@ -30,43 +32,38 @@ public class UbicacionViewModel extends AndroidViewModel {
         return mLocation;
     }
 
-    // Encapsula toda la lógica sin if visibles
-    public void obtenerUbicacionSegura(Context ctx,
-                                       Runnable solicitarPermiso,
-                                       Runnable alFinalizar) {
-
-        Runnable obtenerUbicacion = () -> fusedClient.getLastLocation()
-                .addOnSuccessListener(this::procesarUbicacion);
-
-        ejecutarSiTienePermiso(
-                ctx,
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                solicitarPermiso,
-                () -> {
-                    obtenerUbicacion.run();
-                    alFinalizar.run();
-                }
-        );
+    public MutableLiveData<LatLng> getInmobiliariaLatLng() {
+        return mInmobiliariaLatLng;
     }
 
+    /** Método para obtener la ubicación y actualizar el LiveData */
+    public void obtenerUbicacionSegura(Context ctx, Runnable solicitarPermiso, Runnable alFinalizar) {
+        // Verificar si el permiso ya está concedido
+        if (ActivityCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            // Si ya se tiene el permiso, obtener la ubicación
+            fusedClient.getLastLocation()
+                    .addOnSuccessListener(this::procesarUbicacion)
+                    .addOnFailureListener(e -> {
+                        // Manejo de error, si no se puede obtener la ubicación
+                        e.printStackTrace();
+                    })
+                    .addOnCompleteListener(task -> alFinalizar.run());
+        } else {
+            // Si no se tiene el permiso, solicitarlo
+            solicitarPermiso.run();
+        }
+    }
+
+    /** Método para procesar la ubicación y actualizar el LiveData */
     private void procesarUbicacion(Location location) {
         Optional.ofNullable(location)
-                .ifPresent(mLocation::setValue);
+                .ifPresent(mLocation::setValue); // Actualiza el LiveData con la ubicación
     }
 
-    // Helper genérico sin if explícitos
-    private void ejecutarSiTienePermiso(Context ctx,
-                                        String permiso,
-                                        Runnable siNoTiene,
-                                        Runnable siTiene) {
-
-        boolean concedido = ActivityCompat.checkSelfPermission(ctx, permiso)
-                == PackageManager.PERMISSION_GRANTED;
-
-        ejecutarSegun(concedido, siTiene, siNoTiene);
-    }
-
-    private void ejecutarSegun(boolean condicion, Runnable siVerdadero, Runnable siFalso) {
-        (condicion ? siVerdadero : siFalso).run();
+    /** Helper para manejar permisos */
+    public void verificarPermiso(Context ctx, String permiso, Runnable siNoTiene, Runnable siTiene) {
+        boolean concedido = ActivityCompat.checkSelfPermission(ctx, permiso) == PackageManager.PERMISSION_GRANTED;
+        (concedido ? siTiene : siNoTiene).run();  // Ejecuta el Runnable según si tiene o no permisos
     }
 }

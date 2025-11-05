@@ -12,6 +12,7 @@ color colorSecondary
 color gray
 color gray_dark
 color gray_light
+color ic_launcher_background
 color orange_primary
 color purple_200
 color purple_500
@@ -22,8 +23,10 @@ color teal_700
 color white
 drawable avatar_border
 drawable bg_estado_badge
+drawable bg_inmobiliaria
 drawable circle_background
 drawable edittext_background
+drawable glass_box
 drawable ic_baseline_add_24
 drawable ic_baseline_attach_money_24
 drawable ic_baseline_description_24
@@ -39,6 +42,7 @@ drawable ic_launcher_foreground
 drawable ic_person
 drawable image_background
 drawable image_border
+drawable logo_inmobiliaria
 id action_contratosFragment_to_detalleContratoFragment
 id action_contratosFragment_to_nav_ubicacion
 id action_detalleContratoFragment_to_nav_contratos
@@ -94,6 +98,7 @@ id imageViewProfile
 id imgAvatarInquilino
 id imgInmueble
 id imgInquilinoInmueble
+id inmoLogoHeaderBg
 id ivAvatar
 id ivInmueble
 id ivPreview
@@ -175,6 +180,7 @@ layout item_pago
 layout nav_header
 menu drawer_menu
 mipmap ic_launcher
+mipmap ic_launcher_foreground
 mipmap ic_launcher_round
 navigation nav_graph
 string agregar_inmueble
