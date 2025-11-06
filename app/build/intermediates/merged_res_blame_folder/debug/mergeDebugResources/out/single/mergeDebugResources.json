@@ -32,10 +32,6 @@
         "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\mipmap-xxxhdpi\\ic_launcher.webp"
     },
     {
-        "merged": "com.jorge.inmobiliaria2025.app-debug-57:/mipmap-mdpi_ic_launcher.webp.flat",
-        "source": "com.jorge.inmobiliaria2025.app-main-59:/mipmap-mdpi/ic_launcher.webp"
-    },
-    {
         "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-debug-57:\\mipmap-anydpi-v26_ic_launcher_round.xml.flat",
         "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\mipmap-anydpi-v26\\ic_launcher_round.xml"
     },
@@ -52,36 +48,20 @@
         "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\drawable\\ic_person.xml"
     },
     {
-        "merged": "com.jorge.inmobiliaria2025.app-debug-57:/mipmap-mdpi_ic_launcher_foreground.webp.flat",
-        "source": "com.jorge.inmobiliaria2025.app-main-59:/mipmap-mdpi/ic_launcher_foreground.webp"
-    },
-    {
         "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-debug-57:\\drawable_ic_baseline_edit_24.xml.flat",
         "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\drawable\\ic_baseline_edit_24.xml"
     },
     {
-        "merged": "com.jorge.inmobiliaria2025.app-debug-57:/mipmap-hdpi_ic_launcher_foreground.webp.flat",
-        "source": "com.jorge.inmobiliaria2025.app-main-59:/mipmap-hdpi/ic_launcher_foreground.webp"
-    },
-    {
-        "merged": "com.jorge.inmobiliaria2025.app-debug-57:/mipmap-mdpi_ic_launcher_round.webp.flat",
-        "source": "com.jorge.inmobiliaria2025.app-main-59:/mipmap-mdpi/ic_launcher_round.webp"
+        "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-debug-57:\\mipmap-xhdpi_ic_launcher_foreground.webp.flat",
+        "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\mipmap-xhdpi\\ic_launcher_foreground.webp"
     },
     {
         "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-debug-57:\\layout_dialog_renovar_contrato.xml.flat",
         "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\layout\\dialog_renovar_contrato.xml"
     },
     {
-        "merged": "com.jorge.inmobiliaria2025.app-debug-57:/mipmap-xxhdpi_ic_launcher_round.webp.flat",
-        "source": "com.jorge.inmobiliaria2025.app-main-59:/mipmap-xxhdpi/ic_launcher_round.webp"
-    },
-    {
         "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-debug-57:\\drawable_ic_baseline_home_24.xml.flat",
         "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\drawable\\ic_baseline_home_24.xml"
-    },
-    {
-        "merged": "com.jorge.inmobiliaria2025.app-debug-57:/mipmap-hdpi_ic_launcher_round.webp.flat",
-        "source": "com.jorge.inmobiliaria2025.app-main-59:/mipmap-hdpi/ic_launcher_round.webp"
     },
     {
         "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-debug-57:\\layout_nav_header.xml.flat",
@@ -104,16 +84,12 @@
         "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\drawable\\circle_background.xml"
     },
     {
+        "merged": "com.jorge.inmobiliaria2025.app-debug-57:/layout_fragment_ubicacion.xml.flat",
+        "source": "com.jorge.inmobiliaria2025.app-main-59:/layout/fragment_ubicacion.xml"
+    },
+    {
         "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-debug-57:\\mipmap-mdpi_ic_launcher.webp.flat",
         "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\mipmap-mdpi\\ic_launcher.webp"
-    },
-    {
-        "merged": "com.jorge.inmobiliaria2025.app-debug-57:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
-        "source": "com.jorge.inmobiliaria2025.app-main-59:/mipmap-anydpi-v26/ic_launcher_round.xml"
-    },
-    {
-        "merged": "com.jorge.inmobiliaria2025.app-debug-57:/mipmap-xxhdpi_ic_launcher_foreground.webp.flat",
-        "source": "com.jorge.inmobiliaria2025.app-main-59:/mipmap-xxhdpi/ic_launcher_foreground.webp"
     },
     {
         "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-debug-57:\\mipmap-xxxhdpi_ic_launcher_round.webp.flat",
@@ -130,10 +106,6 @@
     {
         "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-debug-57:\\drawable_image_background.xml.flat",
         "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\drawable\\image_background.xml"
-    },
-    {
-        "merged": "com.jorge.inmobiliaria2025.app-debug-57:/mipmap-anydpi-v26_ic_launcher.xml.flat",
-        "source": "com.jorge.inmobiliaria2025.app-main-59:/mipmap-anydpi-v26/ic_launcher.xml"
     },
     {
         "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-debug-57:\\layout_item_pago.xml.flat",
@@ -176,12 +148,8 @@
         "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\layout\\activity_main.xml"
     },
     {
-        "merged": "com.jorge.inmobiliaria2025.app-debug-57:/mipmap-hdpi_ic_launcher.webp.flat",
-        "source": "com.jorge.inmobiliaria2025.app-main-59:/mipmap-hdpi/ic_launcher.webp"
-    },
-    {
-        "merged": "com.jorge.inmobiliaria2025.app-debug-57:/mipmap-xhdpi_ic_launcher_round.webp.flat",
-        "source": "com.jorge.inmobiliaria2025.app-main-59:/mipmap-xhdpi/ic_launcher_round.webp"
+        "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-debug-57:\\mipmap-hdpi_ic_launcher_foreground.webp.flat",
+        "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\mipmap-hdpi\\ic_launcher_foreground.webp"
     },
     {
         "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-debug-57:\\layout_dialog_cambiar_clave.xml.flat",
@@ -196,12 +164,12 @@
         "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\drawable\\avatar_border.xml"
     },
     {
-        "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-debug-57:\\menu_drawer_menu.xml.flat",
-        "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\menu\\drawer_menu.xml"
+        "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-debug-57:\\mipmap-mdpi_ic_launcher_foreground.webp.flat",
+        "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\mipmap-mdpi\\ic_launcher_foreground.webp"
     },
     {
-        "merged": "com.jorge.inmobiliaria2025.app-debug-57:/mipmap-xhdpi_ic_launcher.webp.flat",
-        "source": "com.jorge.inmobiliaria2025.app-main-59:/mipmap-xhdpi/ic_launcher.webp"
+        "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-debug-57:\\menu_drawer_menu.xml.flat",
+        "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\menu\\drawer_menu.xml"
     },
     {
         "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-debug-57:\\xml_backup_rules.xml.flat",
@@ -244,14 +212,6 @@
         "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\mipmap-xxhdpi\\ic_launcher.webp"
     },
     {
-        "merged": "com.jorge.inmobiliaria2025.app-debug-57:/mipmap-xxhdpi_ic_launcher.webp.flat",
-        "source": "com.jorge.inmobiliaria2025.app-main-59:/mipmap-xxhdpi/ic_launcher.webp"
-    },
-    {
-        "merged": "com.jorge.inmobiliaria2025.app-debug-57:/mipmap-xxxhdpi_ic_launcher.webp.flat",
-        "source": "com.jorge.inmobiliaria2025.app-main-59:/mipmap-xxxhdpi/ic_launcher.webp"
-    },
-    {
         "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-debug-57:\\mipmap-xhdpi_ic_launcher.webp.flat",
         "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\mipmap-xhdpi\\ic_launcher.webp"
     },
@@ -260,24 +220,20 @@
         "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\anim\\slide_out_left.xml"
     },
     {
+        "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-debug-57:\\mipmap-xxhdpi_ic_launcher_foreground.webp.flat",
+        "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\mipmap-xxhdpi\\ic_launcher_foreground.webp"
+    },
+    {
         "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-debug-57:\\layout_fragment_contratos.xml.flat",
         "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\layout\\fragment_contratos.xml"
     },
     {
-        "merged": "com.jorge.inmobiliaria2025.app-debug-57:/mipmap-xxxhdpi_ic_launcher_round.webp.flat",
-        "source": "com.jorge.inmobiliaria2025.app-main-59:/mipmap-xxxhdpi/ic_launcher_round.webp"
-    },
-    {
-        "merged": "com.jorge.inmobiliaria2025.app-debug-57:/mipmap-xhdpi_ic_launcher_foreground.webp.flat",
-        "source": "com.jorge.inmobiliaria2025.app-main-59:/mipmap-xhdpi/ic_launcher_foreground.webp"
+        "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-debug-57:\\mipmap-xxxhdpi_ic_launcher_foreground.webp.flat",
+        "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\mipmap-xxxhdpi\\ic_launcher_foreground.webp"
     },
     {
         "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-debug-57:\\drawable_ic_baseline_logout_24.xml.flat",
         "source": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-main-59:\\drawable\\ic_baseline_logout_24.xml"
-    },
-    {
-        "merged": "com.jorge.inmobiliaria2025.app-debug-57:/mipmap-xxxhdpi_ic_launcher_foreground.webp.flat",
-        "source": "com.jorge.inmobiliaria2025.app-main-59:/mipmap-xxxhdpi/ic_launcher_foreground.webp"
     },
     {
         "merged": "C:\\Users\\jf_wo\\.gradle\\daemon\\8.13\\com.jorge.inmobiliaria2025.app-debug-57:\\xml_network_security_config.xml.flat",

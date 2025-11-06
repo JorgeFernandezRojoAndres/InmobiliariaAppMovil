@@ -22,7 +22,7 @@ public class RetrofitClient {
     // ✅ Debe estar arriba para que reset() la pueda limpiar
     private static volatile Retrofit retrofit = null;
 
-    public static final String BASE_URL = "http://192.168.1.37:5027/";
+    public static final String BASE_URL = "http://192.168.1.35:5027/";
 
     public static Retrofit getInstance(Context context) {
         if (retrofit == null) {

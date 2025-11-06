@@ -4,6 +4,7 @@ package com.jorge.inmobiliaria2025.databinding;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.viewbinding.ViewBinding;
@@ -13,15 +14,15 @@ import java.lang.Override;
 
 public final class FragmentUbicacionBinding implements ViewBinding {
   @NonNull
-  private final View rootView;
+  private final FrameLayout rootView;
 
-  private FragmentUbicacionBinding(@NonNull View rootView) {
+  private FragmentUbicacionBinding(@NonNull FrameLayout rootView) {
     this.rootView = rootView;
   }
 
   @Override
   @NonNull
-  public View getRoot() {
+  public FrameLayout getRoot() {
     return rootView;
   }
 
@@ -46,6 +47,6 @@ public final class FragmentUbicacionBinding implements ViewBinding {
       throw new NullPointerException("rootView");
     }
 
-    return new FragmentUbicacionBinding(rootView);
+    return new FragmentUbicacionBinding((FrameLayout) rootView);
   }
 }
