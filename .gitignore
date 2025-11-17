@@ -1,15 +1,84 @@
+# ====================================
+# ANDROID / JAVA / ANDROID STUDIO
+# ====================================
+
+# Project files
 *.iml
 .gradle
 /local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
+/.idea/*
+!.idea/gradle.xml
+!.idea/inspectionProfiles
+
+# OS files
 .DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
-local.properties
+Thumbs.db
+
+# Build system
+/build/
+app/build/
+*/build/
+
+# Binary artifacts
+*.apk
+*.ap_
+*.aab
+*.dex
+*.class
+*.o
+*.so
+*.jar
+*.war
+*.ear
+
+# Android Studio captures
+/captures/
+
+# NDK / C++
+.cxx/
+.externalNativeBuild/
+
+# Generated files
+generated/
+app/generated/
+
+# Data binding / view binding generated files
+app/build/generated/
+*/build/generated/
+
+# KAPT / Annotation processing
+app/build/tmp/
+*/build/tmp/
+*/build/kapt/
+*/build/kapt3/
+*/build/intermediates/
+*/build/javac/
+
+# Gradle caches
+.gradle/
+**/build-cache/
+
+# Intermediates (MUY importante)
+app/build/intermediates/
+*/intermediates/
+
+# Output
+app/build/outputs/
+*/outputs/
+
+# Logs
+*.log
+
+# Android Studio navigation temp files
+.navigation/
+.idea/navEditor.xml
+
+# Crashlytics / Firebase
+fabric.properties
+
+# Keystores (no subir nunca)
+*.jks
+*.keystore
+
+# Local configuration
+.env

@@ -64,6 +64,8 @@ public class InmueblesAdapter extends RecyclerView.Adapter<InmueblesAdapter.View
                 holder.itemView.getContext().getString(R.string.precio_formato, i.getPrecio())
         );
 
+
+
         // ✅ Manejo seguro de URL (si viene relativa le agregamos base)
         String url = i.getImagenUrl();
         if (url != null && !url.isEmpty() && !url.startsWith("http")) {
@@ -84,7 +86,7 @@ public class InmueblesAdapter extends RecyclerView.Adapter<InmueblesAdapter.View
             if (i.isDisponible() != isChecked) {
                 i.setDisponible(isChecked);
 
-                // ✅ Notificar solo al VM, sin lógica acá
+
                 if (disponibilidadListener != null) {
                     disponibilidadListener.onDisponibilidadChanged(i);
                 }

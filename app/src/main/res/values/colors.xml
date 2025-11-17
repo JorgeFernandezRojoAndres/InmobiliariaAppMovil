@@ -18,4 +18,7 @@
     <!-- 🔥 Nuevos colores -->
     <color name="red">#D32F2F</color> <!-- rojo Material Design para acciones destructivas -->
     <color name="orange_primary">#FF6B00</color> <!-- naranja institucional del proyecto -->
+
+    <!-- 💙 Color para enlaces o textos interactivos -->
+    <color name="azul_claro">#6AD4EF</color>
 </resources>

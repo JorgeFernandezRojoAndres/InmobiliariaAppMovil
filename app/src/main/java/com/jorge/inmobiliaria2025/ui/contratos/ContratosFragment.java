@@ -5,7 +5,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
@@ -99,7 +98,6 @@ public class ContratosFragment extends Fragment {
         return binding.getRoot();
     }
 
-
     @Override
     public void onResume() {
         super.onResume();
@@ -110,5 +108,9 @@ public class ContratosFragment extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
         Log.d(TAG, "🧹 onDestroyView() ejecutado (ContratosFragment)");
+        // 🔒 Limpieza de observers si fuera necesario (buena práctica)
+        if (vm != null) {
+            vm.limpiarObservers();
+        }
     }
 }

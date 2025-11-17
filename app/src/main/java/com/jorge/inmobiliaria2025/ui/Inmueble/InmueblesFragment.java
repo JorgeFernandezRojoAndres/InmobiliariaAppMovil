@@ -38,6 +38,7 @@ public class InmueblesFragment extends Fragment {
                 com.jorge.inmobiliaria2025.databinding.FragmentInmueblesBinding.inflate(inflater, container, false);
         View v = binding.getRoot();
 
+
         rv = binding.rvInmuebles;
         FloatingActionButton fabAgregar = binding.fabAgregar;
 

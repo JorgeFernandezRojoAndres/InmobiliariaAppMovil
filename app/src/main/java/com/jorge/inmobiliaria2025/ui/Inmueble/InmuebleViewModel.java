@@ -6,13 +6,10 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.ImageView;
 import android.widget.Toast;
-
 
 import androidx.activity.result.ActivityResult;
 import androidx.annotation.NonNull;
-
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -22,6 +19,8 @@ import com.jorge.inmobiliaria2025.localdata.InmobiliariaDatabase;
 import com.jorge.inmobiliaria2025.model.Inmueble;
 import com.jorge.inmobiliaria2025.model.TipoInmueble;
 import com.jorge.inmobiliaria2025.ui.nav.NavViewModel;
+
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,12 +41,20 @@ public class InmuebleViewModel extends AndroidViewModel {
     private final MutableLiveData<Bundle> accionNavegarDetalle = new MutableLiveData<>();
     private final MutableLiveData<String> mensajeToast = new MutableLiveData<>();
 
-
-    private final MutableLiveData<List<TipoInmueble>> tiposInmueble = new MutableLiveData<>();
+    // === NUEVOS CAMPOS ===
+    private final MutableLiveData<List<TipoInmueble>> tiposInmueble = new MutableLiveData<>(new ArrayList<>());
+    private final MutableLiveData<TipoInmueble> tipoSeleccionado = new MutableLiveData<>();
     private final MutableLiveData<Void> accionLimpiarCampos = new MutableLiveData<>();
     private final MutableLiveData<Void> accionNavegarAtras = new MutableLiveData<>();
+    private final MutableLiveData<String> usoSeleccionado = new MutableLiveData<>();
+
     public LiveData<Void> getAccionLimpiarCampos() { return accionLimpiarCampos; }
     public LiveData<Void> getAccionNavegarAtras() { return accionNavegarAtras; }
+    public LiveData<List<TipoInmueble>> getTiposInmueble() { return tiposInmueble; }
+    public LiveData<TipoInmueble> getTipoSeleccionado() { return tipoSeleccionado; }
+    public void setTipoSeleccionado(TipoInmueble tipo) { tipoSeleccionado.postValue(tipo); }
+    public LiveData<String> getUso() { return usoSeleccionado; }
+    public void setUso(String valor) { usoSeleccionado.postValue(valor); }
 
     public InmuebleViewModel(@NonNull Application application) {
         super(application);
@@ -79,7 +86,7 @@ public class InmuebleViewModel extends AndroidViewModel {
         List<Inmueble> listaActual = listaLiveData.getValue();
         if (listaActual == null || listaActual.isEmpty()) return;
 
-        // 🔹 Buscar y reemplazar el inmueble actualizado en la lista actual
+        // 🔹 Buscar y reemplazar el inmueble actualizado
         List<Inmueble> nuevaLista = new ArrayList<>(listaActual);
         for (int i = 0; i < nuevaLista.size(); i++) {
             if (nuevaLista.get(i).getId() == actualizado.getId()) {
@@ -92,10 +99,9 @@ public class InmuebleViewModel extends AndroidViewModel {
         Log.i("InmuebleVM", "🔁 Lista actualizada con cambios del inmueble ID=" + actualizado.getId());
     }
 
-
     // ====================================================
-// 🔹 Procesar selección de imagen desde el Fragment (sin if en el Fragment)
-// ====================================================
+    // 🔹 Procesar selección de imagen desde el Fragment
+    // ====================================================
     private final MutableLiveData<Uri> imagenUriSeleccionadaLiveData = new MutableLiveData<>();
     public LiveData<Uri> getImagenUriSeleccionada() { return imagenUriSeleccionadaLiveData; }
 
@@ -105,7 +111,7 @@ public class InmuebleViewModel extends AndroidViewModel {
         if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
             Uri uri = result.getData().getData();
             if (uri != null) {
-                imagenUriSeleccionadaLiveData.postValue(uri); // 🔹 Guarda la URI seleccionada
+                imagenUriSeleccionadaLiveData.postValue(uri);
                 Log.d("InmuebleVM", "📸 Imagen seleccionada: " + uri);
             }
         } else {
@@ -113,26 +119,19 @@ public class InmuebleViewModel extends AndroidViewModel {
         }
     }
 
-
     // 🧭 ViewModel global para manejar navegación
     private NavViewModel navVM;
+    public void setNavViewModel(NavViewModel navVM) { this.navVM = navVM; }
 
-    public void setNavViewModel(NavViewModel navVM) {
-        this.navVM = navVM;
-    }
 
-    // 🏠 Click en un inmueble desde la lista
     public void onInmuebleClick(Inmueble inmueble) {
         if (inmueble == null) return;
 
-        // ✅ Guarda el inmueble seleccionado (mantiene tu lógica actual)
         setInmuebleSeleccionado(inmueble);
 
-        // ✅ Prepara los datos para enviar al detalle
         Bundle bundle = new Bundle();
         bundle.putSerializable("inmueble", inmueble);
 
-        // 🚀 Enviar evento de navegación al NavViewModel compartido
         try {
             if (navVM != null) {
                 navVM.navegarADetalle(bundle);
@@ -144,9 +143,7 @@ public class InmuebleViewModel extends AndroidViewModel {
             Log.w("InmuebleVM", "⚠️ Error al intentar usar NavViewModel: " + e.getMessage());
         }
 
-        // 🔸 Emite igual tu LiveData local (por compatibilidad con otros observers)
         accionNavegarDetalle.postValue(bundle);
-
         Log.d("InmuebleVM", "➡️ Navegando al detalle: " + inmueble.getDireccion());
     }
 
@@ -154,9 +151,7 @@ public class InmuebleViewModel extends AndroidViewModel {
     public void onCambiarDisponibilidad(Inmueble inmueble) {
         if (inmueble == null) return;
 
-        // Invoca al repo para actualizar disponibilidad
         LiveData<Boolean> resultado = repo.actualizarDisponibilidad(inmueble);
-
         resultado.observeForever(exito -> {
             if (Boolean.TRUE.equals(exito)) {
                 mensajeToast.postValue("✅ Estado actualizado correctamente");
@@ -166,13 +161,86 @@ public class InmuebleViewModel extends AndroidViewModel {
             }
         });
     }
+    // =====================================================
+// 🔹 Orquestador: llamado desde el Fragment
+// =====================================================
+    public void onGuardarInmuebleClick(String direccion, String precioStr, String metrosStr,
+                                       int posTipo, String uso, Uri imagenUri) {
 
-    public enum EstadoGuardado { EXITO, CAMPOS_VACIOS, PRECIO_INVALIDO }
+        List<TipoInmueble> tipos = tiposInmueble.getValue();
 
+        if (tipos == null || tipos.isEmpty()) {
+            Log.w("InmuebleVM", "⚠️ Tipos de inmueble no cargados o lista vacía");
+            mensajeToast.postValue("⚠️ No se pudieron cargar los tipos de inmueble");
+            return;
+        }
+
+        if (posTipo < 0 || posTipo >= tipos.size()) {
+            Log.w("InmuebleVM", "⚠️ Posición de tipo inválida: " + posTipo);
+            mensajeToast.postValue("⚠️ Seleccione un tipo de inmueble válido");
+            return;
+        }
+
+        TipoInmueble tipoSeleccionado = tipos.get(posTipo);
+        Log.d("InmuebleVM", "🧩 Tipo seleccionado: ID=" + tipoSeleccionado.getId() +
+                ", Nombre=" + tipoSeleccionado.getNombre());
+
+        if (direccion == null || direccion.trim().isEmpty()) {
+            mensajeToast.postValue("⚠️ La dirección es obligatoria");
+            return;
+        }
+        if (precioStr == null || precioStr.trim().isEmpty()) {
+            mensajeToast.postValue("⚠️ El precio es obligatorio");
+            return;
+        }
+        if (metrosStr == null || metrosStr.trim().isEmpty()) {
+            mensajeToast.postValue("⚠️ Los metros cuadrados son obligatorios");
+            return;
+        }
+
+        double precio;
+        int metros;
+
+        try {
+            precio = Double.parseDouble(precioStr);
+        } catch (NumberFormatException e) {
+            mensajeToast.postValue("❌ Precio inválido");
+            Log.e("InmuebleVM", "❌ Error al convertir precio: " + precioStr, e);
+            return;
+        }
+
+        try {
+            metros = Integer.parseInt(metrosStr);
+        } catch (NumberFormatException e) {
+            mensajeToast.postValue("❌ Metros inválidos");
+            Log.e("InmuebleVM", "❌ Error al convertir metros: " + metrosStr, e);
+            return;
+        }
+
+        setTipoSeleccionado(tipoSeleccionado);
+        setUso(uso);
+
+        Log.d("InmuebleVM", "📦 Preparando guardado -> Dir=" + direccion +
+                ", Precio=" + precio + ", M2=" + metros +
+                ", Tipo=" + tipoSeleccionado.getNombre() +
+                ", Uso=" + uso);
+
+        // ✅ Pasamos tipoSeleccionado al método de guardado
+        guardarInmueble(
+                direccion,
+                String.valueOf(precio),
+                String.valueOf(metros),
+                false, // inactivo por defecto
+                imagenUri,
+                uso,
+                tipoSeleccionado
+        );
+    }
+
+
+    public enum EstadoGuardado { EXITO,}
 
     public LiveData<List<Inmueble>> getInmuebles() { return listaLiveData; }
-
-
     public LiveData<String> getMensajeToast() { return mensajeToast; }
 
     // ==========================
@@ -196,9 +264,10 @@ public class InmuebleViewModel extends AndroidViewModel {
     }
 
     // ==========================
-    // 🔹 CARGA DE INMUEBLES (API + Room fallback)
+    // 🔹 CARGA DE INMUEBLES (API + Room)
     // ==========================
     public void cargarInmueblesDesdeApi() {
+        // aca recibimos  la respuesta del Repository
         LiveData<List<Inmueble>> respuestaApi = repo.obtenerMisInmuebles();
         respuestaApi.observeForever(new Observer<List<Inmueble>>() {
             @Override
@@ -231,15 +300,14 @@ public class InmuebleViewModel extends AndroidViewModel {
     }
 
     // ==========================
-// 🆕 SUBIR IMAGEN INDIVIDUAL (corregido para ejecutar en hilo principal)
-// ==========================
+    // 🆕 SUBIR IMAGEN INDIVIDUAL
+    // ==========================
     public void subirImagenInmueble(int idInmueble, Uri imagenUri) {
         if (imagenUri == null) {
             mensajeToast.postValue("⚠️ Seleccione una imagen antes de guardar");
             return;
         }
 
-        // 👇 Asegura que observeForever se ejecute en el hilo principal
         new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
             LiveData<Boolean> resultado = repo.subirImagenInmueble(idInmueble, imagenUri);
             resultado.observeForever(new Observer<Boolean>() {
@@ -257,11 +325,10 @@ public class InmuebleViewModel extends AndroidViewModel {
         });
     }
 
-    // ✅ Versión extendida con validación de Metros²
+    // ✅ Versión final con tipo real desde API y uso
     public void guardarInmueble(String direccion, String precioTexto, String metrosTexto,
-                                boolean disponible, Uri imagenUri) {
+                                boolean disponible, Uri imagenUri, String uso, TipoInmueble tipoSeleccionado) {
 
-        // 🔹 Validaciones mínimas dentro del ViewModel
         if (direccion == null || direccion.trim().isEmpty()) {
             mensajeToast.postValue("⚠️ La dirección es obligatoria");
             return;
@@ -292,14 +359,29 @@ public class InmuebleViewModel extends AndroidViewModel {
             return;
         }
 
-        // 🔹 Crear objeto Inmueble
-        Inmueble nuevo = new Inmueble(direccion.trim(), precio, disponible);
+        // 🔹 Crear el inmueble con los datos ingresados
+        Inmueble nuevo = new Inmueble(direccion.trim(), precio, false);
         nuevo.setMetrosCuadrados(metros);
-        nuevo.setTipoId(1);
 
+        // 🔹 Asignar tipo de inmueble real
+        if (tipoSeleccionado != null) {
+            nuevo.setTipoId(tipoSeleccionado.getId());
+            nuevo.setTipoNombre(tipoSeleccionado.getNombre());
+            Log.d("InmuebleVM", "🏷️ Tipo aplicado -> ID=" + tipoSeleccionado.getId() +
+                    ", Nombre=" + tipoSeleccionado.getNombre());
+        } else {
+            nuevo.setTipoId(1);
+            nuevo.setTipoNombre("Sin especificar");
+            Log.w("InmuebleVM", "⚠️ TipoSeleccionado es null, se aplica valor por defecto");
+        }
+
+        // 🔹 Asignar uso
+        if (uso != null && !uso.trim().isEmpty()) {
+            nuevo.setUso(uso.trim());
+        }
+
+        // 🔹 Enviar al repositorio
         LiveData<Inmueble> creado = repo.crearInmueble(nuevo);
-
-        // 🔹 Observer anónimo, todo controlado desde el ViewModel
         creado.observeForever(new Observer<Inmueble>() {
             @Override
             public void onChanged(Inmueble inmuebleCreado) {
@@ -312,14 +394,14 @@ public class InmuebleViewModel extends AndroidViewModel {
 
                 mensajeToast.postValue("✅ Inmueble creado correctamente");
 
-                // 📤 Subir imagen (si corresponde) sin tocar UI
+                // 🔹 Si se seleccionó una imagen, subirla
                 if (imagenUri != null) {
                     new android.os.Handler(android.os.Looper.getMainLooper()).post(() ->
                             subirImagenInmueble(inmuebleCreado.getId(), imagenUri)
                     );
                 }
 
-                // 🔄 Refrescar lista y emitir eventos al Fragment vía LiveData
+                // 🔹 Actualizar vista y limpiar
                 cargarInmueblesDesdeApi();
                 estadoGuardado.postValue(EstadoGuardado.EXITO);
                 accionLimpiarCampos.postValue(null);
@@ -336,16 +418,12 @@ public class InmuebleViewModel extends AndroidViewModel {
     }
 
     public LiveData<List<Inmueble>> getListaFiltrada() {
-        return androidx.lifecycle.Transformations.map(listaLiveData, lista -> {
-            return (lista == null) ? new ArrayList<>() : lista;
-        });
+        return androidx.lifecycle.Transformations.map(listaLiveData, lista ->
+                (lista == null) ? new ArrayList<>() : lista
+        );
     }
 
-
-    public LiveData<List<Inmueble>> getListaLiveData() {
-        return getInmuebles();
-    }
-    public void cargarInmuebles() {
-        cargarInmueblesDesdeApi();
-    }
+    public LiveData<List<Inmueble>> getListaLiveData() { return getInmuebles(); }
+    public void cargarInmuebles() { cargarInmueblesDesdeApi(); }
 }
+

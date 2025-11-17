@@ -417,7 +417,7 @@ public class InmuebleRepository {
         RequestBody precio = RequestBody.create(MediaType.parse("text/plain"), String.valueOf(inmueble.getPrecio()));
         RequestBody activo = RequestBody.create(MediaType.parse("text/plain"), String.valueOf(inmueble.isActivo()));
 
-        // 🔹 Llamada al endpoint multipart (CORREGIDA)
+        // 🔹 Llamada al endpoint multipart
         apiService.actualizarInmuebleConImagen(
                 inmueble.getId(),   // ✅ ya no se pasa el token acá
                 idBody,
@@ -476,6 +476,15 @@ public class InmuebleRepository {
             return data;
         }
 
+        // 🧠 Log detallado del objeto antes del POST
+        try {
+            com.google.gson.Gson gson = new com.google.gson.GsonBuilder().setPrettyPrinting().create();
+            String json = gson.toJson(nuevo);
+            Log.d("RepoInmueble", "📤 JSON ENVIADO A API:\n" + json);
+        } catch (Exception e) {
+            Log.e("RepoInmueble", "❌ Error al serializar inmueble: " + e.getMessage());
+        }
+
         apiService.crearInmueble(nuevo).enqueue(new Callback<Inmueble>() {
             @Override
             public void onResponse(Call<Inmueble> call, Response<Inmueble> response) {
@@ -483,7 +492,7 @@ public class InmuebleRepository {
                     Inmueble creado = response.body();
                     Log.i("RepoInmueble", "✅ Inmueble creado en API (ID=" + creado.getId() + ")");
 
-                    // 💾 Insertar también en Room para mantener consistencia local
+                    // 💾 Insertar también en Room
                     InmobiliariaDatabase db = InmobiliariaDatabase.getInstance(app);
                     InmuebleDao dao = db.inmuebleDao();
                     new Thread(() -> {
@@ -514,8 +523,8 @@ public class InmuebleRepository {
             }
         });
 
-
         return data;
     }
+
 }
 

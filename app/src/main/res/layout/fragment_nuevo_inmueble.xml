@@ -89,6 +89,40 @@
                 android:textColor="@android:color/black" />
         </com.google.android.material.textfield.TextInputLayout>
 
+        <!-- 🏠 Tipo de inmueble -->
+        <TextView
+            android:id="@+id/tvTipoLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tipo de inmueble"
+            android:textStyle="bold"
+            android:textColor="@android:color/white"
+            android:layout_marginBottom="4dp" />
+
+        <Spinner
+            android:id="@+id/spTipo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:background="@android:drawable/btn_dropdown" />
+
+        <!-- 🏢 Uso del inmueble -->
+        <TextView
+            android:id="@+id/tvUsoLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Uso del inmueble"
+            android:textStyle="bold"
+            android:textColor="@android:color/white"
+            android:layout_marginBottom="4dp" />
+
+        <Spinner
+            android:id="@+id/spUso"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:background="@android:drawable/btn_dropdown" />
+
         <!-- 🖼️ Vista previa de imagen -->
         <ImageView
             android:id="@+id/ivPreview"
@@ -116,7 +150,7 @@
             app:iconGravity="textStart"
             app:iconPadding="10dp"
             app:elevation="4dp"
-            app:backgroundTint="@color/purple_700"
+            app:backgroundTint="@color/azul_claro"
             android:textColor="@android:color/white"
             android:layout_marginBottom="18dp" />
 

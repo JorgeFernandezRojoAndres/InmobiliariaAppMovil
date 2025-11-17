@@ -5,7 +5,6 @@ import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 import androidx.room.Ignore;
 import androidx.annotation.NonNull;
-import androidx.room.Ignore;
 
 import com.google.gson.annotations.SerializedName;
 
@@ -17,36 +16,54 @@ public class Inmueble implements Serializable {
     @PrimaryKey(autoGenerate = true)
     private int id;
 
+    @SerializedName("direccion")
     @ColumnInfo(name = "direccion")
     private String direccion;
 
+    @SerializedName("precio")
     @ColumnInfo(name = "precio")
     private double precio;
 
     // 🔹 Permite null si viene así de la API
+    @SerializedName("disponible")
     @ColumnInfo(name = "disponible")
     private Boolean disponible;
 
+    // ✅ Coincide con backend (TipoId)
     @SerializedName("tipoId")
     @ColumnInfo(name = "tipo_id")
     private int tipoId;
 
+    @SerializedName("tipoNombre")
     @ColumnInfo(name = "tipo_nombre")
     private String tipoNombre;
 
+    // 🔹 Nuevo campo “uso”
+    @SerializedName("uso")
+    @ColumnInfo(name = "uso")
+    private String uso;
+
+    // ✅ Coincide con backend (metrosCuadrados)
+    @SerializedName("metrosCuadrados")
     @ColumnInfo(name = "metros_cuadrados")
     private int metrosCuadrados;
 
+    // ✅ Coincide con backend (PropietarioId)
+    @SerializedName("propietarioId")
     @ColumnInfo(name = "propietario_id")
     private int propietarioId;
 
+    // ✅ Coincide con backend (Activo)
     @SerializedName("activo")
     @ColumnInfo(name = "activo")
     private Boolean activo;
 
+    @SerializedName("nombrePropietario")
     @ColumnInfo(name = "nombre_propietario")
     private String nombrePropietario;
 
+    // ✅ Coincide con backend (ImagenUrl)
+    @SerializedName("imagenUrl")
     @ColumnInfo(name = "imagen_url")
     private String imagenUrl;
 
@@ -85,16 +102,15 @@ public class Inmueble implements Serializable {
     public double getPrecio() { return precio; }
     public void setPrecio(double precio) { this.precio = precio; }
 
-    // ✅ Ahora devuelve Boolean (coherente con el tipo del campo)
     public Boolean isDisponible() {
         if (disponible != null) return disponible;
         return activo != null ? activo : false;
     }
+
     @Ignore
     public boolean isActivo() {
         return getActivo();
     }
-
 
     public void setDisponible(Boolean disponible) {
         this.disponible = disponible;
@@ -107,13 +123,15 @@ public class Inmueble implements Serializable {
     public String getTipoNombre() { return tipoNombre; }
     public void setTipoNombre(String tipoNombre) { this.tipoNombre = tipoNombre; }
 
+    public String getUso() { return uso; }
+    public void setUso(String uso) { this.uso = uso; }
+
     public int getMetrosCuadrados() { return metrosCuadrados; }
     public void setMetrosCuadrados(int metrosCuadrados) { this.metrosCuadrados = metrosCuadrados; }
 
     public int getPropietarioId() { return propietarioId; }
     public void setPropietarioId(int propietarioId) { this.propietarioId = propietarioId; }
 
-    // ✅ También devuelve Boolean para eliminar warning
     public Boolean getActivo() {
         if (activo != null) return activo;
         return disponible != null ? disponible : false;
@@ -130,7 +148,6 @@ public class Inmueble implements Serializable {
     public String getImagenUrl() { return imagenUrl; }
     public void setImagenUrl(String imagenUrl) { this.imagenUrl = imagenUrl; }
 
-    // 🧠 Log útil
     @NonNull
     @Override
     public String toString() {
@@ -141,6 +158,7 @@ public class Inmueble implements Serializable {
                 ", disponible=" + disponible +
                 ", tipoId=" + tipoId +
                 ", tipoNombre='" + tipoNombre + '\'' +
+                ", uso='" + uso + '\'' +
                 ", metrosCuadrados=" + metrosCuadrados +
                 ", propietarioId=" + propietarioId +
                 ", activo=" + activo +

@@ -14,7 +14,7 @@ public class SettingsViewModel extends AndroidViewModel {
     private final MutableLiveData<String> baseUrlActual = new MutableLiveData<>();
 
     // 🌍 URL base fija (según tu red actual)
-    private static final String BASE_URL_FIJA = "http://192.168.1.35:5027/";
+    private static final String BASE_URL_FIJA = "http://192.168.1.36:5027/";
 
     public SettingsViewModel(@NonNull Application application) {
         super(application);

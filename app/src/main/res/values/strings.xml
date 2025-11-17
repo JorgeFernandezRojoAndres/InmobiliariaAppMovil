@@ -56,6 +56,7 @@
     <string name="rango_fechas">%1$s → %2$s</string>
     <string name="detalle_monto">Monto: $%1$.2f</string>
     <string name="detalle_estado">Estado: %1$s</string>
+
     <!-- ✅ Filtros de contratos -->
     <string-array name="filtros_contratos">
         <item>Vigentes</item>
@@ -63,7 +64,19 @@
         <item>Todos</item>
     </string-array>
 
+    <!-- 🏠 Tipos de inmueble -->
+    <string-array name="tipos_inmueble">
+        <item>Casa</item>
+        <item>Departamento</item>
+        <item>Local</item>
+        <item>Galpón</item>
+    </string-array>
 
-
+    <!-- 🏢 Usos del inmueble -->
+    <string-array name="usos_inmueble">
+        <item>Residencial</item>
+        <item>Comercial</item>
+        <item>Industrial</item>
+    </string-array>
 
 </resources>

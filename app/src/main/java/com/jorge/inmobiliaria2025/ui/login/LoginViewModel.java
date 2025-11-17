@@ -22,24 +22,35 @@ import retrofit2.Response;
 
 public class LoginViewModel extends AndroidViewModel {
 
+    // =========================================================
+    // 🔹 DEPENDENCIAS
+    // =========================================================
     private final ApiService apiService;
     private final SessionManager sessionManager;
 
+    // =========================================================
+    // 🔹 LIVE DATA
+    // =========================================================
     private final MutableLiveData<String> mensaje = new MutableLiveData<>();
     private final MutableLiveData<Boolean> navegarMain = new MutableLiveData<>();
     private final MutableLiveData<Boolean> camposListos = new MutableLiveData<>();
+    private final MutableLiveData<String> deepLinkToken = new MutableLiveData<>();
 
     public LoginViewModel(@NonNull Application app) {
         super(app);
         apiService = RetrofitClient.getInstance(app).create(ApiService.class);
         sessionManager = SessionManager.getInstance(app);
 
+        // Si el usuario ya tiene sesión guardada, ir directo al Main
         if (sessionManager.isLogged()) {
             Log.d("LOGIN", "🔁 Sesión existente detectada, saltando LoginActivity");
             navegarMain.setValue(true);
         }
     }
 
+    // =========================================================
+    // 🔹 LOGIN
+    // =========================================================
     public void iniciarSesion(String email, String password) {
         if (email.isEmpty() || password.isEmpty()) {
             camposListos.setValue(true);
@@ -56,43 +67,9 @@ public class LoginViewModel extends AndroidViewModel {
             @Override
             public void onResponse(Call<TokenResponse> call, Response<TokenResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    TokenResponse tokenResponse = response.body();
-                    String token = tokenResponse.getToken();
-                    Propietario propietario = tokenResponse.getPropietario();
-
-                    if (token != null && !token.isEmpty()) {
-
-                        // ✅ Guardar token y reiniciar Retrofit
-                        sessionManager.saveToken(token);
-                        RetrofitClient.reset();   // <<< FIX IMPORTANTE
-
-                        sessionManager.saveEmail(email);
-
-                        if (propietario != null) {
-                            sessionManager.guardarPropietario(propietario);
-                            Log.d("LOGIN", "👤 Propietario guardado: " + propietario.getNombreCompleto());
-                        } else {
-                            Log.w("LOGIN", "⚠️ Propietario nulo en respuesta");
-                            mensaje.postValue("Advertencia: no se recibieron datos del propietario");
-                        }
-
-                        InmobiliariaApp app = InmobiliariaApp.getInstance();
-                        if (app != null) app.guardarEmail(email);
-
-                        mensaje.postValue("Inicio de sesión exitoso");
-                        navegarMain.postValue(true);
-                    } else {
-                        mensaje.postValue("Error: token vacío");
-                    }
+                    procesarLoginExitoso(email, response.body());
                 } else {
-                    int code = response.code();
-                    String msg = switch (code) {
-                        case 401 -> "Usuario o contraseña incorrectos";
-                        case 500 -> "Error interno del servidor";
-                        default -> "Credenciales inválidas";
-                    };
-                    mensaje.postValue("❌ " + msg);
-                    Log.e("LOGIN", "Error HTTP " + code + " - " + response.message());
+                    manejarErrorLogin(response.code(), response.message());
                 }
             }
 
@@ -104,6 +81,100 @@ public class LoginViewModel extends AndroidViewModel {
         });
     }
 
+    // =========================================================
+    // 🔹 PROCESAMIENTO LOGIN
+    // =========================================================
+    private void procesarLoginExitoso(String email, TokenResponse tokenResponse) {
+        String token = tokenResponse.getToken();
+        Propietario propietario = tokenResponse.getPropietario();
+
+        if (token == null || token.isEmpty()) {
+            mensaje.postValue("Error: token vacío");
+            return;
+        }
+
+        sessionManager.saveToken(token);
+        RetrofitClient.reset();
+        sessionManager.saveEmail(email);
+
+        if (propietario != null) {
+            sessionManager.guardarPropietario(propietario);
+            Log.d("LOGIN", "👤 Propietario guardado: " + propietario.getNombreCompleto());
+        } else {
+            Log.w("LOGIN", "⚠️ Propietario nulo en respuesta");
+            mensaje.postValue("Advertencia: no se recibieron datos del propietario");
+        }
+
+        InmobiliariaApp app = InmobiliariaApp.getInstance();
+        if (app != null) app.guardarEmail(email);
+
+        mensaje.postValue("Inicio de sesión exitoso");
+        navegarMain.postValue(true);
+    }
+
+    private void manejarErrorLogin(int code, String msg) {
+        String mensajeError = switch (code) {
+            case 401 -> "Usuario o contraseña incorrectos";
+            case 500 -> "Error interno del servidor";
+            default -> "Credenciales inválidas";
+        };
+        mensaje.postValue("❌ " + mensajeError);
+        Log.e("LOGIN", "Error HTTP " + code + " - " + msg);
+    }
+
+    // =========================================================
+    // 🔹 OLVIDÉ MI CONTRASEÑA
+    // =========================================================
+    public void enviarRecuperacion(String email) {
+        if (email == null || email.trim().isEmpty()) {
+            mensaje.postValue("Debes ingresar un correo electrónico");
+            return;
+        }
+
+        if (!email.contains("@")) {
+            mensaje.postValue("Email inválido");
+            return;
+        }
+
+        Log.d("RECUPERACION", "📧 Solicitando reset para: " + email);
+
+        apiService.solicitarReset(email).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    mensaje.postValue("📬 Se envió un enlace a tu correo para restablecer la contraseña");
+                    Log.d("RECUPERACION", "✅ Correo enviado correctamente");
+                } else {
+                    mensaje.postValue("⚠️ No se encontró una cuenta con ese correo");
+                    Log.w("RECUPERACION", "Error HTTP " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                mensaje.postValue("❌ Error al enviar correo: " + t.getMessage());
+                Log.e("RECUPERACION", "Fallo de red: " + t.getMessage());
+            }
+        });
+    }
+
+    // =========================================================
+    // 🔹 DEEP LINK TOKEN (RESET PASSWORD)
+    // =========================================================
+    public void setDeepLinkToken(String token) {
+        if (token != null && !token.trim().isEmpty()) {
+            Log.d("DEEPLINK", "📩 Token recibido desde deep link: " + token);
+            deepLinkToken.postValue(token);
+        }
+    }
+
+    public LiveData<String> getDeepLinkToken() {
+        return deepLinkToken;
+    }
+
+    // =========================================================
+    // 🔹 OBSERVABLES
+    // =========================================================
     public LiveData<String> getMensaje() { return mensaje; }
     public LiveData<Boolean> getNavegarMain() { return navegarMain; }
     public LiveData<Boolean> getCamposListos() { return camposListos; }

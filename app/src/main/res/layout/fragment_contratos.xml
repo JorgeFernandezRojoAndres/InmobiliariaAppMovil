@@ -19,7 +19,7 @@
         android:textColor="@color/black"
         android:layout_marginBottom="16dp" />
 
-    <!-- 🔹 Spinner de filtro -->
+
 
     <!-- 🔹 Mensaje / placeholder -->
     <TextView

@@ -22,7 +22,7 @@ public class DetalleInquilinoFragment extends Fragment {
         binding = FragmentDetalleInquilinoBinding.inflate(inflater, container, false);
         vm = new ViewModelProvider(this).get(DetalleInquilinoViewModel.class);
 
-        // ViewModel recibirá el ID y decidirá qué hacer
+        // ViewModel recibirá el ID
         vm.recibirId(getArguments());
 
         // Observa texto ya preparado por el ViewModel

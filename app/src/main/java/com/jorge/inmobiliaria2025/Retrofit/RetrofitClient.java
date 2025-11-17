@@ -17,12 +17,14 @@ import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
+/**
+ * ✅ RetrofitClient centralizado
+ * Maneja JWT automáticamente mediante Interceptor y expone getApiService().
+ */
 public class RetrofitClient {
 
-    // ✅ Debe estar arriba para que reset() la pueda limpiar
     private static volatile Retrofit retrofit = null;
-
-    public static final String BASE_URL = "http://192.168.1.35:5027/";
+    public static final String BASE_URL = "http://192.168.1.36:5027/";
 
     public static Retrofit getInstance(Context context) {
         if (retrofit == null) {
@@ -31,7 +33,7 @@ public class RetrofitClient {
 
                     SessionManager session = SessionManager.getInstance(context);
 
-                    // 🛰 Logs HTTP
+                    // 🛰 Interceptor de logs
                     HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor(message -> {
                         if (message.startsWith("-->") || message.startsWith("<--"))
                             Log.d("Retrofit", "🌐 " + message);
@@ -56,7 +58,7 @@ public class RetrofitClient {
                             builder.header("Content-Type", "application/json");
                         }
 
-                        // ✅ Solo mandar token si es válido
+                        // ✅ Agregar token si es válido
                         if (token != null && token.trim().length() > 10) {
                             builder.header("Authorization", "Bearer " + token);
                             Log.d("RetrofitAuth", "✅ Token enviado: " + token);
@@ -101,9 +103,14 @@ public class RetrofitClient {
         return retrofit;
     }
 
-    // ✅ Forzar reconstrucción cuando cambia token
+    // ✅ Forzar reconstrucción cuando cambia el token
     public static void reset() {
         retrofit = null;
         Log.d("RetrofitClient", "🔄 Retrofit reiniciado para usar nuevo token");
+    }
+
+    // ✅ Nuevo método: acceso directo al ApiService
+    public static ApiService getApiService(Context context) {
+        return getInstance(context).create(ApiService.class);
     }
 }

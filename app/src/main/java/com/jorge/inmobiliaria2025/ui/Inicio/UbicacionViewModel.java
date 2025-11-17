@@ -4,7 +4,7 @@ import android.Manifest;
 import android.app.Application;
 import android.content.pm.PackageManager;
 import android.location.Location;
-import android.content.Context;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
@@ -26,104 +26,150 @@ import java.util.Optional;
 
 public class UbicacionViewModel extends AndroidViewModel {
 
+    // === EVENTOS UI ===
+    public abstract static class EventoUI {
+        public static class PedirPermiso extends EventoUI {}
+        public static class DibujarMarkers extends EventoUI {
+            public final List<MarkerOptions> markers;
+            public DibujarMarkers(List<MarkerOptions> markers) { this.markers = markers; }
+        }
+        public static class MoverCamara extends EventoUI {
+            public final LatLngBounds bounds;
+            public MoverCamara(LatLngBounds b) { this.bounds = b; }
+        }
+    }
+
+    private final MutableLiveData<EventoUI> _eventosUI = new MutableLiveData<>();
+    public LiveData<EventoUI> getEventosUI() { return _eventosUI; }
+
+    // === Ubicación y mapa ===
     private final MutableLiveData<Location> mLocation = new MutableLiveData<>();
     private final MutableLiveData<LatLng> mInmobiliariaLatLng =
             new MutableLiveData<>(new LatLng(-33.301726, -66.337752));
 
-    private final MutableLiveData<Boolean> _solicitarPermiso = new MutableLiveData<>();
-    public LiveData<Boolean> solicitarPermisoEvent() { return _solicitarPermiso; }
-
-    private final FusedLocationProviderClient fusedClient;
-
-    // 🆕 LiveData para los límites del mapa
     private final MediatorLiveData<LatLngBounds> mBounds = new MediatorLiveData<>();
     public LiveData<LatLngBounds> getBounds() { return mBounds; }
 
-    // 🆕 LiveData para los marcadores del mapa
-    private final MutableLiveData<List<MarkerOptions>> mMarkers = new MutableLiveData<>(new ArrayList<>());
+    private final MutableLiveData<List<MarkerOptions>> mMarkers =
+            new MutableLiveData<>(new ArrayList<>());
     public LiveData<List<MarkerOptions>> getMarkers() { return mMarkers; }
+
+    private final FusedLocationProviderClient fusedClient;
 
     public UbicacionViewModel(@NonNull Application application) {
         super(application);
         fusedClient = LocationServices.getFusedLocationProviderClient(application);
 
-        // 🔁 Cuando cambia la ubicación o la coordenada fija, recalculamos los bounds
+        // recalcular bounds cada vez que cambia ubicación u oficina
         mBounds.addSource(mLocation, loc -> recomputarBounds(loc, mInmobiliariaLatLng.getValue()));
         mBounds.addSource(mInmobiliariaLatLng, inmo -> recomputarBounds(mLocation.getValue(), inmo));
     }
 
-    public MutableLiveData<Location> getLocation() { return mLocation; }
-    public MutableLiveData<LatLng> getInmobiliariaLatLng() { return mInmobiliariaLatLng; }
-
-    /** ✅ Flujo MVVM sin lógica en la vista */
+    /** ================================
+     *  FLUJO PRINCIPAL DE UBICACIÓN
+     *  ================================ */
     public void iniciarObtencionUbicacion() {
-        if (ContextCompat.checkSelfPermission(getApplication(), Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
-            fusedClient.getLastLocation()
-                    .addOnSuccessListener(this::procesarUbicacion)
-                    .addOnFailureListener(Throwable::printStackTrace);
-        } else {
-            _solicitarPermiso.setValue(true); // la vista solo observa este evento
+        Log.d("UBICACION_VM", "🚀 Iniciando obtención de ubicación...");
+
+        boolean permisoOk = ContextCompat.checkSelfPermission(
+                getApplication(), Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED;
+
+        if (!permisoOk) {
+            Log.w("UBICACION_VM", "🚫 Permiso no concedido, enviando evento a la vista");
+            _eventosUI.setValue(new EventoUI.PedirPermiso());
+            return;
         }
+
+        Log.d("UBICACION_VM", "✅ Permiso concedido, solicitando última ubicación...");
+
+        fusedClient.getLastLocation()
+                .addOnSuccessListener(location -> {
+                    if (location != null) {
+                        Log.d("UBICACION_VM", "📍 Ubicación obtenida: "
+                                + location.getLatitude() + ", " + location.getLongitude());
+                        procesarUbicacion(location);
+                    } else {
+                        Log.w("UBICACION_VM", "⚠️ getLastLocation devolvió null");
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("UBICACION_VM", "❌ Error obteniendo ubicación: " + e.getMessage(), e);
+                });
     }
 
-    /** ✅ Resultado de permisos (la vista solo reenvía el resultado) */
-    public void procesarResultadoPermisos(int requestCode, int[] grantResults, int expectedCode) {
-        if (requestCode == expectedCode &&
-                grantResults != null && grantResults.length > 0 &&
-                grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+    /** ================================
+     *  PROCESAR PERMISOS (vista solo reenvía)
+     *  ================================ */
+    public void procesarResultadoPermisos(int requestCode,
+                                          int[] grantResults,
+                                          int expectedCode) {
+
+        boolean concedido = requestCode == expectedCode &&
+                grantResults != null &&
+                grantResults.length > 0 &&
+                grantResults[0] == PackageManager.PERMISSION_GRANTED;
+
+        if (concedido) {
+            Log.d("UBICACION_VM", "🔓 Permiso concedido. Reintentando...");
             iniciarObtencionUbicacion();
+        } else {
+            Log.w("UBICACION_VM", "🚷 Permiso denegado.");
         }
     }
 
-    /** 🔁 Método legado para compatibilidad */
-    @Deprecated
-    public void obtenerUbicacionSegura(Context ctx, Runnable solicitarPermiso, Runnable alFinalizar) {
-        iniciarObtencionUbicacion();
-        if (alFinalizar != null) alFinalizar.run();
-    }
-
-    /** 🔁 Helper de permisos */
-    public void verificarPermiso(Context ctx, String permiso, Runnable siNoTiene, Runnable siTiene) {
-        boolean concedido = ContextCompat.checkSelfPermission(ctx, permiso) == PackageManager.PERMISSION_GRANTED;
-        (concedido ? siTiene : siNoTiene).run();
-    }
-
-    /** 🧭 Procesa la ubicación y genera marcadores y bounds */
+    /** ================================
+     *  PROCESAR UBICACIÓN
+     *  ================================ */
     private void procesarUbicacion(Location location) {
         Optional.ofNullable(location).ifPresent(loc -> {
             mLocation.setValue(loc);
 
             LatLng inmobiliaria = mInmobiliariaLatLng.getValue();
-            if (inmobiliaria == null) return;
+            if (inmobiliaria == null) {
+                Log.w("UBICACION_VM", "⚠️ Coordenada de inmobiliaria nula");
+                return;
+            }
 
-            // 🟢 Crear lista de marcadores
+            // Crear marcadores
             List<MarkerOptions> lista = new ArrayList<>();
             lista.add(new MarkerOptions()
                     .position(inmobiliaria)
-                    .title("Inmobiliaria Alone")
+                    .title("Inmobiliaria")
                     .snippet("Nuestra oficina central"));
+
             lista.add(new MarkerOptions()
                     .position(new LatLng(loc.getLatitude(), loc.getLongitude()))
                     .title("Mi ubicación actual")
                     .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
 
-            // Publicar los marcadores
-            mMarkers.postValue(lista);
+            mMarkers.setValue(lista);
+
+            // Enviar evento a la vista para dibujarlos
+            _eventosUI.setValue(new EventoUI.DibujarMarkers(lista));
 
             // Recalcular bounds
             recomputarBounds(loc, inmobiliaria);
         });
     }
 
-    /** 🧭 Cálculo automático de bounds */
+    /** ================================
+     *  CALCULAR BOUNDS
+     *  ================================ */
     private void recomputarBounds(Location loc, LatLng inmo) {
         if (loc == null || inmo == null) return;
+
         LatLng mi = new LatLng(loc.getLatitude(), loc.getLongitude());
         LatLngBounds bounds = new LatLngBounds.Builder()
                 .include(mi)
                 .include(inmo)
                 .build();
+
         mBounds.setValue(bounds);
+
+        // Enviar acción para mover cámara
+        _eventosUI.setValue(new EventoUI.MoverCamara(bounds));
+
+        Log.d("UBICACION_VM", "📏 Bounds recalculados.");
     }
 }

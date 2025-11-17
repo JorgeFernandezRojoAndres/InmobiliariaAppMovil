@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?> 
+<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="com.jorge.inmobiliaria2025">
@@ -9,10 +9,10 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
 
-    <!-- 🔔 Permiso requerido desde Android 13+ para mostrar notificaciones -->
+    <!-- 🔔 Permiso requerido desde Android 13+ para notificaciones -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
-    <!-- ✅ Permiso para llamadas telefónicas (shake en Login) -->
+    <!-- ☎️ Permiso para llamadas telefónicas -->
     <uses-permission android:name="android.permission.CALL_PHONE" />
 
     <application
@@ -29,23 +29,39 @@
         android:enableOnBackInvokedCallback="true"
         tools:targetApi="31">
 
-        <!-- 🌐 Permitir tráfico HTTP solo según configuración XML -->
+        <!-- 🌐 WebView segura -->
         <meta-data
             android:name="android.webkit.WebView.EnableSafeBrowsing"
             android:value="true" />
 
-        <!-- 🔑 Clave de API de Google Maps -->
+        <!-- 🗺️ Clave API Google Maps -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyBaeLBuSlsO3PQqtVi-QK1fsMEQOC1jy_c" />
 
-        <!-- 🔹 Login: pantalla inicial -->
+        <!-- 🔹 LOGIN - Pantalla inicial -->
         <activity
             android:name=".ui.login.LoginActivity"
             android:exported="true">
+
+            <!-- 🚀 Lanzador -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- 🌐 DEEP LINK para reset-password -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <!-- Acepta enlaces enviados en el correo -->
+                <data
+                    android:scheme="http"
+                    android:host="192.168.1.36"
+                    android:port="5027"
+                    android:pathPrefix="/api/Propietarios/reset-password" />
             </intent-filter>
         </activity>
 
@@ -54,7 +70,7 @@
             android:name=".ui.nav.MainActivity"
             android:exported="true" />
 
-        <!-- 🆕 🔔 Servicio para recibir notificaciones push (FCM) -->
+        <!-- 🔔 Servicio de notificaciones Firebase -->
         <service
             android:name=".services.MyFirebaseMessagingService"
             android:exported="false">
@@ -63,7 +79,7 @@
             </intent-filter>
         </service>
 
-        <!-- 🆕 🔑 Integración del plugin de Google Services -->
+        <!-- 🔑 Configuración FCM -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="pagos_channel" />
@@ -72,5 +88,4 @@
             android:resource="@mipmap/ic_launcher" />
 
     </application>
-
 </manifest>

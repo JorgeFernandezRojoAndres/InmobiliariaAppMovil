@@ -1,5 +1,6 @@
 package com.jorge.inmobiliaria2025.ui.logout;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -22,20 +23,31 @@ public class LogoutFragment extends Fragment {
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
 
-        // ✅ Cerrar sesión del SessionManager
-        SessionManager.getInstance(requireContext()).logout();
+        View view = new View(requireContext());
 
+        // 🔸 Mostrar diálogo de confirmación
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Cerrar sesión")
+                .setMessage("¿Deseás cerrar tu sesión actual?")
+                .setPositiveButton("Sí", (dialog, which) -> {
+                    // ✅ Cerrar sesión del SessionManager
+                    SessionManager.getInstance(requireContext()).logout();
 
-        // ✅ Cerrar sesión global de la app
-        InmobiliariaApp.getInstance().cerrarSesion();
+                    // ✅ Cerrar sesión global de la app
+                    InmobiliariaApp.getInstance().cerrarSesion();
 
-        // ✅ Redirigir al login y cerrar la actividad actual
-        Intent intent = new Intent(requireContext(), LoginActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivity(intent);
-        requireActivity().finish();
+                    // ✅ Redirigir al login y cerrar la actividad actual
+                    Intent intent = new Intent(requireContext(), LoginActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                    requireActivity().finish();
+                })
+                .setNegativeButton("Cancelar", (dialog, which) -> {
+                    // 🔹 Si cancela, volver al fragment anterior
+                    requireActivity().onBackPressed();
+                })
+                .show();
 
-        // ✅ Retornar una vista vacía para cumplir el ciclo de vida
-        return new View(requireContext());
+        return view;
     }
 }

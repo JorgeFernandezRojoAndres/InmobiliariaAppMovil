@@ -66,6 +66,20 @@
                 android:elevation="3dp"
                 android:paddingVertical="10dp" />
 
+            <!-- 🔹 Nuevo texto interactivo: Olvidé mi contraseña -->
+            <TextView
+                android:id="@+id/tvOlvide"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="14dp"
+                android:text="¿Olvidaste tu contraseña?"
+                android:textColor="@color/azul_claro"
+                android:textStyle="bold"
+                android:textSize="15sp"
+                android:clickable="true"
+                android:focusable="true" />
+
         </LinearLayout>
 
     </LinearLayout>

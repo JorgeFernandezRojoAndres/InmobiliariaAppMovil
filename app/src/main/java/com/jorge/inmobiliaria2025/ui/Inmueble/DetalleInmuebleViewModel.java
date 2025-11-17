@@ -31,6 +31,10 @@ public class DetalleInmuebleViewModel extends AndroidViewModel {
     private final MutableLiveData<Boolean> modoEdicion = new MutableLiveData<>(false);
     private final MutableLiveData<Uri> imagenSeleccionada = new MutableLiveData<>();
     private final MutableLiveData<String> imagenUrl = new MutableLiveData<>();
+    // 🔹 Nuevo campo para el uso del inmueble
+    private final MutableLiveData<String> uso = new MutableLiveData<>();
+    public LiveData<String> getUso() { return uso; }
+    public void setUso(String valor) { uso.postValue(valor); }
 
     // ==== Campos de formulario ====
     private final MutableLiveData<String> direccion = new MutableLiveData<>();
@@ -151,6 +155,7 @@ public class DetalleInmuebleViewModel extends AndroidViewModel {
         String met = safeText(metros);
         Boolean act = activo.getValue();
         TipoInmueble tipo = tipoSeleccionadoMediator.getValue();
+        String usoSeleccionado = uso.getValue(); // 🔹 nuevo campo LiveData<String> en tu VM
         Uri uriSeleccionada = imagenSeleccionada.getValue();
 
         if (dir.isEmpty() || prec.isEmpty() || met.isEmpty()) {
@@ -162,7 +167,17 @@ public class DetalleInmuebleViewModel extends AndroidViewModel {
         int metrosInt = parseIntSafe(met, "❌ Metros inválidos");
         if (precioDouble <= 0 || metrosInt <= 0) return;
 
-        Inmueble actualizado = construirInmuebleActualizado(actual, dir, precioDouble, metrosInt, act, tipo);
+        // 🔹 Construir inmueble actualizado con tipo y uso incluidos
+        Inmueble actualizado = construirInmuebleActualizado(
+                actual,
+                dir,
+                precioDouble,
+                metrosInt,
+                act,
+                tipo,
+                usoSeleccionado
+        );
+
         Uri uriFinal = resolverUriFinal(uriSeleccionada, imagenUrl.getValue());
 
         if (uriFinal == null) {
@@ -170,6 +185,33 @@ public class DetalleInmuebleViewModel extends AndroidViewModel {
         } else {
             guardarConImagen(actualizado, uriFinal, globalVM);
         }
+    }
+
+    // ==== Construir inmueble actualizado ====
+    private Inmueble construirInmuebleActualizado(Inmueble base, String dir, double precioDouble, int metrosInt,
+                                                  Boolean act, TipoInmueble tipo, String uso) {
+
+        Inmueble actualizado = new Inmueble(base.getId(), dir, precioDouble, act != null && act);
+        actualizado.setMetrosCuadrados(metrosInt);
+
+        // 🔹 Tipo de inmueble
+        if (tipo != null) {
+            actualizado.setTipoId(tipo.getId());
+            actualizado.setTipoNombre(tipo.getNombre());
+        } else {
+            actualizado.setTipoId(base.getTipoId());
+            actualizado.setTipoNombre(base.getTipoNombre());
+        }
+
+        // 🔹 Uso del inmueble (nuevo campo)
+        if (uso != null && !uso.trim().isEmpty()) {
+            actualizado.setUso(uso);
+        } else {
+            // si no se cambió, mantiene el valor anterior
+            actualizado.setUso(base.getUso());
+        }
+
+        return actualizado;
     }
 
 

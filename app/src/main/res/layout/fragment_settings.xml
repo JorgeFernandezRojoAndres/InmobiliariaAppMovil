@@ -20,7 +20,7 @@
         android:id="@+id/etBaseUrl"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Ej: http://192.168.1.35:5027/api/"
+        android:hint="Ej: http://192.168.1.36:5027/api/"
         android:inputType="textUri"
         android:textColor="@color/black"
         android:textSize="16sp"

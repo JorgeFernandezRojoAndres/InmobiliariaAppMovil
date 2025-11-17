@@ -9,9 +9,7 @@ import com.jorge.inmobiliaria2025.model.Propietario;
 import com.jorge.inmobiliaria2025.model.CambioClaveDto;
 import com.jorge.inmobiliaria2025.model.TipoInmueble;
 import com.jorge.inmobiliaria2025.model.InquilinoConInmueble;
-import retrofit2.http.POST;
-import retrofit2.http.Path;
-import retrofit2.http.Query;
+import com.jorge.inmobiliaria2025.model.ResetPasswordDto;
 
 import java.util.List;
 
@@ -26,9 +24,10 @@ import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Part;
 import retrofit2.http.Path;
+import retrofit2.http.Query;
 
 /**
- * ✅ ApiService (versión simplificada)
+ * ✅ ApiService
  * Usa el interceptor de RetrofitClient para agregar el token JWT automáticamente.
  * Define todos los endpoints REST utilizados por la app móvil.
  */
@@ -37,6 +36,15 @@ public interface ApiService {
     // -------------------- 🔐 AUTENTICACIÓN --------------------
     @POST("api/Propietarios/login")
     Call<TokenResponse> login(@Body LoginRequest request);
+
+    // 🔹 Solicitar enlace de recuperación (olvidé mi contraseña)
+    @POST("api/Propietarios/forgot-password")
+    Call<Void> solicitarReset(@Body String email);
+
+    // 🔹 Restablecer contraseña usando token
+    @POST("api/Propietarios/reset-password")
+    Call<Void> resetPassword(@Body ResetPasswordDto dto);
+
 
     // -------------------- 👤 PERFIL / AVATAR --------------------
     @Multipart
@@ -53,6 +61,7 @@ public interface ApiService {
 
     @PUT("api/Propietarios/cambiar-clave")
     Call<ResponseBody> cambiarClave(@Body CambioClaveDto dto);
+
 
     // -------------------- 🏠 INMUEBLES --------------------
     @GET("api/Inmuebles/misInmuebles")
@@ -87,13 +96,16 @@ public interface ApiService {
             @Part MultipartBody.Part imagen
     );
 
+
     // -------------------- 🏗️ TIPOS DE INMUEBLE --------------------
     @GET("api/TiposInmuebleApi")
     Call<List<TipoInmueble>> getTiposInmueble();
 
+
     // -------------------- 📄 CONTRATOS --------------------
     @GET("api/ContratosApi/vigentes")
     Call<List<Contrato>> getContratosVigentes();
+
 
     // -------------------- 💰 PAGOS --------------------
     @GET("api/ContratosApi/{id}/pagos")
@@ -101,6 +113,7 @@ public interface ApiService {
 
     @GET("api/Pagos/propietarioActual")
     Call<List<Pago>> getPagosGlobales();
+
 
     // -------------------- ✏️ ACTUALIZAR / CREAR INMUEBLE --------------------
     @PUT("api/Inmuebles/{id}")
@@ -112,6 +125,7 @@ public interface ApiService {
     @POST("api/Inmuebles")
     Call<Inmueble> crearInmueble(@Body Inmueble nuevo);
 
+
     // -------------------- 👥 INQUILINOS --------------------
     @GET("api/InquilinosApi/con-inmueble")
     Call<List<InquilinoConInmueble>> getInquilinosConInmueble();
@@ -119,18 +133,20 @@ public interface ApiService {
     @GET("api/InquilinosApi/{idInquilino}")
     Call<InquilinoConInmueble> getInquilinoById(@Path("idInquilino") int idInquilino);
 
+
     // -------------------- ⚖️ RESCISIÓN DE CONTRATO --------------------
     @POST("api/ContratosApi/rescindir/{id}")
     Call<ResponseBody> rescindirContrato(@Path("id") int idContrato);
 
     // ✅ Renovar contrato
     @POST("api/ContratosApi/renovar/{id}")
-    Call<okhttp3.ResponseBody> renovarContrato(
+    Call<ResponseBody> renovarContrato(
             @Path("id") int id,
             @Query("fechaInicio") String fechaInicio,
             @Query("fechaFin") String fechaFin,
             @Query("monto") String monto
     );
+
 
     // -------------------- 📄 CONTRATOS - FILTROS NUEVOS --------------------
     @GET("api/ContratosApi/finalizados")
@@ -138,6 +154,4 @@ public interface ApiService {
 
     @GET("api/ContratosApi/todos")
     Call<List<Contrato>> getContratosTodos();
-
-
 }
