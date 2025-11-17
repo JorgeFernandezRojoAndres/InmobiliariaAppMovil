@@ -44,7 +44,7 @@ public class InmueblesFragment extends Fragment {
 
         rv.setLayoutManager(new GridLayoutManager(requireContext(), 2));
 
-        // 🧠 ViewModels
+
         vm = new ViewModelProvider(requireActivity()).get(InmuebleViewModel.class);
 
         // ✅ Conectamos el NavViewModel compartido
@@ -65,7 +65,7 @@ public class InmueblesFragment extends Fragment {
             adapter.actualizarLista(inmuebles);
         });
 
-        // 📦 Carga inicial movida acá
+        // 📦 Carga inicial
         vm.cargarInmuebles();
 
         // ➕ Botón agregar inmueble
@@ -76,8 +76,6 @@ public class InmueblesFragment extends Fragment {
 
         return v;
     }
-
-
 
     @Override
     public void onResume() {

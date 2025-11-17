@@ -188,7 +188,7 @@ public class DetalleInmuebleFragment extends Fragment {
         binding.etPrecioDetalle.setEnabled(habilitar);
         binding.swActivoDetalle.setEnabled(habilitar);
         binding.spTipoInmuebleDetalle.setEnabled(habilitar);
-        binding.etMetrosDetalle.setEnabled(false); // siempre deshabilitado
+        binding.etMetrosDetalle.setEnabled(false);
 
         binding.btnGuardar.setVisibility(habilitar ? View.VISIBLE : View.GONE);
         binding.btnCambiarImg.setVisibility(habilitar ? View.VISIBLE : View.GONE);

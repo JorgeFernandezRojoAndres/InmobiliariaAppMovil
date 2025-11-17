@@ -20,8 +20,6 @@ import com.jorge.inmobiliaria2025.model.Inmueble;
 import com.jorge.inmobiliaria2025.model.TipoInmueble;
 import com.jorge.inmobiliaria2025.ui.nav.NavViewModel;
 
-import org.jspecify.annotations.Nullable;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -240,7 +238,6 @@ public class InmuebleViewModel extends AndroidViewModel {
 
     public enum EstadoGuardado { EXITO,}
 
-    public LiveData<List<Inmueble>> getInmuebles() { return listaLiveData; }
     public LiveData<String> getMensajeToast() { return mensajeToast; }
 
     // ==========================
@@ -423,7 +420,36 @@ public class InmuebleViewModel extends AndroidViewModel {
         );
     }
 
-    public LiveData<List<Inmueble>> getListaLiveData() { return getInmuebles(); }
-    public void cargarInmuebles() { cargarInmueblesDesdeApi(); }
+    public void cargarInmuebles() {
+
+        // 1) Pedimos los datos al Repository
+        LiveData<List<Inmueble>> respuestaApi = repo.obtenerMisInmuebles();
+
+        // 2) Observamos la respuesta
+        respuestaApi.observeForever(new Observer<List<Inmueble>>() {
+            @Override
+            public void onChanged(List<Inmueble> lista) {
+                respuestaApi.removeObserver(this);
+
+                if (lista != null && !lista.isEmpty()) {
+
+                    // 3) Publicamos lista remota
+                    listaInmueblesRemotos.postValue(lista);
+                    listaLiveData.postValue(lista);
+
+                    Log.i("InmuebleVM",
+                            "✅ Inmuebles cargados desde API: " + lista.size());
+                }
+                else {
+
+                    Log.w("InmuebleVM",
+                            "⚠️ API vacía o sin respuesta, usando Room...");
+
+                    // 4) Fallback a Room
+                    cargarInmueblesDesdeRoom();
+                }
+            }
+        });
+    }
 }
 
